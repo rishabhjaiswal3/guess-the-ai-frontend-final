@@ -1,0 +1,287 @@
+.leaderboard-bg {
+  background:
+    radial-gradient(1200px 600px at 10% 0%, rgba(156, 92, 255, 0.25), transparent 60%),
+    radial-gradient(900px 500px at 90% 100%, rgba(75, 225, 236, 0.18), transparent 60%),
+    linear-gradient(135deg, #1B003F 0%, #2A003A 40%, #3B0A6B 72%, #0E001F 100%);
+  background-blend-mode: screen, screen, normal;
+}
+
+.leaderboard-container {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100%;
+  overflow: hidden;
+  margin-top:0px;
+  box-sizing: border-box;
+}
+
+.leaderboard-decor-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 1;
+  -webkit-mask-image: linear-gradient(to top, black 75%, transparent 98%);
+  mask-image: linear-gradient(to top, black 75%, transparent 98%);
+}
+
+.leaderboard-content {
+  width: 1000px;
+  max-width: 98vw;
+  margin: 80px auto;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid rgba(157, 107, 255, 0.25);
+  background: rgba(255,255,255,0.06);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  backdrop-filter: blur(10px);
+  color: white;
+  /* margin-bottom: 10px; */
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Loader styles */
+.lb-loader-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 52vh;
+}
+
+.lb-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.25);
+  border-top-color: #9c5cff;
+  animation: lb-spin 0.9s linear infinite;
+  box-shadow: 0 0 16px rgba(156,92,255,0.35);
+}
+
+.lb-loader-text {
+  font-size: 14px;
+  color: #eae2ff;
+  opacity: 0.9;
+}
+
+@keyframes lb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.lb-error-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: #ffb4b4;
+}
+
+.lb-retry {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(157,107,255,0.6);
+  background: linear-gradient(135deg, #7b3fe4, #9d6bff);
+  color: #fff;
+  cursor: pointer;
+}
+
+.leaderboard-logo-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.5rem 0;
+  padding: 1rem 0;
+  transform: scale(1.2); /* Additional scaling for the container */
+}
+
+.leaderboard-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 80px; /* Increased from 200px */
+  width: auto;
+  object-fit: contain;
+  transform: scale(1.5); /* Scale up the logo */
+}
+
+.leaderboard-list {
+  width: 100%;
+  text-align: left;
+  max-height: 58vh;
+  overflow: scroll;
+  overflow-y: auto;
+  margin-top: 10px;
+  height:100%;
+  padding-bottom: 100px;
+  /* Define shared column template: name, correct, streak, all streak, rank */
+  --lb-cols: 2fr 1fr 0.9fr 0.9fr 0.7fr;
+}
+
+
+.leaderboard-item {
+  display: grid;
+  grid-template-columns: var(--lb-cols);
+  align-items: center;
+  column-gap: 16px; /* add more breathing room between name and next column */
+  min-height: 64px;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  font-size: 1.2rem;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+  border: 1px solid rgba(157, 107, 255, 0.25);
+  position: relative;
+}
+
+.leaderboard-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.leaderboard-item span {
+  justify-self: center;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Name column: compact with ellipsis */
+.leaderboard-item .lb-name {
+  min-width: 0; /* allow shrinking so ellipsis can kick in */
+  padding-right: 10px; /* ensure visual space before next column */
+  display: inline-block; /* so max-width can constrain for ellipsis */
+  justify-self: start;
+  text-align: left;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #eae2ff;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* Reveal full name on hover (tooltip) */
+.leaderboard-item .lb-name:hover::after {
+  content: attr(data-full);
+  position: absolute;
+  left: 12px;
+  bottom: calc(100% + 6px);
+  max-width: 70%;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(157,107,255,0.35);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  color: #fff;
+  white-space: normal;
+  z-index: 5;
+}
+
+.leaderboard-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: rgba(27,0,63,0.6);
+  border: 1px solid rgba(157, 107, 255, 0.35);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08);
+  font-weight: 700;
+}
+
+/* First column (name) base override so it isn't oversized */
+.leaderboard-item span:first-child {
+  font-weight: 600;
+  color: #eae2ff;
+  font-size: 0.95rem;
+  justify-self: start;
+  text-align: left;
+}
+
+/* Score styling */
+.leaderboard-item span:last-child {
+  font-weight: bold;
+  color: #4caf50;
+  font-size: 1.5rem;
+  margin:auto;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .leaderboard-item span:first-child {
+    font-size: 0.95rem; /* keep same size as web */
+  }
+}
+
+/* Responsive type scaling for small devices */
+@media (max-width: 600px) {
+  .leaderboard-logo-container {
+    transform: scale(1);
+    margin: 1rem 0;
+    padding: 0.5rem 0;
+  }
+  .leaderboard-logo {
+    transform: none;
+    max-height: 72px;
+  }
+  .leaderboard-item {
+    padding: 6px 8px;
+    column-gap: 14px; /* keep extra spacing on narrow screens */
+  }
+  .leaderboard-item span {
+    font-size: 0.9rem;
+  }
+  .leaderboard-header span {
+    font-size: 0.8rem;
+    white-space: normal; /* allow wrap on narrow screens */
+    line-height: 1.15;
+  }
+  .leaderboard-list {
+    /* shrink name column a bit more on small screens */
+    --lb-cols: 1.6fr 1fr 0.9fr 0.9fr 0.7fr;
+  }
+  .leaderboard-item .lb-name {
+    font-size: 0.85rem;
+    max-width: 14ch; /* shorter names with ellipsis */
+  }
+}
+
+@media (max-width: 1024px) {
+  .leaderboard-item .lb-name { max-width: 20ch; font-size: 0.9rem; }
+}
+
+@media (max-width: 360px) {
+  .leaderboard-list {
+    --lb-cols: 1.5fr 1fr 0.9fr 0.9fr 0.7fr;
+  }
+  .leaderboard-item .lb-name { max-width: 12ch; font-size: 0.8rem; }
+}
+
+@media (max-width: 360px) {
+  .leaderboard-item span {
+    font-size: 0.8rem;
+  }
+  .leaderboard-header span {
+    font-size: 0.7rem;
+  }
+  .leaderboard-item {
+    padding: 5px 6px;
+  }
+}

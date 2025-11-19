@@ -1,0 +1,43 @@
+
+var ftGUID_9116854="6356F8E240D4CC";
+var ftConfID_9116854="0";
+var ftParams_9116854="ftOBA=1&ft_agentEnv=0&ft_referrer=https://www.citypng.com/photo/11861/hd-green-check-true-tick-mark-icon-sign-png;https%3A%2F%2Fwww.citypng.com%2Fphoto%2F11861%2Fhd-green-check-true-tick-mark-icon-sign-png&us_privacy=${US_PRIVACY}&ft_partnerimpid=ABAjH0ivZnqN2l4MDMxN30qWyY4v;ABAjH0ivZnqN2l4MDMxN30qWyY4v&site_url=https://www.citypng.com/photo/11861/hd-green-check-true-tick-mark-icon-sign-png&pub_id=1&sup_platform=1&cachebuster=707683.9351451269&ft_keyword=DV360CampID:__21329366619__&ft_section=DV360CampID:21329366619";
+var ftKeyword_9116854="";
+var ftCustom_9116854="";
+var ftSection_9116854="DV360CampID:21329366619";
+var ftSegment_9116854="";
+var ftSegmentList_9116854=[];
+var ftRuleMatch_9116854="0";
+var ftTimestamp_9116854="1758355216";
+var ftGeoC2_9116854="in";
+var ftGeoState_9116854="dl";
+var ftGeoCity_9116854="delhi";
+var ftISP_9116854="anl network pvt ltd";
+var ftSpeed_9116854="broadband";
+var ftConnType_9116854="wifi";
+var ftDMA_9116854="356001";
+var ftLong_9116854="77.24";
+var ftLat_9116854="28.51";
+var ftPostal_9116854="110062";
+var ftTimeZone_9116854="+530";
+var ftMobileCarrier_9116854="";
+var ftImp9116854 = {};
+ftImp9116854.privacy = "x";
+ftImp9116854.guidAge = "116";
+ftImp9116854.impID = "C0FEB27C-044F-5340-9598-4D0D48A4FB83";
+ftImp9116854.duid = "FT:6356F8E240D4CC";
+
+ftImp9116854.ft_tpplid = "";
+ftImp9116854.ft_c = {};
+ftImp9116854.gdpr = "";
+ftImp9116854.gdpr_consent = "";
+ftImp9116854.gdpr_pd = "";
+ftImp9116854.oob_consent = "";
+ftImp9116854.gdprStoredConsent = "";
+ftImp9116854.us_privacy = "!!US_PRIVACY!";
+ftImp9116854.gpc = "";
+
+ftImp9116854.jsAppend = "1";
+var ftCreativeId_9116854 = "5298724";
+(function(){var tag=document.getElementById("ft_servedby_9116854")||function(s){return s[s.length-1]}(document.getElementsByTagName("script")),js=document.createElement("script");js.src="https://ajs-assets.ftstatic.com/ftUtils.js";js.id="ftscript_m9116854";js.setAttribute("name","ftscript_m9116854");tag.parentNode.insertBefore(js,tag)})();window.fTChecker=window.fTChecker||function(id){if(!id)return false;id=""+id;if(window.hasOwnProperty("ftUtils")){window["ft"+id]=Object.assign({},window.ftUtils.common);window["ft"+id].getBannerConfig(id)}else(function(id){window.setTimeout(function(){window.fTChecker(id)},50)})(id)};window.fTChecker("9116854");
+
