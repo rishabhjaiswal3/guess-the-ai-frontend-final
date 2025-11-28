@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import clips from '../../assets/Clip.png';
 import DemonImage from '../../assets/Demon .png';
 import { getProfile } from '../../api/auth';
@@ -18,9 +18,9 @@ type ProfileData = {
 
 const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const { isConnected } = useAccount();
+  const { authenticated } = usePrivy();
   const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = isConnected || (isIframeSession && hasToken);
+  const isSessionActive = authenticated || (isIframeSession && hasToken);
 
   useEffect(() => {
     const fetchProfile = async () => {

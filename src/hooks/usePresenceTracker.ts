@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { useAccount } from 'wagmi';
 import { SESSION_CHANGE_EVENT, SESSION_SOURCES, getSessionSource } from '../utils/session';
 
 const FRONT_BUFFER_MS = Number(import.meta.env.VITE_PRESENCE_FRONT_BUFFER_MS ?? 10_000);
@@ -25,8 +24,7 @@ const readPending = () => {
   return Number(localStorage.getItem(STORAGE_KEY)) || 0;
 };
 
-export default function usePresenceTracker(token?: string | null) {
-  const { isConnected } = useAccount();
+export default function usePresenceTracker(token?: string | null, hasWalletSession = false) {
   const socketRef = useRef<Socket | null>(null);
   const tickTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const frontTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,7 +66,7 @@ export default function usePresenceTracker(token?: string | null) {
       path: '/ws',
       transports: ['websocket'],
       auth: { token },
-      autoConnect: !!(token && (isConnected || allowWithoutWallet)),
+      autoConnect: !!(token && (hasWalletSession || allowWithoutWallet)),
     });
     socketRef.current.on('connect', () => {
       flushIfReady();
@@ -98,7 +96,7 @@ export default function usePresenceTracker(token?: string | null) {
       socketRef.current = null;
     }
 
-    if (!token || (!isConnected && !allowWithoutWallet)) {
+    if (!token || (!hasWalletSession && !allowWithoutWallet)) {
       cleanup();
       return undefined;
     }
@@ -121,7 +119,7 @@ export default function usePresenceTracker(token?: string | null) {
     window.addEventListener('storage', handleStorage);
 
     return cleanup;
-  }, [token, isConnected, allowWithoutWallet]);
+  }, [token, hasWalletSession, allowWithoutWallet]);
 
   useEffect(() => {
     const handleSessionChange = () => {

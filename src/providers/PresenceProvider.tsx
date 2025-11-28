@@ -1,4 +1,5 @@
 import { createContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
 import usePresenceTracker from '../hooks/usePresenceTracker';
 
 type PresenceContextValue = {
@@ -13,6 +14,7 @@ type PresenceProviderProps = {
 
 export default function PresenceProvider({ children }: PresenceProviderProps) {
   const [token, setToken] = useState(() => (typeof window !== 'undefined' ? localStorage.getItem('token') ?? '' : ''));
+  const { authenticated } = usePrivy();
 
   useEffect(() => {
     const syncFromStorage = (event: StorageEvent) => {
@@ -31,7 +33,7 @@ export default function PresenceProvider({ children }: PresenceProviderProps) {
     };
   }, []);
 
-  usePresenceTracker(token);
+  usePresenceTracker(token, authenticated);
 
   const value = useMemo(() => ({ token }), [token]);
   return <PresenceContext.Provider value={value}>{children}</PresenceContext.Provider>;

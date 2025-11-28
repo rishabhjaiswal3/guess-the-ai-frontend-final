@@ -1,5 +1,5 @@
 import { useState, useEffect, type ChangeEvent, type KeyboardEvent } from 'react';
-import { useAccount } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import WalletConnect from '../../components/WalletConnect';
 import './home.css';
 import { updateUserName } from '../../api/auth';
@@ -10,12 +10,12 @@ import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
 
 const Home = () => {
-  const { isConnected } = useAccount();
+  const { authenticated } = usePrivy();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { isIframeSession } = useSessionSource();
-  const isSessionActive = isConnected || isIframeSession;
+  const isSessionActive = authenticated || isIframeSession;
   
   // Load name from localStorage on component mount
   useEffect(() => {

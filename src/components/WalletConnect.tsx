@@ -1,93 +1,61 @@
-import { useEffect } from 'react';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useSwitchChain } from 'wagmi';
-import { login } from '../api/auth';
+import { useCallback, useEffect } from 'react';
+import { usePrivy, type PrivyUser } from '@privy-io/react-auth';
+import { login as backendLogin } from '../api/auth';
 import useSessionSource from '../hooks/useSessionSource';
 import { clearSessionStorage } from '../utils/session';
 import './WalletConnect.css';
 
+type WalletAccount = {
+  type?: string;
+  address?: string;
+};
+
+const getWalletAddress = (user?: PrivyUser | null) => {
+  if (!user) return '';
+  if (user.wallet?.address) {
+    return user.wallet.address;
+  }
+  const linkedWallet = user.linkedAccounts?.find(
+    (account) => (account as WalletAccount).type === 'wallet' && Boolean((account as WalletAccount).address),
+  ) as WalletAccount | undefined;
+  return linkedWallet?.address ?? '';
+};
+
 const WalletConnect = () => {
-  const { isConnected, address } = useAccount();
-  const { switchChain } = useSwitchChain();
+  const { ready, authenticated, login: openPrivyLogin, user } = usePrivy();
   const { isIframeSession } = useSessionSource();
 
-  const loginUser = async () => {
+  const loginUser = useCallback(async () => {
+    if (!authenticated) return;
+    const address = getWalletAddress(user);
+    if (!address) return;
     if (typeof window === 'undefined') return;
     const token = localStorage.getItem('token');
-    if (!token && address) {
-      await login(address);
+    if (!token) {
+      await backendLogin(address);
     }
-  };
+  }, [authenticated, user]);
 
-  // Store wallet address in local storage when connected
   useEffect(() => {
-    if (isConnected && address) {
+    if (authenticated) {
       loginUser();
     } else if (!isIframeSession) {
       clearSessionStorage();
     }
-  }, [isConnected, address, isIframeSession]);
+  }, [authenticated, loginUser, isIframeSession]);
 
-  useEffect(() => {
-    const switchToOgGalileo = async () => {
-      const chainId = Number(import.meta.env.VITE_CHAIN_ID);
-      if (isConnected) {
-        try {
-          if (Number.isFinite(chainId)) {
-            await switchChain({ chainId });
-          }
-        } catch (error) {
-          console.error('Failed to switch to 0G Galileo Testnet:', error);
-        }
-      }
-    };
-
-    switchToOgGalileo();
-  }, [isConnected, switchChain]);
-
-  const shouldHideConnect = isConnected || isIframeSession;
+  const shouldHideConnect = authenticated || isIframeSession;
 
   return (
-    <div className="wallet-connect-wrap" style={{display:shouldHideConnect?'none':'block'}}>
-      <ConnectButton 
-        label="Connect Wallet"
-        showBalance={false}
-        accountStatus="none"
-        chainStatus="none"
-        showNetworkModal={false}
+    <div className="wallet-connect-wrap" style={{ display: shouldHideConnect ? 'none' : 'block' }}>
+      <button
+        type="button"
+        className="connect-wallet-button"
+        onClick={() => openPrivyLogin()}
+        disabled={!ready}
       >
-        {({ account, chain, openConnectModal, mounted }) => {
-          return (
-            <div
-              {...(!mounted && {
-                'aria-hidden': true,
-                style: {
-                  background:'yellow',
-                  color:'green'
-                  // opacity: 0,
-                  // pointerEvents: 'none',
-                  // userSelect: 'none',
-                },
-              })}
-            >
-              {(() => {
-                if (!mounted || !account || !chain) {
-                  return (
-                    <button 
-                      onClick={openConnectModal} 
-                      type="button"
-                      className="connect-wallet-button"
-                    >
-                      Connect
-                    </button>
-                  );
-                }
-                return null;
-              })()}
-            </div>
-          );
-        }}
-      </ConnectButton>
+        {ready ? 'Connect' : 'Loading...'}
+      </button>
     </div>
   );
 };

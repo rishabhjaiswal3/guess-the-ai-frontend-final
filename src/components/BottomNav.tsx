@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAccount, useDisconnect } from 'wagmi';
+import { usePrivy } from '@privy-io/react-auth';
 import GameIcon from '../assets/Game.png';
 import LeaderboardIcon from '../assets/Leaderboard.png';
 import ProfileIcon from '../assets/Profile.png';
@@ -203,17 +203,16 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
 
 const BottomNav = (): JSX.Element | null => {
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
+  const { authenticated, logout } = usePrivy();
   const [, setShowWalletInfo] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = isConnected || (isIframeSession && hasToken);
+  const isSessionActive = authenticated || (isIframeSession && hasToken);
 
-  const handleDisconnect = () => {
-    if (isConnected) {
-      disconnect();
+  const handleDisconnect = async () => {
+    if (authenticated) {
+      await logout();
     }
     clearSessionStorage();
     setShowDisconnectModal(false);
