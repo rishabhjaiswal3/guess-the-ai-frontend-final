@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 56px;
+  height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,13 +21,13 @@
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));
 }
 
-/* Emphasize game logo, reduce company logo a bit */
-.brand-logo.left { height: 70px; margin-top:40px;margin-left:10px; }
-.brand-logo.right { height: 32px; margin-top:20px }
+/* Emphasize game logo, keep everything inside the bar */
+.brand-logo.left { height: 64px; margin-top: 0; margin-left: 10px; }
+.brand-logo.right { height: 32px; margin-top: 0; }
 
 @media (max-width: 480px) {
-  .top-brand-bar { height: 52px; padding: 6px 10px; }
+  .top-brand-bar { height: 72px; padding: 6px 10px; }
   .brand-logo { height: 30px; }
-  .brand-logo.left { height: 60px; margin-top: 20px; }
-  .brand-logo.right { height: 28px; }
+  .brand-logo.left { height: 56px; margin-top: 0; }
+  .brand-logo.right { height: 28px; margin-top: 0; }
 }

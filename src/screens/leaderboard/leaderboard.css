@@ -124,7 +124,7 @@
   overflow-y: auto;
   margin-top: 10px;
   height:100%;
-  padding-bottom: 100px;
+  padding-bottom: 80px;
   /* Define shared column template: name, correct, streak, all streak, rank */
   --lb-cols: 2fr 1fr 0.9fr 0.9fr 0.7fr;
 }
@@ -161,19 +161,17 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+
 /* Name column: compact with ellipsis */
 .leaderboard-item .lb-name {
   min-width: 0; /* allow shrinking so ellipsis can kick in */
   padding-right: 10px; /* ensure visual space before next column */
-  display: inline-block; /* so max-width can constrain for ellipsis */
+  display: inline-block; /* so width can respond to grid column */
   justify-self: start;
   text-align: left;
   font-size: 0.95rem;
   font-weight: 600;
   color: #eae2ff;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 
 /* Reveal full name on hover (tooltip) */
@@ -204,6 +202,11 @@
   font-weight: 700;
 }
 
+.leaderboard-header span {
+  color: #ffffff;
+  opacity: 1;
+}
+
 /* First column (name) base override so it isn't oversized */
 .leaderboard-item span:first-child {
   font-weight: 600;
@@ -213,12 +216,12 @@
   text-align: left;
 }
 
-/* Score styling */
+/* Rank styling (keep subtle on mobile) */
 .leaderboard-item span:last-child {
-  font-weight: bold;
-  color: #4caf50;
-  font-size: 1.5rem;
-  margin:auto;
+  font-weight: 500;
+  color: #eae2ff;
+  font-size: 0.95rem;
+  margin: auto;
   justify-content: center;
   align-items: center;
 }
@@ -243,6 +246,7 @@
   }
   .leaderboard-item {
     padding: 6px 8px;
+    margin: 8px 0; /* a bit more space between rows on mobile */
     column-gap: 14px; /* keep extra spacing on narrow screens */
   }
   .leaderboard-item span {
@@ -254,24 +258,30 @@
     line-height: 1.15;
   }
   .leaderboard-list {
-    /* shrink name column a bit more on small screens */
-    --lb-cols: 1.6fr 1fr 0.9fr 0.9fr 0.7fr;
+    /* shrink name column a bit more on small screens; hide rank column */
+    --lb-cols: 1.8fr 1fr 1fr 1fr 0fr;
   }
   .leaderboard-item .lb-name {
     font-size: 0.85rem;
-    max-width: 14ch; /* shorter names with ellipsis */
+    max-width: 12ch; /* shorter names with ellipsis so they don't approach next column */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
-}
 
-@media (max-width: 1024px) {
-  .leaderboard-item .lb-name { max-width: 20ch; font-size: 0.9rem; }
+  /* Hide rank column entirely on mobile */
+  .leaderboard-item span:last-child,
+  .leaderboard-header span:last-child {
+    display: none;
+  }
+
 }
 
 @media (max-width: 360px) {
   .leaderboard-list {
-    --lb-cols: 1.5fr 1fr 0.9fr 0.9fr 0.7fr;
+    --lb-cols: 1.6fr 1fr 1fr 1fr 0fr;
   }
-  .leaderboard-item .lb-name { max-width: 12ch; font-size: 0.8rem; }
+  .leaderboard-item .lb-name { max-width: 10ch; font-size: 0.8rem; }
 }
 
 @media (max-width: 360px) {

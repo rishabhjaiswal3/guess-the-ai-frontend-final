@@ -18,6 +18,14 @@ const privyAppId = import.meta.env.VITE_PRIVY_APP_ID;
 const privyConfig: PrivyClientConfig = {
   appearance: {
     theme: 'dark',
+    walletChainType: 'ethereum-only',
+  },
+  embeddedWallets: {
+    createOnLogin: 'users-without-wallets',
+  },
+  loginMethods: ['email', 'sms', 'wallet', 'google'],
+  intl: {
+    defaultCountry: 'US',
   },
 };
 

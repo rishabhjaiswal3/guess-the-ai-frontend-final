@@ -17,6 +17,7 @@ const Leaderboard = () => {
   const [leaderboard,setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
  
   const getLeaderboardData = useCallback(async () => {
     setLoading(true);
@@ -36,18 +37,34 @@ const Leaderboard = () => {
     getLeaderboardData();
   },[getLeaderboardData])
 
-  const getUserName = (userName?: string) => {
-    if (!userName) return '';
-    try {
-      if (typeof window !== 'undefined' && window.innerWidth <= 500) {
-        const max = 10; // character cap for small screens
-        return userName.length > max ? `${userName.slice(0, max - 4)}...` : userName;
+  useEffect(() => {
+    const updateIsMobile = () => {
+      if (typeof window !== 'undefined') {
+        setIsMobile(window.innerWidth <= 600);
       }
-      return userName;
-    } catch {
-      return userName;
+    };
+
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+
+    return () => {
+      window.removeEventListener('resize', updateIsMobile);
+    };
+  }, []);
+
+  const getUserName = (userName?: string) => {
+    const name = userName ?? '';
+
+    if (!isMobile) {
+      return name;
     }
-  }
+
+    if (name.length <= 10) {
+      return name;
+    }
+
+    return `${name.slice(0, 9)}...`;
+  };
 
   return (
     <div 
@@ -64,12 +81,12 @@ const Leaderboard = () => {
         </div>
         <div className="leaderboard-list">
           <div className="leaderboard-item leaderboard-header">
-              <span>Players</span>
-              <span>Correct Answers</span>
-              <span>Streak</span>
-              <span>Best Streak</span>
-              <span>Rank</span>
-            </div>
+            <span>Players</span>
+            <span>Correct</span>
+            <span>Streak</span>
+            <span>Best</span>
+            <span>#</span>
+          </div>
           {loading ? (
             <div className="lb-loader-wrap" role="status" aria-live="polite" aria-label="Loading leaderboard">
               <div className="lb-spinner" />

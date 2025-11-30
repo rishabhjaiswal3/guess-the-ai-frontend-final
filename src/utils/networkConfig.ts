@@ -3,7 +3,6 @@ import type { Chain } from 'viem/chains';
 const ogGalileoTestnet = {
   id: 16601,
   name: '0G Galileo Testnet',
-  network: '0G-Galileo-Testnet',
   nativeCurrency: {
     decimals: 18,
     name: 'OG',
@@ -23,7 +22,6 @@ const ogGalileoTestnet = {
 const ogMainnet = {
   id: 16661,
   name: 'Aristotle',
-  network: 'Aristotle',
   nativeCurrency: {
     decimals: 18,
     name: 'OG',

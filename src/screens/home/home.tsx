@@ -14,8 +14,8 @@ const Home = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { isIframeSession } = useSessionSource();
-  const isSessionActive = authenticated || isIframeSession;
+  const { isIframeSession, hasToken } = useSessionSource();
+  const isSessionActive = authenticated || isIframeSession || hasToken;
   
   // Load name from localStorage on component mount
   useEffect(() => {

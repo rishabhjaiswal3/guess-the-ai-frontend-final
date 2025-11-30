@@ -20,7 +20,7 @@ body {
   padding: 20px;
   padding-top: 92px; /* start below top bar */
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible; /* allow main-content to handle scrolling */
 }
 
 .profile-decor-bottom {
@@ -54,13 +54,13 @@ body {
   width: 100%;
   display:flex;
   border: 1px solid rgba(157, 107, 255, 0.35);
-  padding:12px;
-  min-height:90px;
+  padding: 12px 14px;
+  min-height: 90px;
   justify-content: space-between;
   align-items: center;
   border-radius: 12px;
-  background: transparent; /* remove header background */
-  box-shadow: none;
+  background: radial-gradient(circle at top left, rgba(156,92,255,0.16), transparent 55%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 .logo {
@@ -73,13 +73,13 @@ body {
 .player-info {
   text-align: left;
   flex-grow: 1;
-  padding: 0 40px;
+  padding: 0 18px;
   max-width: 70%;
   word-break: break-all;
 }
 
 .player-name {
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   margin: 0 0 10px;
   font-weight: 900;
   background: linear-gradient(90deg, #FF4D4D, #FFD166 35%, #4BE1EC 70%, #9C5CFF);
@@ -91,12 +91,13 @@ body {
 }
 
 .wallet {
-  font-size: 1rem;
-  color: #9c5cff;
+  font-size: 0.95rem;
+  color: #c8b8ff;
   font-family: 'Courier New', monospace;
   margin: 0;
   word-break: break-all;
-  font-weight: bold;
+  font-weight: 500;
+  opacity: 0.9;
 }
 
 .wallet span {
@@ -105,25 +106,29 @@ body {
 }
 
 .rank-box {
-  background: #2c005a;
-  border: 2px solid #ff4c4c;
-  padding: 10px 20px;
-  border-radius: 10px;
-  text-align: center;
-  min-width: 100px;
+  background: rgba(44, 0, 90, 0.9);
+  border: 1px solid rgba(255, 204, 128, 0.9);
+  padding: 8px 14px;
+  border-radius: 12px;
+  min-width: 96px;
   box-shadow: 0 0 15px rgba(255, 76, 76, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
 }
 
 .rank-text {
-  font-size: 1.5rem;
-  color: #fff;
+  font-size: 0.85rem;
+  color: #ffe3b3;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
 }
 
 .rank-badge {
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   font-weight: bold;
   color: #fff;
   background: linear-gradient(45deg, #ff4c4c, #ff8c4c);
@@ -140,39 +145,31 @@ body {
 }
 
 .profile-card {
-  /* width:900px; */
-  width:90vw;
-  max-width: 96%;
-  padding:10px;
+  width: 100%;
+  max-width: 100%;
+  padding: 18px 18px 16px;
   margin-top:20px;
   background: rgba(42, 10, 79, 0.5);
   border-radius: 12px;
   border: 1px solid rgba(157, 107, 255, 0.25);
   display: flex;
-  justify-content: space-around;
-  align-items: center;
+  justify-content: space-between;
+  align-items: stretch;
   box-shadow: 0 0 30px rgba(156, 92, 255, 0.3);
   backdrop-filter: blur(10px);
   
 }
 
-@media screen and (max-width: 500px) {
-
-  .profile-card {
-    display:flex;
-    flex-direction: column-reverse;
-  }
-}
-  
-
 .stats {
- padding:20px
+  padding: 4px 4px 4px 0;
+  flex: 1.2;
 }
 
 .stat {
   display: flex;
   align-items: center;
-  margin: 15px 0;
+  justify-content: space-between;
+  margin: 10px 0;
 }
 
 .icon {
@@ -183,11 +180,11 @@ body {
 
 .label {
   display: block;
-  font-size: 0.9rem;
-  margin-bottom: 8px;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
   color: #bbb;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.12em;
 }
 
 .stat h2 {
@@ -222,6 +219,8 @@ hr {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex: 0.9;
+  margin-left: 18px;
 }
 
 .badge:hover {
@@ -280,7 +279,7 @@ hr {
   }
   
   .player-info {
-    padding: 15px 0;
+    padding: 10px 0;
   }
 
   
@@ -293,11 +292,20 @@ hr {
   .badge {
     margin-top: 20px;
     width: 100%;
+    margin-left: 0;
   }
   
   .badge-img {
     width: 120px;
     height: 120px;
+  }
+
+  .player-name {
+    font-size: 1.4rem;
+  }
+
+  .wallet {
+    font-size: 0.85rem;
   }
 }
 
@@ -314,4 +322,71 @@ hr {
 .rank-badge:hover, .badge:hover .badge-img {
   animation: pulse 1.5s infinite;
   transform: scale(1.05);
+}
+
+.player-avatar-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 2px solid rgba(156,92,255,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 0%, rgba(255,255,255,0.18), transparent 55%);
+  box-shadow: 0 0 18px rgba(156,92,255,0.5);
+}
+
+.avatar-initial {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  text-shadow: 0 0 10px rgba(156,92,255,0.7);
+}
+
+.stat-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media screen and (max-width: 500px) {
+  .profile-header {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .player-info {
+    padding: 0 8px;
+    max-width: 65%;
+  }
+
+  .rank-box {
+    width: 100%;
+    margin-top: 8px;
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    text-align: left;
+  }
+
+  .profile-card {
+    flex-direction: column-reverse;
+  }
+
+  .badge {
+    margin-top: 16px;
+  }
+
+  .player-name {
+    font-size: 1.2rem;
+  }
+
+  .wallet {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
 }

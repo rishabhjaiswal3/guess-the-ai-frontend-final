@@ -1,8 +1,16 @@
-import axios, { type AxiosError, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, {
+  type AxiosError,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+} from 'axios';
 import axiosRetry from 'axios-retry';
 import { SESSION_SOURCES, setSessionSource } from '../utils/session';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+// Debug: log API base URL once on module load
+// eslint-disable-next-line no-console
+console.log('[api] Using API_BASE_URL:', API_BASE_URL || '(none)');
 
 const api = axios.create({
   baseURL: API_BASE_URL || undefined,
@@ -27,10 +35,9 @@ api.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
-        config.headers = {
-          ...config.headers,
-          Authorization: `Bearer ${token}`,
-        };
+        const headers = config.headers ?? {};
+        (headers as any).Authorization = `Bearer ${token}`;
+        config.headers = headers;
       }
     }
     return config;
@@ -112,10 +119,14 @@ const login = async (walletAddress?: string | null) => {
   if (!walletAddress) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
+    // eslint-disable-next-line no-console
+    console.log('[api/login] Existing JWT found, redirecting to /game');
     window.location.href = '/game';
     return undefined;
   }
   try {
+    // eslint-disable-next-line no-console
+    console.log('[api/login] Sending /user/login request', { walletAddress });
     const response = await apiInterceptor<ApiSuccessResponse<LoginPayload>>({
       method: 'post',
       url: '/user/login',
@@ -132,9 +143,15 @@ const login = async (walletAddress?: string | null) => {
       setSessionSource(SESSION_SOURCES.WALLET);
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
     }
+    // eslint-disable-next-line no-console
+    console.log('[api/login] Login succeeded; token and username stored', {
+      hasToken: !!newToken,
+      username: payload.username,
+    });
     return response.data;
   } catch (error) {
-    console.error('Login failed', error);
+    // eslint-disable-next-line no-console
+    console.error('[api/login] Login failed', error);
     return { success: false, message: 'Login failed', data: { token: '' } };
   }
 };

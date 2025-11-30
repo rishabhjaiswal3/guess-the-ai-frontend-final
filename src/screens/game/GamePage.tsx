@@ -60,6 +60,28 @@ const GamePage = () => {
   const objectUrlRef = useRef<string | null>(null);
   const indexerBaseUrl = import.meta.env.VITE_INDEXER_BASE_URL ?? 'https://indexer-storage-turbo.0g.ai/file?root=';
   const current = imageState.current;
+
+  const clampImageHeight = (rawHeight: number | undefined | null) => {
+    const base = rawHeight && rawHeight > 0 ? rawHeight : 300;
+    if (typeof window === 'undefined') return base;
+    const vh = window.innerHeight || 640;
+    const vw = window.innerWidth || 1024;
+    let maxFraction: number;
+    if (vw <= 600) {
+      // compact image on small phones
+      maxFraction = 0.33;
+    } else if (vw <= 1024) {
+      // slightly smaller image on tablet / 1024px width to avoid vertical overflow
+      maxFraction = 0.30;
+    } else {
+      // larger desktops can afford a bit more height
+      maxFraction = 0.40;
+    }
+    const max = Math.max(200, Math.floor(vh * maxFraction));
+    const min = 180;
+    return Math.min(Math.max(base, min), max);
+  };
+
   const buildApiUrl = (path?: string) => {
     if (!path) return '';
     if (/^https?:\/\//i.test(path)) return path;
@@ -363,7 +385,8 @@ const GamePage = () => {
   useEffect(() => {
     const onResize = () => {
       if (imgRef.current) {
-        setImageBoxHeight(imgRef.current.getBoundingClientRect().height || 300);
+        const h = imgRef.current.getBoundingClientRect().height || 300;
+        setImageBoxHeight(clampImageHeight(h));
       }
     };
     window.addEventListener('resize', onResize);
@@ -374,6 +397,9 @@ const GamePage = () => {
     <div className="game-container game-bg">
       <img src={clips} alt="Decor bottom" className="game-decor-bottom" />
       <div className="game-card">
+        <div className="game-title">
+          Guess the AI
+        </div>
         <div className="game-stats">
           <div className="stat">
             <img src={streak} className="stat-icon" alt="Streak" />
@@ -395,7 +421,7 @@ const GamePage = () => {
               ref={imgRef}
               onLoad={(e) => {
                 const h = e.currentTarget.getBoundingClientRect().height;
-                if (h) setImageBoxHeight(h);
+                setImageBoxHeight(clampImageHeight(h));
                 setImageLoading(false);
               }}
               onError={() => {

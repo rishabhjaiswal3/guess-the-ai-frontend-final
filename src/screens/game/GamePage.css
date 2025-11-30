@@ -10,17 +10,21 @@
 .game-container {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  overflow-y: auto; /* allow scroll on small screens */
-  padding: 20px;
-  padding-top: 92px; /* start below top bar */
+  min-height: calc(100vh - 160px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Let the main layout handle scrolling; avoid nested scroll areas */
+  overflow: visible;
+  padding: 16px 16px 32px;
   box-sizing: border-box;
 }
 
 .game-card {
   width: min(92vw, 520px);
-  margin: 16px auto 110px; /* space for bottom bar */
-  padding: 22px;
+  margin: 18px auto 16px;
+  padding: 20px 18px 18px;
   border-radius: 18px;
   border: 1px solid rgba(157, 107, 255, 0.28);
   background: linear-gradient(180deg, rgba(42, 10, 79, 0.46) 0%, rgba(27, 0, 63, 0.32) 100%);
@@ -35,7 +39,22 @@
   z-index: 2;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.25s ease;
-  min-height: 560px;
+  min-height: 420px;
+}
+
+.game-title {
+  width: 100%;
+  text-align: left;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+  background: linear-gradient(90deg, #FF4D4D, #FFD166 35%, #4BE1EC 70%, #9C5CFF);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 16px rgba(156, 92, 255, 0.35);
 }
 
 .game-card::before {
@@ -105,7 +124,7 @@
 /* Image area wrapper to prevent layout shift */
 .image-wrap {
   width: 100%;
-  min-height: 300px; /* reserve space so height doesn't jump */
+  min-height: 220px; /* reserve space so height doesn't jump */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,6 +264,56 @@
   .stat-icon { width: 42px; height: 42px; }
   .stat-label { font-size: 0.9rem; }
   .btn-image { max-width: 150px; }
+  .game-card {
+    padding: 16px 14px 14px;
+    margin: 8px auto 16px;
+  }
+  .image-wrap {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-card {
+    margin-bottom: 0;
+  }
+  .image-wrap {
+    min-height: 240px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .game-container {
+    min-height: calc(100vh - 160px);
+    padding-inline: 24px;
+  }
+
+  .game-card {
+    padding: 24px 28px 24px;
+    gap: 18px;
+  }
+
+  .game-stats {
+    gap: 18px;
+  }
+
+  .stat {
+    flex: 1;
+    padding: 14px 18px;
+  }
+
+  .stat-icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .image-wrap {
+    min-height: 260px;
+  }
+
+  .btn-image {
+    max-width: 220px;
+  }
 }
 
 @media (max-width: 360px) {

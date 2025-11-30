@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePrivy } from '@privy-io/react-auth';
 import GameIcon from '../assets/Game.png';
@@ -201,14 +201,14 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
   );
 };
 
-const BottomNav = (): JSX.Element | null => {
+const BottomNav = (): ReactElement | null => {
   const navigate = useNavigate();
   const { authenticated, logout } = usePrivy();
   const [, setShowWalletInfo] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = authenticated || (isIframeSession && hasToken);
+  const isSessionActive = authenticated || hasToken;
 
   const handleDisconnect = async () => {
     if (authenticated) {

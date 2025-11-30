@@ -1,47 +1,65 @@
-/* .wallet-connect-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-}
-
+/* Container for the connect button on the home screen */
 .wallet-connect-wrap {
-  width: clamp(260px, 50vw, 360px);
+  width: clamp(260px, 80vw, 360px);
+  margin: 4px auto 0;
 }
 
-/* Attractive, wider connect button 
+/* Primary "Connect" button – gradient, glassy, bold */
 .connect-wallet-button {
-  background-color: yellow;
   width: 100%;
-  padding: 14px 20px;
-  border-radius: 14px;
-  border: 1px solid rgba(123, 63, 228, 0.6);
-  background: linear-gradient(135deg, #7b3fe4 0%, #9d6bff 50%, #6a30c9 100%);
+  padding: 16px 22px;
+  border-radius: 16px;
+  border: 1px solid rgba(123, 63, 228, 0.7);
+  background:
+    radial-gradient(120% 180% at 0% 0%, rgba(255, 77, 77, 0.2), transparent),
+    radial-gradient(140% 200% at 100% 0%, rgba(75, 225, 236, 0.16), transparent),
+    linear-gradient(135deg, #7b3fe4 0%, #9d6bff 45%, #6a30c9 100%);
   color: #fff;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 22px rgba(123, 63, 228, 0.35), 0 2px 6px rgba(0,0,0,0.3);
+  text-transform: uppercase;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.6),
+    0 8px 24px rgba(123, 63, 228, 0.45);
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  backdrop-filter: blur(2px);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease,
+    background-position 0.25s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
-.connect-wallet-button:hover {
+.connect-wallet-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(123, 63, 228, 0.45), 0 4px 10px rgba(0,0,0,0.35);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.7),
+    0 12px 32px rgba(123, 63, 228, 0.6);
   filter: brightness(1.05);
 }
 
-.connect-wallet-button:active {
+.connect-wallet-button:active:not(:disabled) {
   transform: translateY(0);
-  box-shadow: 0 6px 16px rgba(123, 63, 228, 0.35), 0 2px 6px rgba(0,0,0,0.35);
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.6),
+    0 6px 20px rgba(123, 63, 228, 0.5);
   filter: brightness(0.98);
+}
+
+.connect-wallet-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
 }
 
 .connect-wallet-button:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(157, 107, 255, 0.35), 0 8px 22px rgba(123, 63, 228, 0.35);
+  box-shadow:
+    0 0 0 2px rgba(15, 23, 42, 0.9),
+    0 0 0 5px rgba(157, 107, 255, 0.6),
+    0 16px 40px rgba(123, 63, 228, 0.6);
 }
 
 @media (max-width: 480px) {
@@ -50,66 +68,7 @@
     max-width: 380px;
   }
   .connect-wallet-button {
-    padding: 16px 20px;
-    font-size: 17px;
+    padding: 18px 20px;
+    font-size: 16px;
   }
 }
-
-.wallet-connect-container button {
-  background-color: red;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.wallet-connect-container button > div,
-.wallet-connect-container button > svg,
-.wallet-connect-container button::after,
-.wallet-connect-container button > div > svg,
-.wallet-connect-container button > div > div > svg {
-  display: none !important;
-}
-
-.wallet-connect-container button {
-  position: relative;
-  padding-right: 16px !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.wallet-connect-container button > span {
-  position: relative;
-  display: inline-block;
-  margin-right: 0 !important;
-}
-
-.wallet-connect-container button > div[aria-hidden="true"] {
-  display: none !important;
-  width: 0 !important;
-  min-width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.wallet-connect-container button:hover {
-  background-color: #6a30c9;
-  transform: translateY(-1px);
-}
-
-@media (max-width: 768px) {
-  .wallet-connect-container {
-    top: 15px;
-    right: 15px;
-  }
-  
-  .wallet-connect-container button {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-} */
