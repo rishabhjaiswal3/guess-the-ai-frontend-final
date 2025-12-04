@@ -186,8 +186,11 @@
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
 }
 
-.result-badge.correct { background: #16a34a; /* green-600 */ }
-.result-badge.incorrect { background: #dc2626; /* red-600 */ }
+.result-badge.correct,
+.result-badge.incorrect {
+  background: transparent;
+  box-shadow: none;
+}
 
 /* Loader */
 .game-loader {
@@ -257,6 +260,7 @@
   color: #ffb4b4;
   font-size: 12px;
 }
+
 
 @media (max-width: 480px) {
   .game-stats { flex-wrap: wrap; justify-content: center; }

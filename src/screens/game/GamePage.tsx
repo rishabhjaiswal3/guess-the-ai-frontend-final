@@ -43,6 +43,7 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
 
 const GamePage = () => {
   const PREFETCH_THRESHOLD = Number(import.meta.env.VITE_PREFETCH_THRESHOLD || 6);
+  const PREFETCH_AHEAD = Number(import.meta.env.VITE_PREFETCH_AHEAD || 4);
   const MAX_IMAGE_FETCH_RETRIES = Number(import.meta.env.VITE_INDEXER_FETCH_RETRIES || 3);
   const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
   const [imageState, setImageState] = useState<ImageState>({ current: null, queue: [] });
@@ -55,9 +56,12 @@ const GamePage = () => {
   const [prefetching, setPrefetching] = useState(false);
   const [displaySrc, setDisplaySrc] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+  const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
   const objectUrlRef = useRef<string | null>(null);
+  const preloadedHashesRef = useRef<Set<string>>(new Set());
+  const imageBlobUrlCacheRef = useRef<Map<string, string>>(new Map());
   const indexerBaseUrl = import.meta.env.VITE_INDEXER_BASE_URL ?? 'https://indexer-storage-turbo.0g.ai/file?root=';
   const current = imageState.current;
 
@@ -136,8 +140,16 @@ const GamePage = () => {
   };
 
   const cleanupObjectUrl = () => {
-    if (objectUrlRef.current) {
-      URL.revokeObjectURL(objectUrlRef.current);
+    const currentUrl = objectUrlRef.current;
+    if (currentUrl) {
+      URL.revokeObjectURL(currentUrl);
+      const cache = imageBlobUrlCacheRef.current;
+      for (const [hash, url] of cache.entries()) {
+        if (url === currentUrl) {
+          cache.delete(hash);
+          break;
+        }
+      }
       objectUrlRef.current = null;
     }
   };
@@ -172,6 +184,65 @@ const GamePage = () => {
     return [];
   };
 
+  const preloadHashes = async (
+    hashes: string[],
+    onProgress?: (completed: number, total: number) => void,
+  ): Promise<void> => {
+    if (typeof window === 'undefined') return;
+    const preloaded = preloadedHashesRef.current;
+    const unique: string[] = [];
+    hashes.forEach((hash) => {
+      if (!hash) return;
+      if (preloaded.has(hash)) return;
+      if (imageBlobUrlCacheRef.current.has(hash)) {
+        preloaded.add(hash);
+        return;
+      }
+      preloaded.add(hash);
+      unique.push(hash);
+    });
+    if (!unique.length) return;
+
+    const total = unique.length;
+    let completed = 0;
+
+    await Promise.all(unique.map(async (hash) => {
+      let lastError: unknown = null;
+      for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
+        try {
+          const url = `${indexerBaseUrl}${encodeURIComponent(hash)}`;
+          const response = await fetch(url, { cache: 'default' });
+          if (!response.ok) {
+            throw new Error(`indexer status ${response.status}`);
+          }
+          const contentType = response.headers.get('content-type') ?? '';
+          const isImage = contentType.toLowerCase().includes('image/');
+          if (!isImage) {
+            throw new Error(`unexpected content-type ${contentType}`);
+          }
+          const blob = await response.blob();
+          if (!blob || !blob.size) {
+            throw new Error('empty image payload');
+          }
+          const objectUrl = URL.createObjectURL(blob);
+          imageBlobUrlCacheRef.current.set(hash, objectUrl);
+          completed += 1;
+          if (onProgress) {
+            onProgress(completed, total);
+          }
+          return;
+        } catch (err) {
+          lastError = err;
+        }
+      }
+      completed += 1;
+      if (onProgress) {
+        onProgress(completed, total);
+      }
+      console.error('Error preloading image after retries:', lastError);
+    }));
+  };
+
   const loadInitialImages = async (): Promise<void> => {
     try {
       setIsLoading(true);
@@ -183,6 +254,18 @@ const GamePage = () => {
         return;
       }
       setImageState({ current: batch[0] ?? null, queue: batch.slice(1) });
+      const hashes = batch
+        .slice(1, 1 + PREFETCH_AHEAD)
+        .map((item) => item.hash)
+        .filter((hash): hash is string => Boolean(hash));
+      if (hashes.length) {
+        setInitialPreloadProgress({ total: hashes.length, completed: 0 });
+        preloadHashes(hashes, (completed, total) => {
+          setInitialPreloadProgress({ total, completed });
+        }).catch((err) => {
+          console.error('Error preloading initial images:', err);
+        });
+      }
     } catch (error) {
       console.error('Error initializing images:', error);
       setError('Failed to load image. Please try again.');
@@ -295,11 +378,22 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
+    const hashes = imageState.queue
+      .slice(0, PREFETCH_AHEAD)
+      .map((item) => item.hash)
+      .filter((hash): hash is string => Boolean(hash));
+    if (!hashes.length) return;
+    preloadHashes(hashes).catch((err) => {
+      console.error('Error preloading queue images:', err);
+    });
+  }, [imageState.queue, indexerBaseUrl]);
+
+  useEffect(() => {
     let cancelled = false;
 
     const fetchIndexerImage = async (hash: string): Promise<string> => {
       const url = `${indexerBaseUrl}${encodeURIComponent(hash)}`;
-      const response = await fetch(url, { cache: 'no-store' });
+      const response = await fetch(url, { cache: 'default' });
       if (!response.ok) {
         throw new Error(`indexer status ${response.status}`);
       }
@@ -331,6 +425,13 @@ const GamePage = () => {
       }
 
       setImageLoading(true);
+      const cachedObjectUrl = imageBlobUrlCacheRef.current.get(current.hash);
+      if (cachedObjectUrl) {
+        objectUrlRef.current = cachedObjectUrl;
+        setDisplaySrc(cachedObjectUrl);
+        setError('');
+        return;
+      }
       let lastError: unknown = null;
       for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
         try {
@@ -339,6 +440,7 @@ const GamePage = () => {
             if (objectUrl) URL.revokeObjectURL(objectUrl);
             return;
           }
+          imageBlobUrlCacheRef.current.set(current.hash, objectUrl);
           objectUrlRef.current = objectUrl;
           setDisplaySrc(objectUrl);
           setError('');
@@ -380,6 +482,10 @@ const GamePage = () => {
 
   useEffect(() => () => {
     cleanupObjectUrl();
+    imageBlobUrlCacheRef.current.forEach((url) => {
+      URL.revokeObjectURL(url);
+    });
+    imageBlobUrlCacheRef.current.clear();
   }, []);
 
   useEffect(() => {
@@ -412,12 +518,11 @@ const GamePage = () => {
         </div>
 
         <div className={`image-wrap ${(isLoading || processing || imageLoading) && current ? 'processing' : ''}`} style={{ height: imageBoxHeight }}>
-          {current ? (
-          
-            <img 
-              src={displaySrc || resolveImageSrc(current)} 
-              alt="AI or Human?" 
-              className={"game-image"}
+          {current && (displaySrc || resolveImageSrc(current)) ? (
+            <img
+              src={displaySrc || resolveImageSrc(current)}
+              alt="AI or Human?"
+              className="game-image"
               ref={imgRef}
               onLoad={(e) => {
                 const h = e.currentTarget.getBoundingClientRect().height;
@@ -440,14 +545,11 @@ const GamePage = () => {
               <div className="spinner" />
             </div>
           )}
-          {/* {answerResult && (
-          <div style={{background:'red',width:'100vw',}}>
-            
-            <div className={`result-badge image-overlay ${answerResult}`} style={{margin:'auto'}} aria-live="polite">
-              {answerResult === 'correct' ? '✓' : '✕'}
+          {answerResult && (
+            <div className={`result-badge ${answerResult}`} aria-live="polite">
+              {answerResult === 'correct' ? '👍' : '🙁'}
             </div>
-          </div>
-          )} */}
+          )}
         </div>
 
         <div className="guess-buttons">
