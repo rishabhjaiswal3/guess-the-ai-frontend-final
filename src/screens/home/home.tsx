@@ -1,5 +1,5 @@
 import { useState, useEffect, type ChangeEvent, type KeyboardEvent } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
+import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
 import WalletConnect from '../../components/WalletConnect';
 import './home.css';
 import { updateUserName } from '../../api/auth';
@@ -10,13 +10,37 @@ import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
 
 const Home = () => {
-  const { authenticated } = usePrivy();
+  const { authenticated, user } = usePrivy();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const { isIframeSession, hasToken } = useSessionSource();
   const isSessionActive = authenticated || isIframeSession || hasToken;
+  const { createWallet } = useCreateWallet();
   
+  // Check and create wallet for new email users
+  useEffect(() => {
+    const checkAndCreateWallet = async () => {
+      if (authenticated && user && createWallet) {
+        // Check if user has a wallet
+        const hasWallet = user.wallet?.address || 
+          (user.linkedAccounts || []).some(acc => acc.type === 'wallet');
+        
+        if (!hasWallet) {
+          try {
+            // Create a wallet for the user
+            await createWallet();
+            console.log('Wallet created successfully');
+          } catch (error) {
+            console.error('Error creating wallet:', error);
+          }
+        }
+      }
+    };
+
+    checkAndCreateWallet();
+  }, [authenticated, user, createWallet]);
+
   // Load name from localStorage on component mount
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -29,21 +53,30 @@ const Home = () => {
   const navigateToGame = async () => {
     setError('');
     setSuccess('');
-    console.log(' my username is ', name);
-    const res = await updateUserName(name);
-    if(res.success) 
-    {
-      // console.log("navigation with updating userName")
-      if (typeof window !== 'undefined' && name.trim() && isSessionActive) {
-        localStorage.setItem('username', name.trim());
-        localStorage.setItem('userName', name.trim());
+    console.log('my username is', name);
+    
+    try {
+      const res = await updateUserName(name);
+      if (res.success) {
+        if (typeof window !== 'undefined' && name.trim() && isSessionActive) {
+          localStorage.setItem('username', name.trim());
+          localStorage.setItem('userName', name.trim());
+        }
+        setSuccess('Username updated Successfully !!');
+        setError('');
+      } else {
+        // Handle specific error messages from the server
+        const errorMessage = res.message?.toLowerCase() || 'internal error';
+        if (errorMessage.includes('internal error')) {
+          setError('username already exist or Please choose a different one.');
+        } else {
+          setError(res.message || 'Failed to update username');
+        }
+        setSuccess('');
       }
-      setSuccess('Username updated Successfully !!');
-      setError('');
-    }
-    else {
-      console.log('failure case ', res.message);
-      setError(res.message ?? '');
+    } catch (err) {
+      console.error('Error updating username:', err);
+      setError('An error occurred while updating your username. Please try again.');
       setSuccess('');
     }
   };
