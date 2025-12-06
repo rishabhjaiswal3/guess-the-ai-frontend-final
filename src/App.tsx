@@ -21,7 +21,7 @@ const privyConfig: PrivyClientConfig = {
     walletChainType: 'ethereum-only',
   },
   embeddedWallets: {
-    createOnLogin: 'users-without-wallets',
+    createOnLogin: 'off',
   },
   loginMethods: ['email', 'sms', 'wallet', 'google'],
   intl: {
