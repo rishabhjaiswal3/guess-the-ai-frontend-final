@@ -48,7 +48,7 @@ const Profile = () => {
     ? profileData.rank
     : '--';
 
-  const walletLabel = isSessionActive
+  const walletLabel = profileData?.walletAddress
     ? (profileData?.walletAddress || 'Wallet connected')
     : 'Not connected';
 
