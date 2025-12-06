@@ -1,4 +1,5 @@
 import { useState, useEffect, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
 import WalletConnect from '../../components/WalletConnect';
 import './home.css';
@@ -87,6 +88,23 @@ const Home = () => {
     setName(newName);
   };
 
+  const navigate = useNavigate();
+
+  // Handle skip name entry
+  const skipForNow = () => {
+    if (isSessionActive) {
+      const defaultName = 'Player' + Math.floor(Math.random() * 1000);
+      setName(defaultName);
+      localStorage.setItem('username', defaultName);
+      localStorage.setItem('userName', defaultName);
+      setSuccess('');
+      // Redirect to game page after a short delay to show the success message
+      setTimeout(() => {
+        navigate('/game');
+      }, 500);
+    }
+  };
+
   // styles moved to CSS classes in home.css
 
   return (
@@ -129,6 +147,35 @@ const Home = () => {
                  placeholder="Type your name"
                  autoFocus
                />
+               {true && (
+                 <div style={{ 
+                   position: 'absolute', 
+                   bottom: '-55px', 
+                   left: '50%', 
+                   transform: 'translateX(-50%)',
+                   width: '100%',
+                   textAlign: 'center'
+                 }}>
+                   <button
+                     onClick={skipForNow}
+                     style={{
+                       background: 'transparent',
+                       border: 'none',
+                       color: '#fff',
+                       cursor: 'pointer',
+                       fontSize: '14px',
+                       textDecoration: 'underline',
+                       padding: '5px 10px',
+                       fontFamily: 'inherit',
+                       fontWeight: 'bold',
+                      //  opacity: 0.8,
+                       transition: 'opacity 0.2s ease'
+                     }}
+                   >
+                     Skip
+                   </button>
+                 </div>
+               )}
                <button 
                  className="enter-button" 
                  onClick={() => name.trim() && navigateToGame()}
@@ -162,7 +209,7 @@ const Home = () => {
           </div>
           }
           <div>
-            <img src={og} alt="" style={{height:"40px",border:'1px solid #ffffff',padding:"8px",borderRadius:'10px'}} />
+            <img src={og} alt="" style={{height:"40px",border:'1px solid #ffffff',padding:"8px",borderRadius:'10px',marginTop:"20px"}} />
           </div>
         </div>
       </div>
