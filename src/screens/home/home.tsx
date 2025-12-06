@@ -26,7 +26,6 @@ const Home = () => {
         // Check if user has a wallet
         const hasWallet = user.wallet?.address || 
           (user.linkedAccounts || []).some(acc => acc.type === 'wallet');
-        
         if (!hasWallet) {
           try {
             // Create a wallet for the user

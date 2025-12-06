@@ -272,10 +272,10 @@ hr {
 
 @media screen and (max-width: 900px) {
   .profile-header {
-    /* flex-direction: column;
+    flex-direction: column;
     text-align: center;
     gap: 20px;
-    padding: 20px 15px; */
+    padding: 20px 15px;
   }
   
   .player-info {

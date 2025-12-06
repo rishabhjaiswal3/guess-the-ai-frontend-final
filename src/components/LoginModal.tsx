@@ -308,9 +308,8 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
-  const [emailStep, setEmailStep] = useState<'enter-email' | 'enter-code'>(
-    'enter-email',
-  );
+  type EmailStep = 'enter-email' | 'enter-code';
+  const [emailStep, setEmailStep] = useState<EmailStep>('enter-email');
   const [error, setError] = useState('');
 
   const { connectWallet } = useConnectWallet({
@@ -478,6 +477,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   style={styles.input}
+                  // Always allow editing the email
                 />
                 <small style={styles.hint}>
                   We&apos;ll email you a 6‑digit OTP.
@@ -513,7 +513,11 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
               <div style={styles.actionsRow}>
                 <button
                   type="button"
-                  onClick={() => setEmailStep('enter-email')}
+                  onClick={() => {
+                    setCode('');
+                    setEmail('');
+                    setEmailStep('enter-email');
+                  }}
                   style={styles.ghost}
                 >
                   Edit email
