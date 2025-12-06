@@ -93,12 +93,12 @@ const Home = () => {
   // Handle skip name entry
   const skipForNow = () => {
     if (isSessionActive) {
-      const defaultName = 'Player' + Math.floor(Math.random() * 1000);
-      setName(defaultName);
-      localStorage.setItem('username', defaultName);
-      localStorage.setItem('userName', defaultName);
-      setSuccess('');
-      // Redirect to game page after a short delay to show the success message
+      // const defaultName = 'Player' + Math.floor(Math.random() * 1000);
+      // setName(defaultName);
+      // localStorage.setItem('username', defaultName);
+      // localStorage.setItem('userName', defaultName);
+      // setSuccess('');
+      // // Redirect to game page after a short delay to show the success message
       setTimeout(() => {
         navigate('/game');
       }, 500);
@@ -147,35 +147,7 @@ const Home = () => {
                  placeholder="Type your name"
                  autoFocus
                />
-               {true && (
-                 <div style={{ 
-                   position: 'absolute', 
-                   bottom: '-55px', 
-                   left: '50%', 
-                   transform: 'translateX(-50%)',
-                   width: '100%',
-                   textAlign: 'center'
-                 }}>
-                   <button
-                     onClick={skipForNow}
-                     style={{
-                       background: 'transparent',
-                       border: 'none',
-                       color: '#fff',
-                       cursor: 'pointer',
-                       fontSize: '14px',
-                       textDecoration: 'underline',
-                       padding: '5px 10px',
-                       fontFamily: 'inherit',
-                       fontWeight: 'bold',
-                      //  opacity: 0.8,
-                       transition: 'opacity 0.2s ease'
-                     }}
-                   >
-                     Skip
-                   </button>
-                 </div>
-               )}
+
                <button 
                  className="enter-button" 
                  onClick={() => name.trim() && navigateToGame()}
@@ -198,6 +170,7 @@ const Home = () => {
                  </svg>
               </button>
             </div>
+               
             <div className="status-row">
               {success && (
                 <span className="status success">{success}</span>
@@ -206,6 +179,31 @@ const Home = () => {
                 <span className="status error">{error}</span>
               )}
             </div>
+            <div style={{
+            width:'100%',
+            marginTop:'10px',
+              textAlign: 'center'
+            }}>
+              <button
+                onClick={skipForNow}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#fff',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  textDecoration: 'underline',
+                  padding: '5px 10px',
+                  fontFamily: 'inherit',
+                  fontWeight: 'bold',
+                //  opacity: 0.8,
+                  transition: 'opacity 0.2s ease'
+                }}
+              >
+                Skip
+              </button>
+            </div>
+      
           </div>
           }
           <div>

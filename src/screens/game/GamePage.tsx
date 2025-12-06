@@ -210,7 +210,7 @@ const GamePage = () => {
       let lastError: unknown = null;
       for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
         try {
-          const url = `${indexerBaseUrl}${encodeURIComponent(hash)}`;
+          const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
           const response = await fetch(url, { cache: 'default' });
           if (!response.ok) {
             throw new Error(`indexer status ${response.status}`);
@@ -392,7 +392,7 @@ const GamePage = () => {
     let cancelled = false;
 
     const fetchIndexerImage = async (hash: string): Promise<string> => {
-      const url = `${indexerBaseUrl}${encodeURIComponent(hash)}`;
+      const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
       const response = await fetch(url, { cache: 'default' });
       if (!response.ok) {
         throw new Error(`indexer status ${response.status}`);
