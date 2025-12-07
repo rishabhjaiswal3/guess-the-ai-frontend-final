@@ -58,6 +58,12 @@ export default function useIframeBootstrap() {
         window.dispatchEvent(new CustomEvent('presence:token-change', { detail: token }));
         setState({ status: 'success', error: null });
 
+        // If backend indicates the name is already set, go straight to game.
+        if (payload.nameUpdated) {
+          navigate('/game', { replace: true });
+          return;
+        }
+
         params.delete('jwt');
         params.delete('source');
         navigate(buildPath({ pathname, hash }, params), { replace: true });

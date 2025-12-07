@@ -500,11 +500,14 @@ const GamePage = () => {
   }, []);
 
   return (
-    <div className="game-container game-bg">
+    <div className="game-container game-bg" style={{minHeight:'100vh'}}>
       <img src={clips} alt="Decor bottom" className="game-decor-bottom" />
-      <div className="game-card">
-        <div className="game-title">
-          Guess the AI
+      <div className="game-card" style={{marginBottom:'60px'}}>
+        <div className="game-card-header">
+          <div className="game-title">
+            AI or Human?
+          </div>
+
         </div>
         <div className="game-stats">
           <div className="stat">
@@ -517,7 +520,7 @@ const GamePage = () => {
           </div>
         </div>
 
-        <div className={`image-wrap ${(isLoading || processing || imageLoading) && current ? 'processing' : ''}`} style={{ height: imageBoxHeight }}>
+        <div className={`image-wrap ${(isLoading || processing || imageLoading) && current ? 'processing' : ''}`} style={{ height: imageBoxHeight}}>
           {current && (displaySrc || resolveImageSrc(current)) ? (
             <img
               src={displaySrc || resolveImageSrc(current)}
@@ -536,8 +539,6 @@ const GamePage = () => {
             />
           ) : (
             <div className="game-loader" role="status" aria-live="polite">
-              {/* <div className="spinner" /> */}
-              {/* <span>Loading image…</span> */}
             </div>
           )}
           {(isLoading || processing || imageLoading) && current && (

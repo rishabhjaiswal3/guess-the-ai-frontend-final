@@ -73,6 +73,7 @@ type LeaderboardResponse = ApiSuccessResponse<LeaderboardEntry[]>;
 type LoginPayload = {
   token: string;
   username?: string;
+  nameUpdated?: boolean;
 };
 
 type GameImageResponse = {
@@ -142,6 +143,9 @@ const login = async (walletAddress?: string | null) => {
       }
       setSessionSource(SESSION_SOURCES.WALLET);
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
+      if (payload.nameUpdated) {
+        window.location.href = '/game';
+      }
     }
     // eslint-disable-next-line no-console
     console.log('[api/login] Login succeeded; token and username stored', {

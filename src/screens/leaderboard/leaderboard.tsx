@@ -85,7 +85,7 @@ const Leaderboard = () => {
             <span>Correct</span>
             <span>Streak</span>
             <span>Best</span>
-            <span>#</span>
+            <span>Rank</span>
           </div>
           {loading ? (
             <div className="lb-loader-wrap" role="status" aria-live="polite" aria-label="Loading leaderboard">
