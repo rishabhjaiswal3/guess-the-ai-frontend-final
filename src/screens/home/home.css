@@ -23,6 +23,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 /* Status message below the input, left-aligned */
@@ -57,7 +58,8 @@
 
 .name-input {
   width: 100%;
-  padding: 14px 48px 14px 44px; /* make room for icon and button */
+  flex: 1;
+  padding: 14px 16px 14px 44px; /* make room for icon on the left */
   font-size: 16px;
   border-radius: 12px;
   color: #fff;
@@ -78,12 +80,12 @@
 }
 
 .enter-button {
-  position: absolute;
-  right: 6px;
-  width: 40px;
-  height: 40px;
+  position: relative;
+  width: auto;
+  height: auto;
+  padding: 10px 18px;
   border: none;
-  border-radius: 12px;
+  border-radius: 999px;
   background: linear-gradient(135deg, #7b3fe4, #9d6bff);
   color: white;
   display: flex;
@@ -92,6 +94,9 @@
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.2s ease, filter 0.2s ease;
   box-shadow: 0 6px 16px rgba(123, 63, 228, 0.35);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .enter-button:hover:not(:disabled) {
@@ -119,6 +124,17 @@
   .name-input-container {
     width: 92vw;
     padding: 14px 14px 16px;
+  }
+
+  .input-with-button {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .enter-button {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
   }
 }
 /* Home page extracted styles */
