@@ -121,7 +121,7 @@ const Leaderboard = () => {
                 <span>{player.correctAnswers} pts</span>
                 <span>{player.currentStreak}</span>
                 <span>{player.streak}</span>
-                <span>#{player.rank}</span>
+                <span className="rank-badge small">{player.rank}</span>
               </div>
             ))
           )}
