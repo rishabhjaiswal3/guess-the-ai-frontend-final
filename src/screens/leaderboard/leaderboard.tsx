@@ -4,7 +4,7 @@ import clips from '../../assets/Clip.png';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
 import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.gif';
+import GifBg from '../../assets/Guesstheaibg.mp4';
 
 type LeaderboardEntry = {
   username: string;
@@ -81,13 +81,15 @@ const Leaderboard = () => {
         />
 
         {/* Animated GIF background */}
-        <img
-          src={GifBg}
-          alt="Animated Background"
-          onLoad={() => setGifLoaded(true)}
-          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          draggable={false}
-        />
+        <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="video-bg"
+>
+  <source src={GifBg} type="video/mp4" />
+</video>
       </div>
       
       <div className="leaderboard-container">

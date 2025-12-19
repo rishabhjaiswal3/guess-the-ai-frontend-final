@@ -6,7 +6,7 @@ import { getProfile } from '../../api/auth';
 import './profile.css';
 import useSessionSource from '../../hooks/useSessionSource';
 import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.gif';
+import GifBg from '../../assets/Guesstheaibg.mp4';
 
 type ProfileData = {
   username?: string;
@@ -68,13 +68,15 @@ const Profile = () => {
         />
 
         {/* Animated GIF background */}
-        <img
-          src={GifBg}
-          alt="Animated Background"
-          onLoad={() => setGifLoaded(true)}
-          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          draggable={false}
-        />
+        <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="video-bg"
+>
+  <source src={GifBg} type="video/mp4" />
+</video>
       </div>
       {/* <img src={clips} alt="Decor bottom" className="profile-decor-bottom" /> */}
       <div className="profile-container">

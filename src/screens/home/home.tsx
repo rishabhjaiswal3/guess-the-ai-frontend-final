@@ -8,7 +8,7 @@ import useSessionSource from '../../hooks/useSessionSource';
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
 import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.gif';
+import GifBg from '../../assets/Guesstheaibg.mp4';
 // import Base from '../../assets/Base.png';
 // import Icon from '../../assets/Icon.png';
 // import SearchIcon from '../../assets/SearchIcon.png';
@@ -136,13 +136,16 @@ const Home = () => {
         />
 
         {/* Animated GIF background */}
-        <img
-          src={GifBg}
-          alt="Animated Background"
-          onLoad={() => setGifLoaded(true)}
-          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          draggable={false}
-        />
+        <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="video-bg"
+>
+  <source src={GifBg} type="video/mp4" />
+</video>
+
       </div>
 
       <div className={`content-container ${isSessionActive ? 'session-active' : ''}`}>
