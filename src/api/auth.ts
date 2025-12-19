@@ -45,6 +45,22 @@ api.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// Add response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.data?.message === 'You are not logged in! Please log in to get access.') {
+      // Clear auth data
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        // Redirect to home page which will handle the login flow
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 const apiInterceptor = <T = unknown>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> =>
   api.request<T>({
     ...config,
