@@ -7,7 +7,7 @@ import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth
 import './GamePage.css';
 import clips from '../../assets/Clip.png';
 import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.gif';
+import GifBg from '../../assets/Guesstheaibg.mp4';
 
 type GameImage = {
   hash?: string;
@@ -515,13 +515,15 @@ const GamePage = () => {
         />
 
         {/* Animated GIF background */}
-        <img
-          src={GifBg}
-          alt="Animated Background"
-          onLoad={() => setGifLoaded(true)}
-          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          draggable={false}
-        />
+        <video
+  autoPlay
+  muted
+  loop
+  playsInline
+  className="video-bg"
+>
+  <source src={GifBg} type="video/mp4" />
+</video>
       </div>
       
       <div className="game-container">
