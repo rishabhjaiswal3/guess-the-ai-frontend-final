@@ -289,8 +289,8 @@
     line-height: 1.15;
   }
   .leaderboard-list {
-    /* shrink name column a bit more on small screens; hide rank column */
-    --lb-cols: 1.8fr 1fr 1fr 1fr 0fr;
+    /* adjust column widths for mobile */
+    --lb-cols: 1.4fr 0.7fr 0.7fr 0.7fr 0.6fr;
   }
   .leaderboard-item .lb-name {
     font-size: 0.85rem;
@@ -300,17 +300,24 @@
     text-overflow: ellipsis;
   }
 
-  /* Hide rank column entirely on mobile */
-  .leaderboard-item span:last-child,
+  /* Show rank badge on mobile */
+  .leaderboard-item .rank-badge {
+    display: inline-flex !important;
+    min-width: 28px;
+    justify-content: center;
+  }
+
+  /* Adjust header for rank column */
   .leaderboard-header span:last-child {
-    display: none;
+    display: inline-flex !important;
+    justify-content: center;
   }
 
 }
 
 @media (max-width: 360px) {
   .leaderboard-list {
-    --lb-cols: 1.6fr 1fr 1fr 1fr 0fr;
+    --lb-cols: 1.3fr 0.6fr 0.6fr 0.6fr 0.5fr;
   }
   .leaderboard-item .lb-name { max-width: 10ch; font-size: 0.8rem; }
 }
