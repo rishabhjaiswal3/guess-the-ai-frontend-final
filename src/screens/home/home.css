@@ -1,10 +1,65 @@
+/* Base styles */
+.home-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.background-image,
+.background-gif {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.content-container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.content-wrap {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
 /* Home screen input area (beautified) */
 .name-input-container {
   width: min(90vw, 520px);
   margin: 6px auto 0;
   padding: 16px 18px 18px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(27, 0, 63, 0.45);
   border: 1px solid rgba(157, 107, 255, 0.25);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.05);
   backdrop-filter: blur(10px);
@@ -139,20 +194,47 @@
 }
 /* Home page extracted styles */
 
-.home-bg {
+/* Background styles now handled by .background-container and its children */
+.background-container {
   background:
-    radial-gradient(1200px 600px at 10% 0%, rgba(156, 92, 255, 0.25), transparent 60%),
-    radial-gradient(900px 500px at 90% 100%, rgba(75, 225, 236, 0.18), transparent 60%),
-    linear-gradient(135deg, #1B003F 0%, #2A003A 40%, #3B0A6B 72%, #0E001F 100%);
-  background-blend-mode: screen, screen, normal;
+    /* Gradient overlay to darken the GIF */
+    /* linear-gradient(135deg, rgba(27, 0, 63, 0.9) 0%, rgba(10, 0, 31, 0.95) 100%), */
+    /* The GIF background */
+    url('../../assets/Guesstheaibg.gif');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-attachment: fixed;
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+}
+
+@keyframes gradientPulse {
+  0%, 100% {
+    background: 
+      /* linear-gradient(135deg, rgba(27, 0, 63, 0.85) 0%, rgba(10, 0, 31, 0.9) 100%), */
+      url('../../assets/Guesstheaibg.gif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  50% {
+    background: 
+      /* linear-gradient(135deg, rgba(35, 0, 80, 0.85) 0%, rgba(15, 0, 45, 0.9) 100%), */
+      url('../../assets/Guesstheaibg.gif');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+}
+
+.home-bg {
+  animation: gradientPulse 20s ease-in-out infinite;
 }
 
 .content-wrap {

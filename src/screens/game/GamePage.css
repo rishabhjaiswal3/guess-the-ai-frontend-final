@@ -1,10 +1,47 @@
-/* Background borrowed from Home theme */
-.game-bg {
-  background:
-    radial-gradient(1200px 600px at 10% 0%, rgba(156, 92, 255, 0.25), transparent 60%),
-    radial-gradient(900px 500px at 90% 100%, rgba(75, 225, 236, 0.18), transparent 60%),
-    linear-gradient(135deg, #1B003F 0%, #2A003A 40%, #3B0A6B 72%, #0E001F 100%);
-  background-blend-mode: screen, screen, normal;
+/* Background matching Home and Profile */
+/* Background container for smooth transition */
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.background-image,
+.background-gif {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.game-page {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  z-index: 1;
 }
 
 .game-container {
@@ -22,24 +59,18 @@
 }
 
 .game-card {
-  width: min(92vw, 520px);
-  margin: 18px auto 16px;
-  padding: 24px 22px 22px;
-  border-radius: 18px;
-  border: 1px solid rgba(157, 107, 255, 0.28);
-  background: linear-gradient(180deg, rgba(42, 10, 79, 0.46) 0%, rgba(27, 0, 63, 0.32) 100%);
-  box-shadow: 0 20px 52px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.06);
-  backdrop-filter: blur(12px);
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
-  z-index: 2;
   overflow: hidden;
-  transition: transform 0.2s ease, box-shadow 0.25s ease;
-  min-height: 460px;
+  text-align: center;
+  margin-bottom: 60px;
 }
 
 .game-card-header {
@@ -99,7 +130,7 @@
   border-radius: 18px;
   padding: 2px;
   background: linear-gradient(135deg, rgba(123,63,228,0.35), rgba(157,107,255,0.15), rgba(75,225,236,0.2));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  /* -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); */
   -webkit-mask-composite: xor;
           mask-composite: exclude;
   pointer-events: none;

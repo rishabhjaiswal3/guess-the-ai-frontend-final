@@ -5,6 +5,8 @@ import DemonImage from '../../assets/Demon .png';
 import { getProfile } from '../../api/auth';
 import './profile.css';
 import useSessionSource from '../../hooks/useSessionSource';
+import BgImage from '../../assets/Bg.png';
+import GifBg from '../../assets/Guesstheaibg.gif';
 
 type ProfileData = {
   username?: string;
@@ -18,6 +20,7 @@ type ProfileData = {
 
 const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [gifLoaded, setGifLoaded] = useState(false);
   const { authenticated } = usePrivy();
   const { isIframeSession, hasToken } = useSessionSource();
   const isSessionActive = authenticated || (isIframeSession && hasToken);
@@ -53,8 +56,27 @@ const Profile = () => {
     : 'Not connected';
 
   return (
-    <div className="profile-page profile-bg">
-      <img src={clips} alt="Decor bottom" className="profile-decor-bottom" />
+    <div className="profile-page">
+      {/* Background with smooth loading */}
+      <div className="background-container">
+        {/* Static background shown until GIF is loaded */}
+        <img
+          src={BgImage}
+          alt="Background"
+          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+          draggable={false}
+        />
+
+        {/* Animated GIF background */}
+        <img
+          src={GifBg}
+          alt="Animated Background"
+          onLoad={() => setGifLoaded(true)}
+          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          draggable={false}
+        />
+      </div>
+      {/* <img src={clips} alt="Decor bottom" className="profile-decor-bottom" /> */}
       <div className="profile-container">
         <header className="profile-header">
           {/* <div className="player-avatar-pill" >

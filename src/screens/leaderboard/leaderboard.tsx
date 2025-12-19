@@ -3,6 +3,8 @@ import './leaderboard.css';
 import clips from '../../assets/Clip.png';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
+import BgImage from '../../assets/Bg.png';
+import GifBg from '../../assets/Guesstheaibg.gif';
 
 type LeaderboardEntry = {
   username: string;
@@ -13,11 +15,11 @@ type LeaderboardEntry = {
 };
 
 const Leaderboard = () => {
-
   const [leaderboard,setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
+  const [gifLoaded, setGifLoaded] = useState(false);
  
   const getLeaderboardData = useCallback(async () => {
     setLoading(true);
@@ -67,26 +69,44 @@ const Leaderboard = () => {
   };
 
   return (
-    <div 
-      className="leaderboard-container leaderboard-bg"
-    >
-      <img src={clips} alt="Decor bottom" className="leaderboard-decor-bottom" />
-      <div className="leaderboard-content">
-        <div className="leaderboard-logo-container" >
-          <img 
-            src={LeaderboardLogo} 
-            alt="Leaderboard" 
-            className="leaderboard-logo"
-          />
-        </div>
-        <div className="leaderboard-list">
-          <div className="leaderboard-item leaderboard-header">
-            <span>Players</span>
-            <span>Correct</span>
-            <span>Streak</span>
-            <span>Best</span>
-            <span>Rank</span>
+    <div className="leaderboard-page">
+      {/* Background with smooth loading */}
+      <div className="background-container">
+        {/* Static background shown until GIF is loaded */}
+        <img
+          src={BgImage}
+          alt="Background"
+          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+          draggable={false}
+        />
+
+        {/* Animated GIF background */}
+        <img
+          src={GifBg}
+          alt="Animated Background"
+          onLoad={() => setGifLoaded(true)}
+          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          draggable={false}
+        />
+      </div>
+      
+      <div className="leaderboard-container">
+        <div className="leaderboard-content">
+          <div className="leaderboard-logo-container">
+            <img 
+              src={LeaderboardLogo} 
+              alt="Leaderboard" 
+              className="leaderboard-logo"
+            />
           </div>
+          <div className="leaderboard-list">
+            <div className="leaderboard-item leaderboard-header">
+              <span>Players</span>
+              <span>Correct</span>
+              <span>Streak</span>
+              <span>Best</span>
+              <span>Rank</span>
+            </div>
           {loading ? (
             <div className="lb-loader-wrap" role="status" aria-live="polite" aria-label="Loading leaderboard">
               <div className="lb-spinner" />
@@ -103,13 +123,14 @@ const Leaderboard = () => {
               </div>
             ))
           )}
-        </div>
-        {error && (
-          <div className="lb-error-row">
-            <span>{error}</span>
-            <button className="lb-retry" onClick={getLeaderboardData}>Retry</button>
           </div>
-        )}
+          {error && (
+            <div className="lb-error-row">
+              <span>{error}</span>
+              <button className="lb-retry" onClick={getLeaderboardData}>Retry</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

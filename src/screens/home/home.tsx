@@ -5,16 +5,21 @@ import WalletConnect from '../../components/WalletConnect';
 import './home.css';
 import { updateUserName } from '../../api/auth';
 import useSessionSource from '../../hooks/useSessionSource';
-import clips from '../../assets/Clip.png';
-import Clipup from '../../assets/ClipUp.png';
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
+import BgImage from '../../assets/Bg.png';
+import GifBg from '../../assets/Guesstheaibg.gif';
+// import Base from '../../assets/Base.png';
+// import Icon from '../../assets/Icon.png';
+// import SearchIcon from '../../assets/SearchIcon.png';
 
 const Home = () => {
   const { authenticated, user } = usePrivy();
+  // const isConnected = authenticated;
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [gifLoaded, setGifLoaded] = useState(false);
   const { isIframeSession, hasToken } = useSessionSource();
   const isSessionActive = authenticated || isIframeSession || hasToken;
   const { createWallet } = useCreateWallet();
@@ -107,18 +112,43 @@ const Home = () => {
   };
 
   // styles moved to CSS classes in home.css
+  // const containerStyle = {
+  //   background: 'linear-gradient(135deg, #1B003F 0%, #0A001F 100%)',
+  //   minHeight: '100vh',
+  //   display: 'flex',
+  //   flexDirection: 'column',
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   padding: '20px',
+  //   boxSizing: 'border-box'
+  // };
 
   return (
-    <div 
-        className={`home-container ${isSessionActive ? '' : 'home-bg'}`}
-      >
-        <img src={clips} alt="Decor bottom" className="decor-bottom" />
+    <div className="home-page">
+      {/* Background with smooth loading */}
+      <div className="background-container">
+        {/* Static background shown until GIF is loaded */}
+        <img
+          src={BgImage}
+          alt="Background"
+          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+          draggable={false}
+        />
+
+        {/* Animated GIF background */}
+        <img
+          src={GifBg}
+          alt="Animated Background"
+          onLoad={() => setGifLoaded(true)}
+          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          draggable={false}
+        />
+      </div>
+
+      <div className={`content-container ${isSessionActive ? 'session-active' : ''}`}>
         <div className="content-wrap">
           <img src={logo2} alt="" className="logo-circle"/>
-          <div className="hero-title">
-            <img src={Clipup} alt="Decor top" className="decor-top" />
-            GUESS THE AI
-          </div>
+          <div className="hero-title">GUESS THE AI</div>
           <div>
             <WalletConnect />
           </div>
@@ -194,18 +224,27 @@ const Home = () => {
           </div>
           }
           <div>
-            <img src={og} alt="" style={{height:"40px",border:'1px solid #ffffff',padding:"8px",borderRadius:'10px',marginTop:"20px"}} />
+            <img 
+              src={og} 
+              alt="" 
+              style={{
+                height: '40px',
+                border: '1px solid #ffffff',
+                padding: '8px',
+                borderRadius: '10px',
+                marginTop: '20px'
+              }} 
+            />
           </div>
         </div>
       </div>
+    </div>
   )
   // return (
   //   <div 
   //     className="home-container"
-  //     style={isConnected ? {} :containerStyle}
+  //     style={isConnected ? {} : containerStyle}
   //   >
-     
-      
   //     {
   //       !isConnected &&
   //       <div style={{
@@ -242,9 +281,8 @@ const Home = () => {
   //           />
   //         </div>
   //       </div>
-        
   //     }
-  //      <div>
+  //     <div>
   //       <WalletConnect />
   //     </div>
   //     {isConnected && (
@@ -259,7 +297,7 @@ const Home = () => {
   //         <div className="name-input-container">
   //           <div className="input-label">Enter user name here</div>
   //           <div>
-  //           {error && <span style={{color:'red',fontSize:'12px'}}>{error}</span>}
+  //             {error && <span style={{color:'red',fontSize:'12px'}}>{error}</span>}
   //           </div>
   //           <div className="input-with-button">
   //             <input
@@ -299,7 +337,6 @@ const Home = () => {
   //             </button>
   //           </div>
   //         </div>
-
   //       </>
   //     )}
   //   </div>

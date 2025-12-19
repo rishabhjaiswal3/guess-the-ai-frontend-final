@@ -6,6 +6,8 @@ import human from '../../assets/Human-button.png';
 import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
 import './GamePage.css';
 import clips from '../../assets/Clip.png';
+import BgImage from '../../assets/Bg.png';
+import GifBg from '../../assets/Guesstheaibg.gif';
 
 type GameImage = {
   hash?: string;
@@ -56,6 +58,7 @@ const GamePage = () => {
   const [prefetching, setPrefetching] = useState(false);
   const [displaySrc, setDisplaySrc] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
+  const [gifLoaded, setGifLoaded] = useState(false);
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
@@ -500,9 +503,29 @@ const GamePage = () => {
   }, []);
 
   return (
-    <div className="game-container game-bg" style={{minHeight:'100vh'}}>
-      <img src={clips} alt="Decor bottom" className="game-decor-bottom" />
-      <div className="game-card" style={{marginBottom:'60px'}}>
+    <div className="game-page">
+      {/* Background with smooth loading */}
+      <div className="background-container">
+        {/* Static background shown until GIF is loaded */}
+        <img
+          src={BgImage}
+          alt="Background"
+          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+          draggable={false}
+        />
+
+        {/* Animated GIF background */}
+        <img
+          src={GifBg}
+          alt="Animated Background"
+          onLoad={() => setGifLoaded(true)}
+          className={`background-gif ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          draggable={false}
+        />
+      </div>
+      
+      <div className="game-container">
+        <div className="game-card">
         <div className="game-card-header">
           <div className="game-title">
             AI or Human?
@@ -562,6 +585,7 @@ const GamePage = () => {
           </button>
         </div>
         {error && <div className="game-error">{error}</div>}
+        </div>
       </div>
     </div>
   );

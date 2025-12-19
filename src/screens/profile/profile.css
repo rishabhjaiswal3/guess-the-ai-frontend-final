@@ -5,13 +5,33 @@ body {
   color: #fff;
 }
 
-/* Background to match Home */
-.profile-bg {
-  background:
-    radial-gradient(1200px 600px at 10% 0%, rgba(156, 92, 255, 0.25), transparent 60%),
-    radial-gradient(900px 500px at 90% 100%, rgba(75, 225, 236, 0.18), transparent 60%),
-    linear-gradient(135deg, #1B003F 0%, #2A003A 40%, #3B0A6B 72%, #0E001F 100%);
-  background-blend-mode: screen, screen, normal;
+/* Background container for smooth transition */
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.background-image,
+.background-gif {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
 }
 
 .profile-page {
@@ -21,6 +41,7 @@ body {
   padding-top: 92px; /* start below top bar */
   box-sizing: border-box;
   overflow: visible; /* allow main-content to handle scrolling */
+  z-index: 1;
 }
 
 .profile-decor-bottom {
