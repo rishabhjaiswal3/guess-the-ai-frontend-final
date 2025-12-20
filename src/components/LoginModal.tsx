@@ -187,8 +187,8 @@ const styles: Record<string, CSSProperties> = {
   primary: {
     padding: '14px 18px',
     borderRadius: 12,
-    border: `1px solid ${theme.primaryDark}`,
-    background: `linear-gradient(135deg, ${theme.primary}, ${theme.primaryDark})`,
+    border: '1px solid var(--theme-card-border-strong)',
+    background: 'var(--theme-accent-gradient)',
     color: '#fff',
     cursor: 'pointer',
     fontWeight: 700,
