@@ -26,7 +26,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      backgroundColor: 'rgba(5, 2, 16, 0.75)',
       backdropFilter: 'blur(3px)',
       WebkitBackdropFilter: 'blur(3px)',
       display: 'flex',
@@ -38,13 +38,13 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
         padding: '32px 26px 22px',
         borderRadius: '20px',
         textAlign: 'left',
-        color: '#ffffff',
+        color: 'var(--theme-text)',
         width: 'clamp(340px, 94vw, 520px)',
         minHeight: '280px',
         maxHeight: '88vh',
-        border: '1px solid rgba(157, 107, 255, 0.35)',
-        background: 'linear-gradient(135deg, rgba(27,0,63,0.95), rgba(42,0,58,0.95))',
-        boxShadow: '0 34px 86px rgba(0, 0, 0, 0.65), 0 0 36px rgba(156, 92, 255, 0.25), inset 0 1px 0 rgba(255,255,255,0.06)',
+        border: '1px solid var(--theme-card-border-strong)',
+        background: 'var(--theme-card-bg)',
+        boxShadow: 'var(--theme-card-shadow)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
         position: 'relative',
@@ -71,8 +71,8 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
             width: 32,
             height: 32,
             borderRadius: 8,
-            border: '1px solid rgba(255,255,255,0.2)',
-            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid var(--theme-card-border)',
+            background: 'var(--theme-card-surface)',
             color: '#fff',
             cursor: 'pointer',
             display: 'flex',
@@ -108,15 +108,15 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
             <h3 style={{
               margin: 0,
               fontSize: '20px',
-              background: 'linear-gradient(90deg, #FF4D4D, #FFD166 35%, #4BE1EC 70%, #9C5CFF)',
+              background: 'var(--theme-title-gradient)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               color: 'transparent',
               WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 18px rgba(156,92,255,0.35)'
+              textShadow: '0 0 18px rgba(210,75,255,0.35)'
             }}>Account</h3>
           </div>
-          <div style={{ fontSize: 13, color: '#cfcfcf', marginTop: 8, textAlign: 'center' }}>Manage your session and profile</div>
+          <div style={{ fontSize: 13, color: 'var(--theme-text-soft)', marginTop: 8, textAlign: 'center' }}>Manage your session and profile</div>
         </div>
 
         <div style={{
@@ -125,8 +125,8 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
           gap: '14px'
         }}>
           <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(157,107,255,0.25)',
+            background: 'var(--theme-card-surface)',
+            border: '1px solid var(--theme-card-border)',
             borderRadius: '12px',
             padding: '12px 14px',
             display: 'flex',
@@ -138,18 +138,18 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
               <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span role="img" aria-hidden>🚪</span> Logout
               </div>
-              <div style={{ fontSize: 13, color: '#cfcfcf' }}>Disconnect your wallet and logout from this device.</div>
+              <div style={{ fontSize: 13, color: 'var(--theme-text-soft)' }}>Disconnect your wallet and logout from this device.</div>
             </div>
             <button
               onClick={onConfirm}
               style={{
                 padding: '10px 14px',
                 borderRadius: '12px',
-                border: '1px solid rgba(255,92,92,0.6)',
-                background: 'linear-gradient(135deg, #ff4d4d, #ff7a7a)',
+                border: '1px solid var(--theme-card-border-strong)',
+                background: 'var(--theme-accent-gradient)',
                 color: '#fff',
                 cursor: 'pointer',
-                boxShadow: '0 10px 22px rgba(255, 77, 77, 0.35)',
+                boxShadow: '0 10px 22px rgba(210, 75, 255, 0.35)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
                 minWidth: 120
               }}
@@ -161,8 +161,8 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
           </div>
 
           <div style={{
-            background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(157,107,255,0.25)',
+            background: 'var(--theme-card-surface)',
+            border: '1px solid var(--theme-card-border)',
             borderRadius: '12px',
             padding: '12px 14px',
             display: 'flex',
@@ -174,18 +174,18 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
               <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span role="img" aria-hidden>🖊️</span> Edit Profile
               </div>
-              <div style={{ fontSize: 13, color: '#cfcfcf' }}>Update your profile details like name and avatar.</div>
+              <div style={{ fontSize: 13, color: 'var(--theme-text-soft)' }}>Update your profile details like name and avatar.</div>
             </div>
             <button
               onClick={onEdit}
               style={{
                 padding: '10px 14px',
                 borderRadius: '12px',
-                border: '1px solid rgba(157,107,255,0.6)',
-                background: 'linear-gradient(135deg, #7b3fe4, #9d6bff)',
+                border: '1px solid var(--theme-card-border-strong)',
+                background: 'var(--theme-accent-gradient)',
                 color: '#fff',
                 cursor: 'pointer',
-                boxShadow: '0 10px 22px rgba(123, 63, 228, 0.35)',
+                boxShadow: '0 10px 22px rgba(210, 75, 255, 0.35)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
                 minWidth: 120
               }}

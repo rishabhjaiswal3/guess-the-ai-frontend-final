@@ -91,14 +91,14 @@ const GoogleIcon = ({ size = 18 }: { size?: number }) => (
 );
 
 const theme = {
-  bg: '#050014',
-  surface: '#0c031f',
-  panel: '#12052b',
-  text: '#f4f4ff',
-  subtext: '#a1a1c5',
-  primary: '#7C3AED',
-  primaryDark: '#6D28D9',
-  ring: 'rgba(124,58,237,0.45)',
+  bg: 'var(--theme-bg-deep)',
+  surface: 'var(--theme-card-bg)',
+  panel: 'var(--theme-card-surface)',
+  text: 'var(--theme-text)',
+  subtext: 'var(--theme-text-soft)',
+  primary: 'var(--theme-accent-magenta)',
+  primaryDark: 'var(--theme-accent-violet)',
+  ring: 'rgba(210,75,255,0.45)',
 } as const;
 
 const styles: Record<string, CSSProperties> = {
@@ -109,7 +109,7 @@ const styles: Record<string, CSSProperties> = {
     maxWidth: 460,
     width: '92vw',
     boxShadow:
-      '0 28px 80px rgba(0,0,0,0.75), 0 0 36px rgba(156,92,255,0.45)',
+      '0 28px 80px rgba(0,0,0,0.75), 0 0 36px rgba(210,75,255,0.4)',
     overflow: 'hidden',
   },
   container: {
@@ -144,7 +144,7 @@ const styles: Record<string, CSSProperties> = {
     textAlign: 'center',
     padding: '30px 10px 22px',
     background:
-      'radial-gradient(1200px 600px at 10% 0%, rgba(156, 92, 255, 0.32), transparent 60%), radial-gradient(900px 500px at 90% 100%, rgba(75, 225, 236, 0.24), transparent 60%), linear-gradient(135deg, #1B003F 0%, #2A003A 40%, #3B0A6B 72%, #0E001F 100%)',
+      'radial-gradient(1200px 600px at 10% 0%, rgba(210, 75, 255, 0.3), transparent 60%), radial-gradient(900px 500px at 90% 100%, rgba(99, 208, 255, 0.22), transparent 60%), linear-gradient(135deg, #14092c 0%, #1b0d3d 40%, #2a1154 72%, #0b0418 100%)',
     borderRadius: 12,
     position: 'relative',
     overflow: 'hidden',
@@ -152,27 +152,27 @@ const styles: Record<string, CSSProperties> = {
   heroGlow: {
     position: 'absolute',
     inset: -60,
-    background: `radial-gradient(800px 180px at 50% -20%, ${theme.primary}33, transparent)`,
+    background:
+      'radial-gradient(800px 180px at 50% -20%, rgba(210, 75, 255, 0.2), transparent)',
   },
   logo: {
     width: 72,
     height: 72,
     objectFit: 'contain',
     borderRadius: 12,
-    border: '1px solid #222',
+    border: '1px solid var(--theme-card-border)',
   },
   title: {
     margin: '14px 0 4px',
     fontSize: 24,
     fontWeight: 900,
     letterSpacing: 0.6,
-    background:
-      'linear-gradient(90deg, #FF4D4D, #FFD166 35%, #4BE1EC 70%, #9C5CFF)',
+    background: 'var(--theme-title-gradient)',
     WebkitBackgroundClip: 'text',
     backgroundClip: 'text',
     color: 'transparent',
     WebkitTextFillColor: 'transparent',
-    textShadow: '0 0 22px rgba(156, 92, 255, 0.35)',
+    textShadow: '0 0 22px rgba(210, 75, 255, 0.35)',
   },
   subtitle: {
     margin: '2px 0 0',
@@ -196,15 +196,15 @@ const styles: Record<string, CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow:
-      '0 10px 30px rgba(0,0,0,0.55), 0 8px 24px rgba(124,58,237,0.45)',
+      '0 10px 30px rgba(0,0,0,0.55), 0 8px 24px rgba(210,75,255,0.45)',
     letterSpacing: 0.2,
     transition: 'transform .08s ease, box-shadow .2s ease',
   },
   primaryAlt: {
     padding: '14px 16px',
     borderRadius: 12,
-    border: '1px solid #24243b',
-    background: '#18182e',
+    border: '1px solid var(--theme-card-border)',
+    background: 'var(--theme-card-surface)',
     color: theme.text,
     cursor: 'pointer',
     fontWeight: 700,
@@ -230,8 +230,8 @@ const styles: Record<string, CSSProperties> = {
     minWidth: 130,
     padding: '10px 14px',
     borderRadius: 10,
-    border: '1px solid rgba(255,255,255,0.18)',
-    background: 'rgba(10,10,18,0.9)',
+    border: '1px solid var(--theme-card-border)',
+    background: 'rgba(12, 6, 28, 0.9)',
     color: theme.text,
     cursor: 'pointer',
     display: 'flex',

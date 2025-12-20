@@ -30,7 +30,7 @@
 .leaderboard-page {
   position: relative;
   min-height: 100vh;
-  color: #fff;
+  color: var(--theme-text);
   font-family: 'Orbitron', sans-serif;
   padding: 20px;
   box-sizing: border-box;
@@ -41,7 +41,7 @@
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 80px 20px;
+  padding: 40px 20px;
   box-sizing: border-box;
   z-index: 1;
 }
@@ -67,11 +67,11 @@
   margin: 0 auto;
   padding: 24px;
   border-radius: 16px;
-  border: 1px solid rgba(157, 107, 255, 0.25);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--theme-card-border);
+  background: var(--theme-card-bg);
+  box-shadow: var(--theme-card-shadow);
   backdrop-filter: blur(10px);
-  color: white;
+  color: var(--theme-text);
   /* margin-bottom: 10px; */
   position: relative;
   z-index: 2;
@@ -96,14 +96,14 @@
   height: 42px;
   border-radius: 50%;
   border: 3px solid rgba(255,255,255,0.25);
-  border-top-color: #9c5cff;
+  border-top-color: var(--theme-accent-magenta);
   animation: lb-spin 0.9s linear infinite;
-  box-shadow: 0 0 16px rgba(156,92,255,0.35);
+  box-shadow: 0 0 16px var(--theme-accent-glow);
 }
 
 .lb-loader-text {
   font-size: 14px;
-  color: #eae2ff;
+  color: var(--theme-text-soft);
   opacity: 0.9;
 }
 
@@ -122,8 +122,8 @@
 .lb-retry {
   padding: 6px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(157,107,255,0.6);
-  background: linear-gradient(135deg, #7b3fe4, #9d6bff);
+  border: 1px solid var(--theme-card-border-strong);
+  background: var(--theme-accent-gradient);
   color: #fff;
   cursor: pointer;
 }
@@ -169,16 +169,16 @@
   min-height: 64px;
   margin: 10px 0;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--theme-card-surface);
   border-radius: 12px;
   font-size: 1.2rem;
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
-  border: 1px solid rgba(157, 107, 255, 0.25);
+  border: 1px solid var(--theme-card-border);
   position: relative;
 }
 
 .leaderboard-item:hover {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(33, 16, 68, 0.78);
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
 }
@@ -188,7 +188,7 @@
   text-align: center;
   font-size: 1rem;
   font-weight: 500;
-  color: #fff;
+  color: var(--theme-text);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
@@ -202,7 +202,7 @@
   text-align: left;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #eae2ff;
+  color: var(--theme-text-soft);
 }
 
 /* Reveal full name on hover (tooltip) */
@@ -215,7 +215,7 @@
   padding: 6px 8px;
   font-size: 12px;
   background: rgba(0, 0, 0, 0.85);
-  border: 1px solid rgba(157,107,255,0.35);
+  border: 1px solid var(--theme-card-border);
   border-radius: 6px;
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
   color: #fff;
@@ -227,8 +227,8 @@
   position: sticky;
   top: 0;
   z-index: 3;
-  background: rgba(27,0,63,0.6);
-  border: 1px solid rgba(157, 107, 255, 0.35);
+  background: rgba(12, 6, 28, 0.7);
+  border: 1px solid var(--theme-card-border);
   box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08);
   font-weight: 700;
 }
@@ -241,7 +241,7 @@
 /* First column (name) base override so it isn't oversized */
 .leaderboard-item span:first-child {
   font-weight: 600;
-  color: #eae2ff;
+  color: var(--theme-text-soft);
   font-size: 0.95rem;
   justify-self: start;
   text-align: left;
@@ -250,7 +250,7 @@
 /* Rank styling (keep subtle on mobile) */
 .leaderboard-item span:last-child {
   font-weight: 500;
-  color: #eae2ff;
+  color: var(--theme-text-soft);
   font-size: 0.95rem;
   margin: auto;
   justify-content: center;

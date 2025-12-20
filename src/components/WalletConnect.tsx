@@ -105,12 +105,13 @@ const WalletConnect = () => {
     <>
       <div
         className="wallet-connect-wrap"
-        style={{ display: shouldHideConnect ? 'none' : 'block' }}
+        style={{ display: shouldHideConnect ? 'none' : 'block',minWidth:"300px" }}
       >
         <button
           type="button"
           className="connect-wallet-button"
           onClick={() => setIsModalOpen(true)}
+          style={{minWidth:"260px"}}
           disabled={!ready}
         >
           {ready ? 'Connect' : 'Loading...'}

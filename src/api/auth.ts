@@ -49,7 +49,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.data?.message === 'You are not logged in! Please log in to get access.') {
+    console.log("My error is ",error);
+    if (error.response?.data?.message === 'You are not logged in! Please log in to get access.' || error.response?.data?.message == 
+"Invalid token or token expired. Please log in again.") {
       // Clear auth data
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');

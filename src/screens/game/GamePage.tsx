@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import Rating from '../../assets/Rating.png';
-import streak from '../../assets/Streak.png';
 import ai from '../../assets/Ai-button.png';
 import human from '../../assets/Human-button.png';
 import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
@@ -534,13 +532,13 @@ const GamePage = () => {
           </div>
 
         </div>
-        <div className="game-stats">
-          <div className="stat">
-            <img src={streak} className="stat-icon" alt="Streak" />
+        <div className="game-stats" style={{marginBottom:"6px"}}>
+          <div className="stat"  style={{display:'flex',justifyContent:'center'}}>
+            <span className="stat-icon" aria-hidden>🔥</span>
             <div className="stat-label">Streak: {scores.streak}</div>
           </div>
-          <div className="stat">
-            <img src={Rating} className="stat-icon" alt="Score" />
+          <div className="stat" style={{display:'flex',justifyContent:'center'}}>
+            <span className="stat-icon" aria-hidden>★</span>
             <div className="stat-label">Score: {scores.score}</div>
           </div>
         </div>
@@ -578,7 +576,7 @@ const GamePage = () => {
           )}
         </div>
 
-        <div className="guess-buttons">
+        <div className="guess-buttons" style={{marginTop:"20px",paddingBottom:"0px"}}>
           <button onClick={() => handleSubmit('ai')} disabled={isLoading || processing || imageLoading} className="guess-button">
             <img src={ai} alt="ai" className="btn-image" />
           </button>
