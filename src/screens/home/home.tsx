@@ -149,7 +149,7 @@ const Home = () => {
       </div>
 
       <div className={`content-container ${isSessionActive ? 'session-active' : ''}`}>
-        <div className="content-wrap">
+        <div className="content-wrap" >
           <img src={logo2} alt="" className="logo-circle"/>
           <div className="hero-title">GUESS THE AI</div>
           <div>
@@ -157,7 +157,7 @@ const Home = () => {
           </div>
           {
             isSessionActive &&
-            <div className="name-input-container">
+            <div className="name-input-container" >
              <div className="input-label">Enter user name here</div>
              <div>
              </div>
@@ -201,7 +201,6 @@ const Home = () => {
             </div>
             <div style={{
             width:'100%',
-            marginTop:'10px',
               textAlign: 'center'
             }}>
               <button
@@ -226,7 +225,7 @@ const Home = () => {
       
           </div>
           }
-          <div>
+          <div >
             <img 
               src={og} 
               alt="" 
@@ -235,7 +234,7 @@ const Home = () => {
                 border: '1px solid #ffffff',
                 padding: '8px',
                 borderRadius: '10px',
-                marginTop: '20px'
+                marginBottom: '30px'
               }} 
             />
           </div>
