@@ -156,8 +156,8 @@
   margin-top: 10px;
   height:100%;
   padding-bottom: 80px;
-  /* Define shared column template: name, correct, streak, all streak, rank */
-  --lb-cols: 2fr 1fr 0.9fr 0.9fr 0.7fr;
+  /* Define shared column template: rank, name, correct, streak, best, level */
+  --lb-cols: minmax(0, 0.7fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.7fr);
 }
 
 
@@ -175,6 +175,9 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
   border: 1px solid var(--theme-card-border);
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .leaderboard-item:hover {
@@ -190,6 +193,7 @@
   font-weight: 500;
   color: var(--theme-text);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  min-width: 0;
 }
 
 
@@ -266,6 +270,16 @@
 
 /* Responsive type scaling for small devices */
 @media (max-width: 600px) {
+  .leaderboard-page {
+    padding: 8px;
+  }
+  .leaderboard-container {
+    padding: 20px 6px;
+  }
+  .leaderboard-content {
+    width: 100%;
+    padding: 14px 8px;
+  }
   .leaderboard-logo-container {
     transform: scale(1);
     margin: 1rem 0;
@@ -276,12 +290,15 @@
     max-height: 72px;
   }
   .leaderboard-item {
-    padding: 6px 8px;
+    padding: 6px 12px;
     margin: 8px 0; /* a bit more space between rows on mobile */
     column-gap: 14px; /* keep extra spacing on narrow screens */
   }
-  .leaderboard-item span {
+  .leaderboard-item:not(.leaderboard-header) span {
     font-size: 0.9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .leaderboard-header span {
     font-size: 0.8rem;
@@ -290,7 +307,8 @@
   }
   .leaderboard-list {
     /* adjust column widths for mobile */
-    --lb-cols: 1.4fr 0.7fr 0.7fr 0.7fr 0.6fr;
+    --lb-cols: minmax(0, 0.6fr) minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.7fr) minmax(0, 0.7fr) minmax(0, 0.6fr);
+    overflow-x: hidden;
   }
   .leaderboard-item .lb-name {
     font-size: 0.85rem;
@@ -313,11 +331,15 @@
     justify-content: center;
   }
 
+  .leaderboard-item span:last-child {
+    padding-right: 4px;
+  }
+
 }
 
 @media (max-width: 360px) {
   .leaderboard-list {
-    --lb-cols: 1.3fr 0.6fr 0.6fr 0.6fr 0.5fr;
+    --lb-cols: minmax(0, 0.55fr) minmax(0, 1.2fr) minmax(0, 0.7fr) minmax(0, 0.6fr) minmax(0, 0.6fr) minmax(0, 0.55fr);
   }
   .leaderboard-item .lb-name { max-width: 10ch; font-size: 0.8rem; }
 }

@@ -93,7 +93,7 @@ const Profile = () => {
             </p>
           </div>
           <div className="rank-box" style={{minWidth:"190px",display:'flex',justifyContent:'space-between',padding:"10px"}}>
-            <span style={{fontSize:"25px",fontWeight:'bold'}}>RANK :</span>
+            <span style={{fontSize:"25px",fontWeight:'bold'}}>LEVEL :</span>
             <span className="rank-badge">{displayRank}</span>
           </div>
         </header>

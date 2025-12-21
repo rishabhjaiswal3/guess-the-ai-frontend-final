@@ -307,8 +307,8 @@
 .logo-circle {
   height: 220px;
   width: 220px;
-  background: #000;
-  border: 1px solid #444;
+  background: rgba(0, 0, 0, 0.6);
+  /* border: 1px solid #444; */
   padding: 20px;
   border-radius: 50%;
 }

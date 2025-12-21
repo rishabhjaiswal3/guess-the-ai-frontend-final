@@ -103,11 +103,12 @@ const Leaderboard = () => {
           </div>
           <div className="leaderboard-list">
             <div className="leaderboard-item leaderboard-header">
+              <span>Rank</span>
               <span>Players</span>
               <span>Correct</span>
               <span>Streak</span>
               <span>Best</span>
-              <span>Rank</span>
+              <span>Level</span>
             </div>
           {loading ? (
             <div className="lb-loader-wrap" role="status" aria-live="polite" aria-label="Loading leaderboard">
@@ -115,9 +116,10 @@ const Leaderboard = () => {
               <div className="lb-loader-text">Loading leaderboard…</div>
             </div>
           ) : (
-            leaderboard.map((player) => (
+            leaderboard.map((player,index) => (
               <div key={player.rank} className="leaderboard-item">
-                <span className="lb-name" title={player.username} data-full={player.username}>{getUserName(player.username)}</span>
+                <span>{index+1}</span>
+                <span>{getUserName(player.username)}</span>
                 <span>{player.correctAnswers} pts</span>
                 <span>{player.currentStreak}</span>
                 <span>{player.streak}</span>
