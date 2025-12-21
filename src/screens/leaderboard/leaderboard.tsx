@@ -93,7 +93,7 @@ const Leaderboard = () => {
       </div>
       
       <div className="leaderboard-container" style={{display:'flex',alignItems:'center'}}>
-        <div className="leaderboard-content">
+        <div className="leaderboard-content" >
           <div className="leaderboard-logo-container">
             <img 
               src={LeaderboardLogo} 

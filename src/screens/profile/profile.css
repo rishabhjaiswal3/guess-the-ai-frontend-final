@@ -36,10 +36,15 @@ body {
 
 .profile-page {
   position: relative;
-  min-height: 100vh;
-  padding: 20px;
-  padding-top: 92px; /* start below top bar */
+  padding-top: 120px;
+  display: flex;
+  padding-bottom: 170px;
+  /* min-height: 80vh; */
+  /* padding: 20px; */
+  /* padding-top: 92px; start below top bar */
   box-sizing: border-box;
+  display:flex;
+  align-items: center;
   overflow: visible; /* allow main-content to handle scrolling */
   z-index: 1;
 }

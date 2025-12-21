@@ -65,9 +65,9 @@
 .leaderboard-content {
   width: 100%;
   max-width: 1000px;
-  max-height: 80vh;
+  max-height: 76vh;
   margin: 0 auto;
-  padding: 24px;
+  padding: 12px;
   border-radius: 16px;
   border: 1px solid var(--theme-card-border);
   background: var(--theme-card-bg);
@@ -157,7 +157,7 @@
   overflow-y: auto;
   margin-top: 10px;
   height:100%;
-  padding-bottom: 80px;
+  padding-bottom: 20px;
   /* Define shared column template: rank, name, correct, streak, best, level */
   --lb-cols: minmax(0, 0.7fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.7fr);
 }
