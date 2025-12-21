@@ -56,10 +56,8 @@ const Profile = () => {
     : 'Not connected';
 
   return (
-    <div className="profile-page">
-      {/* Background with smooth loading */}
-      <div className="background-container">
-        {/* Static background shown until GIF is loaded */}
+    <div className="profile-page" style={{display:'flex',justifyContent:'center'}}>
+      {/* <div className="background-container">
         <img
           src={BgImage}
           alt="Background"
@@ -67,25 +65,18 @@ const Profile = () => {
           draggable={false}
         />
 
-        {/* Animated GIF background */}
         <video
-  autoPlay
-  muted
-  loop
-  playsInline
-  className="video-bg"
->
-  <source src={GifBg} type="video/mp4" />
-</video>
-      </div>
-      {/* <img src={clips} alt="Decor bottom" className="profile-decor-bottom" /> */}
-      <div className="profile-container">
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="video-bg"
+        >
+          <source src={GifBg} type="video/mp4" />
+        </video>
+      </div> */}
+      <div className="profile-container" style={{padding:'10px',height:'100%'}}>
         <header className="profile-header">
-          {/* <div className="player-avatar-pill" >
-            <span className="avatar-initial">
-              {displayName.charAt(0).toUpperCase()}
-            </span>
-          </div> */}
           <div style={{width:"100%",marginLeft:"10px"}}>
             <h1 className="player-name">{displayName}</h1>
             <p className="wallet" title={walletLabel} style={{fontSize:'12px'}}>
@@ -93,12 +84,12 @@ const Profile = () => {
             </p>
           </div>
           <div className="rank-box" style={{minWidth:"190px",display:'flex',justifyContent:'space-between',padding:"10px"}}>
-            <span style={{fontSize:"25px",fontWeight:'bold'}}>LEVEL :</span>
+            <span style={{fontSize:"25px",fontWeight:'bold'}}>RANK :</span>
             <span className="rank-badge">{displayRank}</span>
           </div>
         </header>
 
-        <section className="profile-card" style={{ marginTop: "30px" }}>
+        <section className="profile-card" style={{  }}>
           <div className="stats">
             <div className="stat">
               <div className="stat-label-group">

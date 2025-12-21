@@ -60,8 +60,6 @@ body {
 
 .profile-container {
   width: min(92vw, 900px);
-  margin: 16px auto 110px; /* leave space for bottom bar */
-  padding: 20px;
   box-sizing: border-box;
   position: relative;
   z-index: 2;
@@ -178,7 +176,6 @@ body {
   align-items: stretch;
   box-shadow: var(--theme-card-shadow);
   backdrop-filter: blur(10px);
-  
 }
 
 .stats {

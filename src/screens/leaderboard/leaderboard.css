@@ -30,6 +30,8 @@
 .leaderboard-page {
   position: relative;
   min-height: 100vh;
+  display:flex;
+  justify-content: center;
   color: var(--theme-text);
   font-family: 'Orbitron', sans-serif;
   padding: 20px;
