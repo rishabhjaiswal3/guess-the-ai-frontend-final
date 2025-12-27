@@ -43,3 +43,5 @@ gzip_min_length 1024;
 gzip_types application/javascript text/css application/json image/svg+xml;
 ```
 # Guess-The-AI
+
+<!-- https://api.guesstheai.xyz/ -->
