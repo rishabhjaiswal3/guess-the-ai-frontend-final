@@ -13,7 +13,6 @@ export default defineConfig({
           if (!id.includes('node_modules')) return;
 
           if (id.includes('/node_modules/@privy-io/react-auth/')) return 'privy';
-          if (id.includes('/node_modules/@tanstack/')) return 'tanstack';
 
           if (
             id.includes('/node_modules/react/') ||
