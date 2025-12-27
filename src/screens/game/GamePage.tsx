@@ -58,6 +58,7 @@ const GamePage = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [gifLoaded, setGifLoaded] = useState(false);
   const [showVideoBg, setShowVideoBg] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
@@ -381,6 +382,14 @@ const GamePage = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const updateIsMobile = () => setIsMobile(window.innerWidth <= 600);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isMobile) return;
     let timeoutId: number | undefined;
     const enableVideo = () => setShowVideoBg(true);
     timeoutId = window.setTimeout(enableVideo, 1200);
@@ -389,7 +398,7 @@ const GamePage = () => {
       window.clearTimeout(timeoutId);
       window.removeEventListener('pointerdown', enableVideo);
     };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     const hashes = imageState.queue
@@ -514,31 +523,35 @@ const GamePage = () => {
   }, []);
 
   return (
-    <div className="game-page">
+    <div className={`game-page ${isMobile ? 'is-mobile' : ''}`}>
       {/* Background with smooth loading */}
       <div className="background-container">
-        {/* Static background shown until GIF is loaded */}
-        <img
-          src={BgImage}
-          alt="Background"
-          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-          draggable={false}
-        />
+        {!isMobile && (
+          <>
+            {/* Static background shown until GIF is loaded */}
+            <img
+              src={BgImage}
+              alt="Background"
+              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+              draggable={false}
+            />
 
-        {/* Animated video background */}
-        {showVideoBg && (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            poster={BgImage}
-            className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-            onLoadedData={() => setGifLoaded(true)}
-          >
-            <source src={GifBg} type="video/webm" />
-          </video>
+            {/* Animated video background */}
+            {showVideoBg && (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="none"
+                poster={BgImage}
+                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+                onLoadedData={() => setGifLoaded(true)}
+              >
+                <source src={GifBg} type="video/webm" />
+              </video>
+            )}
+          </>
         )}
       </div>
       

@@ -248,6 +248,11 @@
   animation: gradientPulse 20s ease-in-out infinite;
 }
 
+.home-page.is-mobile .background-container {
+  background: var(--theme-bg, #0a001f);
+  background-image: none;
+}
+
 .content-wrap {
   display: flex;
   justify-content: center;

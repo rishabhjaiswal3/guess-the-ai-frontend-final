@@ -56,7 +56,7 @@ const Leaderboard = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || isMobile) return;
     let timeoutId: number | undefined;
     const enableVideo = () => setShowVideoBg(true);
     timeoutId = window.setTimeout(enableVideo, 1200);
@@ -65,7 +65,7 @@ const Leaderboard = () => {
       window.clearTimeout(timeoutId);
       window.removeEventListener('pointerdown', enableVideo);
     };
-  }, []);
+  }, [isMobile]);
 
   const getUserName = (userName?: string) => {
     const name = userName ?? '';
@@ -82,31 +82,35 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="leaderboard-page">
+    <div className={`leaderboard-page ${isMobile ? 'is-mobile' : ''}`}>
       {/* Background with smooth loading */}
       <div className="background-container">
-        {/* Static background shown until GIF is loaded */}
-        <img
-          src={BgImage}
-          alt="Background"
-          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-          draggable={false}
-        />
+        {!isMobile && (
+          <>
+            {/* Static background shown until GIF is loaded */}
+            <img
+              src={BgImage}
+              alt="Background"
+              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+              draggable={false}
+            />
 
-        {/* Animated video background */}
-        {showVideoBg && (
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="none"
-            poster={BgImage}
-            className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-            onLoadedData={() => setGifLoaded(true)}
-          >
-            <source src={GifBg} type="video/webm" />
-          </video>
+            {/* Animated video background */}
+            {showVideoBg && (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="none"
+                poster={BgImage}
+                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+                onLoadedData={() => setGifLoaded(true)}
+              >
+                <source src={GifBg} type="video/webm" />
+              </video>
+            )}
+          </>
         )}
       </div>
       

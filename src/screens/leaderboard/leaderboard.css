@@ -27,6 +27,10 @@
   opacity: 0;
 }
 
+.leaderboard-page.is-mobile .background-container {
+  background: var(--theme-bg, #0a001f);
+}
+
 .leaderboard-page {
   position: relative;
   min-height: 100vh;
