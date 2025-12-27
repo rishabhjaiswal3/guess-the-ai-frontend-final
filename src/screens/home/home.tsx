@@ -20,6 +20,7 @@ const Home = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [gifLoaded, setGifLoaded] = useState(false);
+  const [showVideoBg, setShowVideoBg] = useState(false);
   const { isIframeSession, hasToken } = useSessionSource();
   const isSessionActive = authenticated || isIframeSession || hasToken;
   const { createWallet } = useCreateWallet();
@@ -53,6 +54,18 @@ const Home = () => {
     if (savedName) {
       setName(savedName);
     }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let timeoutId: number | undefined;
+    const enableVideo = () => setShowVideoBg(true);
+    timeoutId = window.setTimeout(enableVideo, 1200);
+    window.addEventListener('pointerdown', enableVideo, { once: true });
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', enableVideo);
+    };
   }, []);
   
   const navigateToGame = async () => {
@@ -136,16 +149,20 @@ const Home = () => {
         />
 
         {/* Animated video background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          onLoadedData={() => setGifLoaded(true)}
-        >
-          <source src={GifBg} type="video/webm" />
-        </video>
+        {showVideoBg && (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+            poster={BgImage}
+            className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+            onLoadedData={() => setGifLoaded(true)}
+          >
+            <source src={GifBg} type="video/webm" />
+          </video>
+        )}
 
       </div>
 

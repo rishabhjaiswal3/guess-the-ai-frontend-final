@@ -57,6 +57,7 @@ const GamePage = () => {
   const [displaySrc, setDisplaySrc] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [gifLoaded, setGifLoaded] = useState(false);
+  const [showVideoBg, setShowVideoBg] = useState(false);
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
@@ -379,6 +380,18 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let timeoutId: number | undefined;
+    const enableVideo = () => setShowVideoBg(true);
+    timeoutId = window.setTimeout(enableVideo, 1200);
+    window.addEventListener('pointerdown', enableVideo, { once: true });
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', enableVideo);
+    };
+  }, []);
+
+  useEffect(() => {
     const hashes = imageState.queue
       .slice(0, PREFETCH_AHEAD)
       .map((item) => item.hash)
@@ -513,16 +526,20 @@ const GamePage = () => {
         />
 
         {/* Animated video background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          onLoadedData={() => setGifLoaded(true)}
-        >
-          <source src={GifBg} type="video/webm" />
-        </video>
+        {showVideoBg && (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+            poster={BgImage}
+            className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+            onLoadedData={() => setGifLoaded(true)}
+          >
+            <source src={GifBg} type="video/webm" />
+          </video>
+        )}
       </div>
       
       <div className="game-container">

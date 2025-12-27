@@ -20,6 +20,7 @@ const Leaderboard = () => {
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
   const [gifLoaded, setGifLoaded] = useState(false);
+  const [showVideoBg, setShowVideoBg] = useState(false);
  
   const getLeaderboardData = useCallback(async () => {
     setLoading(true);
@@ -54,6 +55,18 @@ const Leaderboard = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let timeoutId: number | undefined;
+    const enableVideo = () => setShowVideoBg(true);
+    timeoutId = window.setTimeout(enableVideo, 1200);
+    window.addEventListener('pointerdown', enableVideo, { once: true });
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', enableVideo);
+    };
+  }, []);
+
   const getUserName = (userName?: string) => {
     const name = userName ?? '';
 
@@ -81,16 +94,20 @@ const Leaderboard = () => {
         />
 
         {/* Animated video background */}
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          onLoadedData={() => setGifLoaded(true)}
-        >
-          <source src={GifBg} type="video/webm" />
-        </video>
+        {showVideoBg && (
+          <video
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="none"
+            poster={BgImage}
+            className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+            onLoadedData={() => setGifLoaded(true)}
+          >
+            <source src={GifBg} type="video/webm" />
+          </video>
+        )}
       </div>
       
       <div className="leaderboard-container" style={{display:'flex',alignItems:'center'}}>

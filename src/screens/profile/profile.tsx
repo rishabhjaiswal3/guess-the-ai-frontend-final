@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
 import clips from '../../assets/Clip.png';
-import DemonImage from '../../assets/Demon .png';
+import DemonImage from '../../assets/demon.webp';
 import { getProfile } from '../../api/auth';
 import './profile.css';
 import useSessionSource from '../../hooks/useSessionSource';
 import BgImage from '../../assets/bg.webp';
-import GifBg from '../../assets/Guesstheaibg.webm';
 
 type ProfileData = {
   username?: string;
@@ -57,25 +56,6 @@ const Profile = () => {
 
   return (
     <div className="profile-page" style={{display:'flex',justifyContent:'center'}}>
-      {/* <div className="background-container">
-        <img
-          src={BgImage}
-          alt="Background"
-          className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-          draggable={false}
-        />
-
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-          onLoadedData={() => setGifLoaded(true)}
-        >
-          <source src={GifBg} type="video/webm" />
-        </video>
-      </div> */}
       <div className="profile-container" style={{padding:'10px',height:'100%'}}>
         <header className="profile-header">
           <div style={{width:"100%",marginLeft:"10px"}}>
