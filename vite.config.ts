@@ -7,10 +7,23 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          react: ['react', 'react-dom', 'react-router-dom'],
-          privy: ['@privy-io/react-auth'],
-          tanstack: ['@tanstack/react-query'],
+        manualChunks(id) {
+          if (id.includes('vite/preload-helper')) return 'runtime';
+          if (id.includes('commonjsHelpers')) return 'runtime';
+          if (!id.includes('node_modules')) return;
+
+          if (id.includes('/node_modules/@privy-io/react-auth/')) return 'privy';
+          if (id.includes('/node_modules/@tanstack/')) return 'tanstack';
+
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-dom/') ||
+            id.includes('/node_modules/react-router/') ||
+            id.includes('/node_modules/react-router-dom/') ||
+            id.includes('/node_modules/scheduler/')
+          ) {
+            return 'react';
+          }
         },
       },
     },
