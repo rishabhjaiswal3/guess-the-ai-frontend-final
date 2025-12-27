@@ -1,16 +1,14 @@
-import { ReactNode, Suspense, lazy } from 'react';
+import { ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
 import PresenceProvider from './providers/PresenceProvider';
 import useIframeBootstrap from './hooks/useIframeBootstrap';
 import BottomNav from './components/BottomNav';
 import TopBrandBar from './components/TopBrandBar';
-import { Loader } from './components/Loader';
-
-const Home = lazy(() => import('./screens/home/home'));
-const Leaderboard = lazy(() => import('./screens/leaderboard/leaderboard'));
-const Profile = lazy(() => import('./screens/profile/profile'));
-const GamePage = lazy(() => import('./screens/game/GamePage'));
+import Home from './screens/home/home';
+import Leaderboard from './screens/leaderboard/leaderboard';
+import Profile from './screens/profile/profile';
+import GamePage from './screens/game/GamePage';
 
 const privyAppId = import.meta.env.VITE_PRIVY_APP_ID;
 const privyConfig: PrivyClientConfig = {
@@ -44,12 +42,6 @@ const Layout = ({ children }: LayoutProps) => {
   );
 };
 
-const PageFallback = () => (
-  <div className="page-fallback" role="status" aria-live="polite">
-    <Loader size="lg" />
-  </div>
-);
-
 export default function PrivyApp() {
   if (!privyAppId) {
     throw new Error('Missing VITE_PRIVY_APP_ID environment variable');
@@ -60,48 +52,40 @@ export default function PrivyApp() {
       <PresenceProvider>
         <Router>
           <Routes>
-            <Route
-              path="/"
-              element={(
-                <Layout>
-                  <Suspense fallback={<PageFallback />}>
+              <Route
+                path="/"
+                element={(
+                  <Layout>
                     <Home />
-                  </Suspense>
-                </Layout>
-              )}
-            />
-            <Route
-              path="/leaderboard"
-              element={(
-                <Layout>
-                  <Suspense fallback={<PageFallback />}>
+                  </Layout>
+                )}
+              />
+              <Route
+                path="/leaderboard"
+                element={(
+                  <Layout>
                     <Leaderboard />
-                  </Suspense>
-                </Layout>
-              )}
-            />
-            <Route
-              path="/profile"
-              element={(
-                <Layout>
-                  <Suspense fallback={<PageFallback />}>
+                  </Layout>
+                )}
+              />
+              <Route
+                path="/profile"
+                element={(
+                  <Layout>
                     <Profile />
-                  </Suspense>
-                </Layout>
-              )}
-            />
-            <Route
-              path="/game"
-              element={(
-                <Layout>
-                  <Suspense fallback={<PageFallback />}>
+                  </Layout>
+                )}
+              />
+              <Route
+                path="/game"
+                element={(
+                  <Layout>
                     <GamePage />
-                  </Suspense>
-                </Layout>
-              )}
-            />
-          </Routes>
-        </Router>
+                  </Layout>
+                )}
+              />
+            </Routes>
+          </Router>
       </PresenceProvider>
     </PrivyProvider>
   );
