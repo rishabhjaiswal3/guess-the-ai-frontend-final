@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { FullPageLoader } from './components/Loader';
+import AppBackground from './components/AppBackground';
 import Shell from './Shell';
 import { warmPrivy, warmPrivyApp } from './warm';
 
@@ -24,26 +25,27 @@ export default function App() {
 
   const isRoot = typeof window !== 'undefined' ? window.location.pathname === '/' : false;
 
-  if (!showPrivyApp) {
-    return (
-      <Shell
-        onConnect={() => {
-          setConnectPending(true);
-          if (typeof window !== 'undefined') {
-            window.sessionStorage.setItem('gta:auto-open-login', '1');
-          }
-          Promise.all([warmPrivy(), warmPrivyApp()])
-            .then(() => setShowPrivyApp(true))
-            .finally(() => setConnectPending(false));
-        }}
-        connecting={connectPending}
-      />
-    );
-  }
-
   return (
-    <Suspense fallback={isRoot ? <Shell onConnect={() => {}} connecting /> : <FullPageLoader />}>
-      <PrivyApp />
-    </Suspense>
+    <>
+      <AppBackground />
+      {showPrivyApp ? (
+        <Suspense fallback={<FullPageLoader />}>
+          <PrivyApp />
+        </Suspense>
+      ) : (
+        <Shell
+          onConnect={() => {
+            setConnectPending(true);
+            if (typeof window !== 'undefined') {
+              window.sessionStorage.setItem('gta:auto-open-login', '1');
+            }
+            Promise.all([warmPrivy(), warmPrivyApp()])
+              .then(() => setShowPrivyApp(true))
+              .finally(() => setConnectPending(false));
+          }}
+          connecting={connectPending}
+        />
+      )}
+    </>
   );
 }

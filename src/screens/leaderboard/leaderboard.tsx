@@ -3,8 +3,6 @@ import { Loader } from '../../components/Loader';
 import './leaderboard.css';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
-import BgImage from '../../assets/bg.webp';
-import GifBg from '../../assets/Guesstheaibg.webm';
 
 type LeaderboardEntry = {
   username: string;
@@ -19,8 +17,6 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMobile, setIsMobile] = useState(false);
-  const [gifLoaded, setGifLoaded] = useState(false);
-  const [showVideoBg, setShowVideoBg] = useState(false);
  
   const getLeaderboardData = useCallback(async () => {
     setLoading(true);
@@ -55,18 +51,6 @@ const Leaderboard = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || isMobile) return;
-    let timeoutId: number | undefined;
-    const enableVideo = () => setShowVideoBg(true);
-    timeoutId = window.setTimeout(enableVideo, 1200);
-    window.addEventListener('pointerdown', enableVideo, { once: true });
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.removeEventListener('pointerdown', enableVideo);
-    };
-  }, [isMobile]);
-
   const getUserName = (userName?: string) => {
     const name = userName ?? '';
 
@@ -82,38 +66,7 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className={`leaderboard-page ${isMobile ? 'is-mobile' : ''}`}>
-      {/* Background with smooth loading */}
-      <div className="background-container">
-        {!isMobile && (
-          <>
-            {/* Static background shown until GIF is loaded */}
-            <img
-              src={BgImage}
-              alt="Background"
-              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-              draggable={false}
-            />
-
-            {/* Animated video background */}
-            {showVideoBg && (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="none"
-                poster={BgImage}
-                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-                onLoadedData={() => setGifLoaded(true)}
-              >
-                <source src={GifBg} type="video/webm" />
-              </video>
-            )}
-          </>
-        )}
-      </div>
-      
+    <div className="leaderboard-page">
       <div className="leaderboard-container" style={{display:'flex',alignItems:'center'}}>
         <div className="leaderboard-content" >
           <div className="leaderboard-logo-container">

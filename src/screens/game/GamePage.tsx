@@ -3,8 +3,6 @@ import ai from '../../assets/Ai-button.png';
 import human from '../../assets/Human-button.png';
 import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
 import './GamePage.css';
-import BgImage from '../../assets/bg.webp';
-import GifBg from '../../assets/Guesstheaibg.webm';
 
 type GameImage = {
   hash?: string;
@@ -55,9 +53,6 @@ const GamePage = () => {
   const [prefetching, setPrefetching] = useState(false);
   const [displaySrc, setDisplaySrc] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
-  const [gifLoaded, setGifLoaded] = useState(false);
-  const [showVideoBg, setShowVideoBg] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
@@ -380,26 +375,6 @@ const GamePage = () => {
   }, []);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const updateIsMobile = () => setIsMobile(window.innerWidth <= 600);
-    updateIsMobile();
-    window.addEventListener('resize', updateIsMobile);
-    return () => window.removeEventListener('resize', updateIsMobile);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || isMobile) return;
-    let timeoutId: number | undefined;
-    const enableVideo = () => setShowVideoBg(true);
-    timeoutId = window.setTimeout(enableVideo, 1200);
-    window.addEventListener('pointerdown', enableVideo, { once: true });
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.removeEventListener('pointerdown', enableVideo);
-    };
-  }, [isMobile]);
-
-  useEffect(() => {
     const hashes = imageState.queue
       .slice(0, PREFETCH_AHEAD)
       .map((item) => item.hash)
@@ -522,38 +497,7 @@ const GamePage = () => {
   }, []);
 
   return (
-    <div className={`game-page ${isMobile ? 'is-mobile' : ''}`}>
-      {/* Background with smooth loading */}
-      <div className="background-container">
-        {!isMobile && (
-          <>
-            {/* Static background shown until GIF is loaded */}
-            <img
-              src={BgImage}
-              alt="Background"
-              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-              draggable={false}
-            />
-
-            {/* Animated video background */}
-            {showVideoBg && (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="none"
-                poster={BgImage}
-                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-                onLoadedData={() => setGifLoaded(true)}
-              >
-                <source src={GifBg} type="video/webm" />
-              </video>
-            )}
-          </>
-        )}
-      </div>
-      
+    <div className="game-page">
       <div className="game-container">
         <div className="game-card">
         <div className="game-card-header">

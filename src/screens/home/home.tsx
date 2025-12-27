@@ -1,52 +1,24 @@
 import { useState, useEffect, type ChangeEvent, type KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { usePrivy, useCreateWallet } from '@privy-io/react-auth';
+import { usePrivy } from '@privy-io/react-auth';
 import WalletConnect from '../../components/WalletConnect';
 import './home.css';
 import { updateUserName } from '../../api/auth';
 import useSessionSource from '../../hooks/useSessionSource';
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
-import BgImage from '../../assets/bg.webp';
-import GifBg from '../../assets/Guesstheaibg.webm';
 // import Base from '../../assets/Base.png';
 // import Icon from '../../assets/Icon.png';
 // import SearchIcon from '../../assets/SearchIcon.png';
 
 const Home = () => {
-  const { authenticated, user } = usePrivy();
+  const { authenticated } = usePrivy();
   // const isConnected = authenticated;
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [gifLoaded, setGifLoaded] = useState(false);
-  const [showVideoBg, setShowVideoBg] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const { isIframeSession, hasToken } = useSessionSource();
   const isSessionActive = authenticated || isIframeSession || hasToken;
-  const { createWallet } = useCreateWallet();
-  
-  // Check and create wallet for new email users
-  useEffect(() => {
-    const checkAndCreateWallet = async () => {
-      if (authenticated && user && createWallet) {
-        // Check if user has a wallet
-        const hasWallet = user.wallet?.address || 
-          (user.linkedAccounts || []).some(acc => acc.type === 'wallet');
-        if (!hasWallet) {
-          try {
-            // Create a wallet for the user
-            await createWallet();
-            console.log('Wallet created successfully');
-          } catch (error) {
-            console.error('Error creating wallet:', error);
-          }
-        }
-      }
-    };
-
-    checkAndCreateWallet();
-  }, [authenticated, user, createWallet]);
 
   // Load name from localStorage on component mount
   useEffect(() => {
@@ -57,26 +29,6 @@ const Home = () => {
     }
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const updateIsMobile = () => setIsMobile(window.innerWidth <= 600);
-    updateIsMobile();
-    window.addEventListener('resize', updateIsMobile);
-    return () => window.removeEventListener('resize', updateIsMobile);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || isMobile) return;
-    let timeoutId: number | undefined;
-    const enableVideo = () => setShowVideoBg(true);
-    timeoutId = window.setTimeout(enableVideo, 250);
-    window.addEventListener('pointerdown', enableVideo, { once: true });
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.removeEventListener('pointerdown', enableVideo);
-    };
-  }, [isMobile]);
-  
   const navigateToGame = async () => {
     setError('');
     setSuccess('');
@@ -146,39 +98,7 @@ const Home = () => {
   // };
 
   return (
-    <div className={`home-page ${isMobile ? 'is-mobile' : ''}`}>
-      {/* Background with smooth loading */}
-      <div className="background-container">
-        {!isMobile && (
-          <>
-            {/* Static background shown until GIF is loaded */}
-            <img
-              src={BgImage}
-              alt="Background"
-              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
-              draggable={false}
-            />
-
-            {/* Animated video background */}
-            {showVideoBg && (
-              <video
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="none"
-                poster={BgImage}
-                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
-                onLoadedData={() => setGifLoaded(true)}
-              >
-                <source src={GifBg} type="video/webm" />
-              </video>
-            )}
-          </>
-        )}
-
-      </div>
-
+    <div className="home-page">
       <div className={`content-container ${isSessionActive ? 'session-active' : ''}`}>
         <div className="content-wrap" >
           <img src={logo2} alt="" className="logo-circle"/>
