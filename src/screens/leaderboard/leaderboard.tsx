@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { Loader } from '../../components/Loader';
 import './leaderboard.css';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
@@ -133,8 +134,7 @@ const Leaderboard = () => {
             </div>
           {loading ? (
             <div className="lb-loader-wrap" role="status" aria-live="polite" aria-label="Loading leaderboard">
-              <div className="lb-spinner" />
-              <div className="lb-loader-text">Loading leaderboard…</div>
+              <Loader size="lg" label="Loading leaderboard" />
             </div>
           ) : (
             leaderboard.map((player,index) => (

@@ -4,6 +4,7 @@ import { login as backendLogin } from '../api/auth';
 import useSessionSource from '../hooks/useSessionSource';
 import { clearSessionStorage } from '../utils/session';
 import LoginModal from './LoginModal';
+import { Loader } from './Loader';
 import logo2 from '../assets/Logo2.png';
 import './WalletConnect.css';
 
@@ -28,6 +29,19 @@ const WalletConnect = () => {
   const { ready, authenticated, user } = usePrivy();
   const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (authenticated || hasToken || isIframeSession || isWalletSession) {
+      window.sessionStorage.removeItem('gta:auto-open-login');
+      return;
+    }
+    const shouldAutoOpen = window.sessionStorage.getItem('gta:auto-open-login') === '1';
+    if (!shouldAutoOpen) return;
+    if (!ready) return;
+    window.sessionStorage.removeItem('gta:auto-open-login');
+    setIsModalOpen(true);
+  }, [ready, authenticated, hasToken, isIframeSession, isWalletSession]);
 
   const loginUser = useCallback(async () => {
     // Debug logs to trace wallet-based login flow
@@ -114,7 +128,7 @@ const WalletConnect = () => {
           style={{minWidth:"260px"}}
           disabled={!ready}
         >
-          {ready ? 'Connect' : 'Loading...'}
+          {ready ? 'Connect' : <Loader size="sm" label="Loading" />}
         </button>
       </div>
       <LoginModal
