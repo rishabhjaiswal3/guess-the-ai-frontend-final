@@ -1,11 +1,7 @@
 import { useEffect, useState } from 'react';
-import { usePrivy } from '@privy-io/react-auth';
-import clips from '../../assets/Clip.png';
 import DemonImage from '../../assets/demon.webp';
 import { getProfile } from '../../api/auth';
 import './profile.css';
-import useSessionSource from '../../hooks/useSessionSource';
-import BgImage from '../../assets/bg.webp';
 
 type ProfileData = {
   username?: string;
@@ -19,10 +15,6 @@ type ProfileData = {
 
 const Profile = () => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [gifLoaded, setGifLoaded] = useState(false);
-  const { authenticated } = usePrivy();
-  const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = authenticated || (isIframeSession && hasToken);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,10 +33,6 @@ const Profile = () => {
   const displayName = profileData?.username && profileData.username.trim().length
     ? profileData.username
     : 'Player';
-
-  const displayDungeonTitle = profileData?.dungeonTitle && profileData.dungeonTitle.trim().length
-    ? profileData.dungeonTitle
-    : 'Demon World Runner';
 
   const displayRank = typeof profileData?.rank !== 'undefined' && profileData?.rank !== null
     ? profileData.rank

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import './leaderboard.css';
-import clips from '../../assets/Clip.png';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
 import BgImage from '../../assets/bg.webp';

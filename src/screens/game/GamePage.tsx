@@ -3,7 +3,6 @@ import ai from '../../assets/Ai-button.png';
 import human from '../../assets/Human-button.png';
 import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
 import './GamePage.css';
-import clips from '../../assets/Clip.png';
 import BgImage from '../../assets/bg.webp';
 import GifBg from '../../assets/Guesstheaibg.webm';
 

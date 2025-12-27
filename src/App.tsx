@@ -1,14 +1,14 @@
-import { ReactNode } from 'react';
+import { ReactNode, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PresenceProvider from './providers/PresenceProvider';
 import useIframeBootstrap from './hooks/useIframeBootstrap';
 // Components
-import Home from './screens/home/home';
-import Leaderboard from './screens/leaderboard/leaderboard';
-import Profile from './screens/profile/profile';
-import GamePage from './screens/game/GamePage';
+const Home = lazy(() => import('./screens/home/home'));
+const Leaderboard = lazy(() => import('./screens/leaderboard/leaderboard'));
+const Profile = lazy(() => import('./screens/profile/profile'));
+const GamePage = lazy(() => import('./screens/game/GamePage'));
 import BottomNav from './components/BottomNav';
 import TopBrandBar from './components/TopBrandBar';
 
@@ -49,6 +49,12 @@ const Layout = ({ children }: LayoutProps) => {
   );
 };
 
+const PageFallback = () => (
+  <div className="page-fallback" role="status" aria-live="polite">
+    Loading...
+  </div>
+);
+
 function App() {
   if (!privyAppId) {
     throw new Error('Missing VITE_PRIVY_APP_ID environment variable');
@@ -64,7 +70,9 @@ function App() {
                 path="/"
                 element={(
                   <Layout>
-                    <Home />
+                    <Suspense fallback={<PageFallback />}>
+                      <Home />
+                    </Suspense>
                   </Layout>
                 )}
               />
@@ -72,7 +80,9 @@ function App() {
                 path="/leaderboard"
                 element={(
                   <Layout>
-                    <Leaderboard />
+                    <Suspense fallback={<PageFallback />}>
+                      <Leaderboard />
+                    </Suspense>
                   </Layout>
                 )}
               />
@@ -80,7 +90,9 @@ function App() {
                 path="/profile"
                 element={(
                   <Layout>
-                    <Profile />
+                    <Suspense fallback={<PageFallback />}>
+                      <Profile />
+                    </Suspense>
                   </Layout>
                 )}
               />
@@ -88,7 +100,9 @@ function App() {
                 path="/game"
                 element={(
                   <Layout>
-                    <GamePage />
+                    <Suspense fallback={<PageFallback />}>
+                      <GamePage />
+                    </Suspense>
                   </Layout>
                 )}
               />

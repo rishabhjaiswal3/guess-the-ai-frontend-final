@@ -29,6 +29,16 @@ html, body, #root {
   padding-bottom: 0;
 }
 
+.page-fallback {
+  min-height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-soft);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 /* Ensure the home container takes full height */
 .home-container {
   min-height: 100%;
