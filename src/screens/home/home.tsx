@@ -69,7 +69,7 @@ const Home = () => {
     if (typeof window === 'undefined' || isMobile) return;
     let timeoutId: number | undefined;
     const enableVideo = () => setShowVideoBg(true);
-    timeoutId = window.setTimeout(enableVideo, 1200);
+    timeoutId = window.setTimeout(enableVideo, 250);
     window.addEventListener('pointerdown', enableVideo, { once: true });
     return () => {
       window.clearTimeout(timeoutId);

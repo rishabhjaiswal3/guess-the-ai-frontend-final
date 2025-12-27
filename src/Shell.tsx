@@ -28,7 +28,7 @@ export default function Shell({ onConnect, connecting }: ShellProps) {
   useEffect(() => {
     if (typeof window === 'undefined' || isMobile) return;
     const enableVideo = () => setShowVideoBg(true);
-    const timeoutId = setTimeout(enableVideo, 1200);
+    const timeoutId = setTimeout(enableVideo, 250);
     window.addEventListener('pointerdown', enableVideo, { once: true });
     return () => {
       clearTimeout(timeoutId);
