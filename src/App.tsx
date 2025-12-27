@@ -6,6 +6,7 @@ import { warmPrivy, warmPrivyApp } from './warm';
 const PrivyApp = lazy(() => import('./PrivyApp'));
 
 export default function App() {
+  const [connectPending, setConnectPending] = useState(false);
   const [showPrivyApp, setShowPrivyApp] = useState(() => {
     if (typeof window === 'undefined') return true;
     if (window.location.pathname !== '/') return true;
@@ -37,21 +38,24 @@ export default function App() {
   if (!showPrivyApp) {
     return (
       <Shell
-        warming={warming}
         onConnect={() => {
+          setConnectPending(true);
           if (typeof window !== 'undefined') {
             window.sessionStorage.setItem('gta:auto-open-login', '1');
           }
-          void warmPrivy();
-          void warmPrivyApp();
-          setShowPrivyApp(true);
+          Promise.all([warmPrivy(), warmPrivyApp()])
+            .then(() => setShowPrivyApp(true))
+            .finally(() => setConnectPending(false));
         }}
+        connecting={connectPending}
       />
     );
   }
 
+  const isRoot = typeof window !== 'undefined' ? window.location.pathname === '/' : false;
+
   return (
-    <Suspense fallback={<FullPageLoader />}>
+    <Suspense fallback={isRoot ? <Shell onConnect={() => {}} connecting /> : <FullPageLoader />}>
       <PrivyApp />
     </Suspense>
   );

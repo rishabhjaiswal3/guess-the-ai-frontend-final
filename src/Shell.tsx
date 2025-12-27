@@ -7,10 +7,10 @@ import { Loader } from './components/Loader';
 
 type ShellProps = {
   onConnect: () => void;
-  warming?: boolean;
+  connecting?: boolean;
 };
 
-export default function Shell({ onConnect, warming }: ShellProps) {
+export default function Shell({ onConnect, connecting }: ShellProps) {
   return (
     <div className="home-page">
       <div className="background-container">
@@ -28,8 +28,16 @@ export default function Shell({ onConnect, warming }: ShellProps) {
               className="connect-wallet-button"
               onClick={onConnect}
               style={{ minWidth: '260px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
+              disabled={connecting}
             >
-              {warming ? <Loader size="sm" label="Preparing login" /> : 'Connect'}
+              {connecting ? (
+                <>
+                  <Loader size="sm" label="Preparing login" />
+                  Preparing…
+                </>
+              ) : (
+                'Connect'
+              )}
             </button>
           </div>
 
