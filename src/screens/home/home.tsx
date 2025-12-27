@@ -7,8 +7,8 @@ import { updateUserName } from '../../api/auth';
 import useSessionSource from '../../hooks/useSessionSource';
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
-import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.mp4';
+import BgImage from '../../assets/bg.webp';
+import GifBg from '../../assets/Guesstheaibg.webm';
 // import Base from '../../assets/Base.png';
 // import Icon from '../../assets/Icon.png';
 // import SearchIcon from '../../assets/SearchIcon.png';
@@ -135,16 +135,17 @@ const Home = () => {
           draggable={false}
         />
 
-        {/* Animated GIF background */}
+        {/* Animated video background */}
         <video
-  autoPlay
-  muted
-  loop
-  playsInline
-  className="video-bg"
->
-  <source src={GifBg} type="video/mp4" />
-</video>
+          autoPlay
+          muted
+          loop
+          playsInline
+          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          onLoadedData={() => setGifLoaded(true)}
+        >
+          <source src={GifBg} type="video/webm" />
+        </video>
 
       </div>
 

@@ -3,8 +3,8 @@ import './leaderboard.css';
 import clips from '../../assets/Clip.png';
 import LeaderboardLogo from '../../assets/Leaderboard-logo.png';
 import { getLeaderboard } from '../../api/auth';
-import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.mp4';
+import BgImage from '../../assets/bg.webp';
+import GifBg from '../../assets/Guesstheaibg.webm';
 
 type LeaderboardEntry = {
   username: string;
@@ -80,16 +80,17 @@ const Leaderboard = () => {
           draggable={false}
         />
 
-        {/* Animated GIF background */}
+        {/* Animated video background */}
         <video
-  autoPlay
-  muted
-  loop
-  playsInline
-  className="video-bg"
->
-  <source src={GifBg} type="video/mp4" />
-</video>
+          autoPlay
+          muted
+          loop
+          playsInline
+          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          onLoadedData={() => setGifLoaded(true)}
+        >
+          <source src={GifBg} type="video/webm" />
+        </video>
       </div>
       
       <div className="leaderboard-container" style={{display:'flex',alignItems:'center'}}>

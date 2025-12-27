@@ -153,7 +153,7 @@
   width: 100%;
   text-align: left;
   max-height: 58vh;
-  overflow: scroll;
+  overflow-x: hidden;
   overflow-y: auto;
   margin-top: 10px;
   height:100%;
@@ -292,7 +292,7 @@
     max-height: 72px;
   }
   .leaderboard-item {
-    padding: 6px 12px;
+    padding: 6px 8px;
     margin: 8px 0; /* a bit more space between rows on mobile */
     column-gap: 14px; /* keep extra spacing on narrow screens */
   }
@@ -331,10 +331,6 @@
   .leaderboard-header span:last-child {
     display: inline-flex !important;
     justify-content: center;
-  }
-
-  .leaderboard-item span:last-child {
-    padding-right: 4px;
   }
 
 }

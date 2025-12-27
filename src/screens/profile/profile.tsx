@@ -5,8 +5,8 @@ import DemonImage from '../../assets/Demon .png';
 import { getProfile } from '../../api/auth';
 import './profile.css';
 import useSessionSource from '../../hooks/useSessionSource';
-import BgImage from '../../assets/Bg.png';
-import GifBg from '../../assets/Guesstheaibg.mp4';
+import BgImage from '../../assets/bg.webp';
+import GifBg from '../../assets/Guesstheaibg.webm';
 
 type ProfileData = {
   username?: string;
@@ -70,9 +70,10 @@ const Profile = () => {
           muted
           loop
           playsInline
-          className="video-bg"
+          className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+          onLoadedData={() => setGifLoaded(true)}
         >
-          <source src={GifBg} type="video/mp4" />
+          <source src={GifBg} type="video/webm" />
         </video>
       </div> */}
       <div className="profile-container" style={{padding:'10px',height:'100%'}}>
