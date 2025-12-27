@@ -457,7 +457,6 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
             <img src={logoSrc} alt="Logo" style={{height:'120px',width:'120px',background:'black',borderRadius:"100px",padding:"10px"}} />
           )}
           <h2 style={styles.title}>GUESS THE AI</h2>
-          {/* Subtitle intentionally minimal for now */}
         </div>
 
         {error && <div style={styles.error}>{error}</div>}

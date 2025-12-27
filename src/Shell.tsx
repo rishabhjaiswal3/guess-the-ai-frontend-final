@@ -1,6 +1,8 @@
 import './components/WalletConnect.css';
 import './screens/home/home.css';
+import { useEffect, useState } from 'react';
 import BgImage from './assets/bg.webp';
+import GifBg from './assets/Guesstheaibg.webm';
 import logo2 from './assets/Logo2.png';
 import og from './assets/og.png';
 import { Loader } from './components/Loader';
@@ -11,10 +13,58 @@ type ShellProps = {
 };
 
 export default function Shell({ onConnect, connecting }: ShellProps) {
+  const [gifLoaded, setGifLoaded] = useState(false);
+  const [showVideoBg, setShowVideoBg] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const updateIsMobile = () => setIsMobile(window.innerWidth <= 600);
+    updateIsMobile();
+    window.addEventListener('resize', updateIsMobile);
+    return () => window.removeEventListener('resize', updateIsMobile);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isMobile) return;
+    const enableVideo = () => setShowVideoBg(true);
+    const timeoutId = setTimeout(enableVideo, 1200);
+    window.addEventListener('pointerdown', enableVideo, { once: true });
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', enableVideo);
+    };
+  }, [isMobile]);
+
   return (
     <div className="home-page">
+
       <div className="background-container">
-        <img src={BgImage} alt="Background" className="background-image fade-in" draggable={false} />
+        {!isMobile && (
+          <>
+            <img
+              src={BgImage}
+              alt="Background"
+              className={`background-image ${gifLoaded ? 'fade-out' : 'fade-in'}`}
+              draggable={false}
+            />
+
+            {showVideoBg && (
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="none"
+                poster={BgImage}
+                className={`video-bg ${gifLoaded ? 'fade-in' : 'fade-out'}`}
+                onLoadedData={() => setGifLoaded(true)}
+              >
+                <source src={GifBg} type="video/webm" />
+              </video>
+            )}
+          </>
+        )}
       </div>
 
       <div className="content-container">
@@ -56,6 +106,7 @@ export default function Shell({ onConnect, connecting }: ShellProps) {
           </div>
         </div>
       </div>
+      
     </div>
   );
 }
