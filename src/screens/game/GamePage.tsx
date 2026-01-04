@@ -372,132 +372,132 @@ const GamePage = () => {
     }
   };
 
-  useEffect(() => {
-    getUserProfile();
-    loadInitialImages();
-  }, []);
+  // useEffect(() => {
+  //   getUserProfile();
+  //   loadInitialImages();
+  // }, []);
 
-  useEffect(() => {
-    const hashes = imageState.queue
-      .slice(0, PREFETCH_AHEAD)
-      .map((item) => item.hash)
-      .filter((hash): hash is string => Boolean(hash));
-    if (!hashes.length) return;
-    preloadHashes(hashes).catch((err) => {
-      console.error('Error preloading queue images:', err);
-    });
-  }, [imageState.queue, indexerBaseUrl]);
+  // useEffect(() => {
+  //   const hashes = imageState.queue
+  //     .slice(0, PREFETCH_AHEAD)
+  //     .map((item) => item.hash)
+  //     .filter((hash): hash is string => Boolean(hash));
+  //   if (!hashes.length) return;
+  //   preloadHashes(hashes).catch((err) => {
+  //     console.error('Error preloading queue images:', err);
+  //   });
+  // }, [imageState.queue, indexerBaseUrl]);
 
-  useEffect(() => {
-    let cancelled = false;
+  // useEffect(() => {
+  //   let cancelled = false;
 
-    const fetchIndexerImage = async (hash: string): Promise<string> => {
-      const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
-      const response = await fetch(url, { cache: 'default' });
-      if (!response.ok) {
-        throw new Error(`indexer status ${response.status}`);
-      }
-      const contentType = response.headers.get('content-type') ?? '';
-      const isImage = contentType.toLowerCase().includes('image/');
-      if (!isImage) {
-        throw new Error(`unexpected content-type ${contentType}`);
-      }
-      const blob = await response.blob();
-      if (!blob || !blob.size) {
-        throw new Error('empty image payload');
-      }
-      return URL.createObjectURL(blob);
-    };
+  //   const fetchIndexerImage = async (hash: string): Promise<string> => {
+  //     const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
+  //     const response = await fetch(url, { cache: 'default' });
+  //     if (!response.ok) {
+  //       throw new Error(`indexer status ${response.status}`);
+  //     }
+  //     const contentType = response.headers.get('content-type') ?? '';
+  //     const isImage = contentType.toLowerCase().includes('image/');
+  //     if (!isImage) {
+  //       throw new Error(`unexpected content-type ${contentType}`);
+  //     }
+  //     const blob = await response.blob();
+  //     if (!blob || !blob.size) {
+  //       throw new Error('empty image payload');
+  //     }
+  //     return URL.createObjectURL(blob);
+  //   };
 
-    const ensureImage = async () => {
-      cleanupObjectUrl();
-      if (!current?.hash) {
-        setDisplaySrc('');
-        setImageLoading(false);
-        return;
-      }
+  //   const ensureImage = async () => {
+  //     cleanupObjectUrl();
+  //     if (!current?.hash) {
+  //       setDisplaySrc('');
+  //       setImageLoading(false);
+  //       return;
+  //     }
 
-      if (current?.sourceType === 'backup' && current?.imageDataUrl) {
-        setDisplaySrc(current.imageDataUrl);
-        setImageLoading(true);
-        setError('');
-        return;
-      }
+  //     if (current?.sourceType === 'backup' && current?.imageDataUrl) {
+  //       setDisplaySrc(current.imageDataUrl);
+  //       setImageLoading(true);
+  //       setError('');
+  //       return;
+  //     }
 
-      setImageLoading(true);
-      const cachedObjectUrl = imageBlobUrlCacheRef.current.get(current.hash);
-      if (cachedObjectUrl) {
-        objectUrlRef.current = cachedObjectUrl;
-        setDisplaySrc(cachedObjectUrl);
-        setError('');
-        return;
-      }
-      let lastError: unknown = null;
-      for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
-        try {
-          const objectUrl = await fetchIndexerImage(current.hash);
-          if (cancelled) {
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-            return;
-          }
-          imageBlobUrlCacheRef.current.set(current.hash, objectUrl);
-          objectUrlRef.current = objectUrl;
-          setDisplaySrc(objectUrl);
-          setError('');
-          return;
-        } catch (err) {
-          lastError = err;
-        }
-      }
-      const backupImage = await fetchBackupImageFromApi();
-      if (cancelled) return;
-      if (backupImage?.imageDataUrl) {
-        setImageState((prev) => ({
-          ...prev,
-          current: {
-            hash: backupImage.imageId,
-            imageId: backupImage.imageId,
-            url: backupImage.url,
-            sourceType: 'backup',
-            imageDataUrl: backupImage.imageDataUrl,
-          },
-        }));
-        setDisplaySrc(backupImage.imageDataUrl);
-        setError('');
-        return;
-      }
-      if (!cancelled) {
-        setError('Failed to load image. Please try again.');
-        setImageLoading(false);
-        console.error('Image load failure:', lastError);
-      }
-    };
+  //     setImageLoading(true);
+  //     const cachedObjectUrl = imageBlobUrlCacheRef.current.get(current.hash);
+  //     if (cachedObjectUrl) {
+  //       objectUrlRef.current = cachedObjectUrl;
+  //       setDisplaySrc(cachedObjectUrl);
+  //       setError('');
+  //       return;
+  //     }
+  //     let lastError: unknown = null;
+  //     for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
+  //       try {
+  //         const objectUrl = await fetchIndexerImage(current.hash);
+  //         if (cancelled) {
+  //           if (objectUrl) URL.revokeObjectURL(objectUrl);
+  //           return;
+  //         }
+  //         imageBlobUrlCacheRef.current.set(current.hash, objectUrl);
+  //         objectUrlRef.current = objectUrl;
+  //         setDisplaySrc(objectUrl);
+  //         setError('');
+  //         return;
+  //       } catch (err) {
+  //         lastError = err;
+  //       }
+  //     }
+  //     const backupImage = await fetchBackupImageFromApi();
+  //     if (cancelled) return;
+  //     if (backupImage?.imageDataUrl) {
+  //       setImageState((prev) => ({
+  //         ...prev,
+  //         current: {
+  //           hash: backupImage.imageId,
+  //           imageId: backupImage.imageId,
+  //           url: backupImage.url,
+  //           sourceType: 'backup',
+  //           imageDataUrl: backupImage.imageDataUrl,
+  //         },
+  //       }));
+  //       setDisplaySrc(backupImage.imageDataUrl);
+  //       setError('');
+  //       return;
+  //     }
+  //     if (!cancelled) {
+  //       setError('Failed to load image. Please try again.');
+  //       setImageLoading(false);
+  //       console.error('Image load failure:', lastError);
+  //     }
+  //   };
 
-    ensureImage();
+  //   ensureImage();
 
-    return () => {
-      cancelled = true;
-    };
-  }, [current?.hash, current?.sourceType, current?.imageDataUrl, indexerBaseUrl]);
+  //   return () => {
+  //     cancelled = true;
+  //   };
+  // }, [current?.hash, current?.sourceType, current?.imageDataUrl, indexerBaseUrl]);
 
-  useEffect(() => () => {
-    cleanupObjectUrl();
-    imageBlobUrlCacheRef.current.forEach((url) => {
-      URL.revokeObjectURL(url);
-    });
-    imageBlobUrlCacheRef.current.clear();
-  }, []);
+  // useEffect(() => () => {
+  //   cleanupObjectUrl();
+  //   imageBlobUrlCacheRef.current.forEach((url) => {
+  //     URL.revokeObjectURL(url);
+  //   });
+  //   imageBlobUrlCacheRef.current.clear();
+  // }, []);
 
-  useEffect(() => {
-    const onResize = () => {
-      if (imgRef.current) {
-        const h = imgRef.current.getBoundingClientRect().height || 300;
-        setImageBoxHeight(clampImageHeight(h));
-      }
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
+  // useEffect(() => {
+  //   const onResize = () => {
+  //     if (imgRef.current) {
+  //       const h = imgRef.current.getBoundingClientRect().height || 300;
+  //       setImageBoxHeight(clampImageHeight(h));
+  //     }
+  //   };
+  //   window.addEventListener('resize', onResize);
+  //   return () => window.removeEventListener('resize', onResize);
+  // }, []);
 
   return (
     <div className="game-container game-bg">
@@ -517,39 +517,52 @@ const GamePage = () => {
           </div>
         </div>
 
-        <div className={`image-wrap ${(isLoading || processing || imageLoading) && current ? 'processing' : ''}`} style={{ height: imageBoxHeight }}>
-          {current && (displaySrc || resolveImageSrc(current)) ? (
+        <div 
+        className={`image-wrap`} 
+        style={{ height: imageBoxHeight }}>
             <img
-              src={displaySrc || resolveImageSrc(current)}
+              src="/@fs/Users/ankurgangwar/Dev/fl/full_stack/guesstheai/data/images/2ec0/48x23/0x1ec377e28d25f6d5f4da70fb1e1567dce1b6fdd746e5d2090df7414122f60b96.jpg"
               alt="AI or Human?"
               className="game-image"
-              ref={imgRef}
-              onLoad={(e) => {
-                const h = e.currentTarget.getBoundingClientRect().height;
-                setImageBoxHeight(clampImageHeight(h));
-                setImageLoading(false);
-              }}
-              onError={() => {
-                setImageLoading(false);
-                setError('Failed to load image. Please try again.');
-              }}
             />
-          ) : (
-            <div className="game-loader" role="status" aria-live="polite">
-              {/* <div className="spinner" /> */}
-              {/* <span>Loading image…</span> */}
-            </div>
-          )}
-          {(isLoading || processing || imageLoading) && current && (
-            <div className="image-overlay" aria-hidden>
-              <div className="spinner" />
-            </div>
-          )}
-          {answerResult && (
-            <div className={`result-badge ${answerResult}`} aria-live="polite">
-              {answerResult === 'correct' ? '👍' : '🙁'}
-            </div>
-          )}
+          {
+          // current && (displaySrc || resolveImageSrc(current)) ? (
+          //   <img
+          //     src={displaySrc || resolveImageSrc(current)}
+          //     alt="AI or Human?"
+          //     className="game-image"
+          //     ref={imgRef}
+          //     onLoad={(e) => {
+          //       const h = e.currentTarget.getBoundingClientRect().height;
+          //       setImageBoxHeight(clampImageHeight(h));
+          //       setImageLoading(false);
+          //     }}
+          //     onError={() => {
+          //       setImageLoading(false);
+          //       setError('Failed to load image. Please try again.');
+          //     }}
+          //   />
+          // ) : (
+          //   <div className="game-loader" role="status" aria-live="polite">
+          //     {/* <div className="spinner" /> */}
+          //     {/* <span>Loading image…</span> */}
+          //   </div>
+          // )
+          }
+          {
+          // (isLoading || processing || imageLoading) && current && (
+          //   <div className="image-overlay" aria-hidden>
+          //     <div className="spinner" />
+          //   </div>
+          // )
+          }
+          {
+          // answerResult && (
+          //   <div className={`result-badge ${answerResult}`} aria-live="polite">
+          //     {answerResult === 'correct' ? '👍' : '🙁'}
+          //   </div>
+          // )
+          }
         </div>
 
         <div className="guess-buttons">
