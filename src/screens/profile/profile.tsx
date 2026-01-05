@@ -43,7 +43,7 @@ const Profile = () => {
     : 'Not connected';
 
   return (
-    <div className="profile-page" style={{ display: 'flex', justifyContent: 'center',maxHeight:'100vh' }}>
+    <div className="profile-page" style={{ display: 'flex', justifyContent: 'center' }}>
       <div className="profile-container" style={{ padding: '10px', height: '100%' }}>
         <header className="profile-header">
           <div style={{ width: "100%", marginLeft: "10px" }}>

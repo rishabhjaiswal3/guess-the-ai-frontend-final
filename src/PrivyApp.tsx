@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
 import PresenceProvider from './providers/PresenceProvider';
 import useIframeBootstrap from './hooks/useIframeBootstrap';
@@ -52,40 +52,40 @@ export default function PrivyApp() {
       <PresenceProvider>
         <Router>
           <Routes>
-              <Route
-                path="/"
-                element={(
-                  <Layout>
-                    <Home />
-                  </Layout>
-                )}
-              />
-              <Route
-                path="/leaderboard"
-                element={(
-                  <Layout>
-                    <Leaderboard />
-                  </Layout>
-                )}
-              />
-              <Route
-                path="/profile"
-                element={(
-                  <Layout>
-                    <Profile />
-                  </Layout>
-                )}
-              />
-              <Route
-                path="/game"
-                element={(
-                  <Layout>
-                    <GamePage />
-                  </Layout>
-                )}
-              />
-            </Routes>
-          </Router>
+            <Route
+              path="/"
+              element={(
+                <Layout>
+                  <Home />
+                </Layout>
+              )}
+            />
+            <Route
+              path="/leaderboard"
+              element={(
+                <Layout>
+                  <Leaderboard />
+                </Layout>
+              )}
+            />
+            <Route
+              path="/profile"
+              element={(
+                <Layout>
+                  <Profile />
+                </Layout>
+              )}
+            />
+            <Route
+              path="/game"
+              element={(
+                <Layout>
+                  <GamePage />
+                </Layout>
+              )}
+            />
+          </Routes>
+        </Router>
       </PresenceProvider>
     </PrivyProvider>
   );
