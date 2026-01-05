@@ -7,16 +7,12 @@ body {
 
 .profile-page {
   position: relative;
-  padding-top: 120px;
   display: flex;
-  padding-bottom: 170px;
-  /* min-height: 80vh; */
-  /* padding: 20px; */
-  /* padding-top: 92px; start below top bar */
+  min-height: 100vh;
   box-sizing: border-box;
-  display:flex;
+  display: flex;
   align-items: center;
-  overflow: visible; /* allow main-content to handle scrolling */
+  overflow: visible;
   z-index: 1;
 }
 
@@ -47,15 +43,15 @@ body {
 
 .profile-header {
   width: 100%;
-  display:flex;
+  display: flex;
   border: 1px solid var(--theme-card-border-strong);
   padding: 12px 14px;
   min-height: 90px;
   justify-content: space-between;
   align-items: center;
   border-radius: 12px;
-  background: radial-gradient(circle at top left, rgba(210,75,255,0.16), transparent 55%);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  background: radial-gradient(circle at top left, rgba(210, 75, 255, 0.16), transparent 55%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .logo {
@@ -143,7 +139,7 @@ body {
   width: 100%;
   max-width: 100%;
   padding: 18px 18px 16px;
-  margin-top:20px;
+  margin-top: 20px;
   background: var(--theme-card-surface);
   border-radius: 12px;
   border: 1px solid var(--theme-card-border);
@@ -190,8 +186,16 @@ body {
 }
 
 @media (max-width: 480px) {
-  .profile-card { flex-direction: column-reverse; width: 100%; }
-  .profile-header { flex-direction: column; gap: 10px; align-items: flex-start; }
+  .profile-card {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .profile-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
 }
 
 hr {
@@ -271,24 +275,24 @@ hr {
     gap: 20px;
     padding: 20px 15px;
   }
-  
+
   .player-info {
     padding: 10px 0;
   }
 
-  
+
   /* .stats {
     width: 100%;
     padding-right: 0;
     margin-bottom: 20px;
   } */
-  
+
   .badge {
     margin-top: 20px;
     width: 100%;
     margin-left: 0;
   }
-  
+
   .badge-img {
     width: 120px;
     height: 120px;
@@ -304,16 +308,26 @@ hr {
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
-.rank-badge, .badge-img {
+.rank-badge,
+.badge-img {
   transition: all 0.3s ease;
 }
 
-.rank-badge:hover, .badge:hover .badge-img {
+.rank-badge:hover,
+.badge:hover .badge-img {
   animation: pulse 1.5s infinite;
   transform: scale(1.05);
 }
@@ -322,19 +336,19 @@ hr {
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 2px solid rgba(210,75,255,0.8);
+  border: 2px solid rgba(210, 75, 255, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at 30% 0%, rgba(255,255,255,0.18), transparent 55%);
-  box-shadow: 0 0 18px rgba(210,75,255,0.5);
+  background: radial-gradient(circle at 30% 0%, rgba(255, 255, 255, 0.18), transparent 55%);
+  box-shadow: 0 0 18px rgba(210, 75, 255, 0.5);
 }
 
 .avatar-initial {
   font-size: 1.4rem;
   font-weight: 800;
   color: #ffffff;
-  text-shadow: 0 0 10px rgba(210,75,255,0.7);
+  text-shadow: 0 0 10px rgba(210, 75, 255, 0.7);
 }
 
 .stat-label-group {

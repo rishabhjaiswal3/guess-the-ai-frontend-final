@@ -44,7 +44,7 @@ const Profile = () => {
 
   return (
     <div className="profile-page" style={{ display: 'flex', justifyContent: 'center' }}>
-      <div className="profile-container" style={{ padding: '10px', height: '100%' }}>
+      <div className="profile-container" style={{padding:"10px"}} >
         <header className="profile-header">
           <div style={{ width: "100%", marginLeft: "10px" }}>
             <h1 className="player-name">{displayName}</h1>
@@ -58,7 +58,7 @@ const Profile = () => {
           </div>
         </header>
 
-        <section className="profile-card" style={{}}>
+        <section className="profile-card">
           <div className="stats">
             <div className="stat">
               <div className="stat-label-group">
