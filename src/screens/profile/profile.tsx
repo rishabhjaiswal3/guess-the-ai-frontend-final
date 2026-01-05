@@ -43,22 +43,22 @@ const Profile = () => {
     : 'Not connected';
 
   return (
-    <div className="profile-page" style={{display:'flex',justifyContent:'center'}}>
-      <div className="profile-container" style={{padding:'10px',height:'100%'}}>
+    <div className="profile-page" style={{ display: 'flex', justifyContent: 'center',maxHeight:'100vh' }}>
+      <div className="profile-container" style={{ padding: '10px', height: '100%' }}>
         <header className="profile-header">
-          <div style={{width:"100%",marginLeft:"10px"}}>
+          <div style={{ width: "100%", marginLeft: "10px" }}>
             <h1 className="player-name">{displayName}</h1>
-            <p className="wallet" title={walletLabel} style={{fontSize:'12px'}}>
+            <p className="wallet" title={walletLabel} style={{ fontSize: '12px' }}>
               {walletLabel}
             </p>
           </div>
-          <div className="rank-box" style={{minWidth:"190px",display:'flex',justifyContent:'space-between',padding:"10px"}}>
-            <span style={{fontSize:"25px",fontWeight:'bold'}}>RANK :</span>
+          <div className="rank-box" style={{ minWidth: "190px", display: 'flex', justifyContent: 'space-between', padding: "10px" }}>
+            <span style={{ fontSize: "25px", fontWeight: 'bold' }}>RANK :</span>
             <span className="rank-badge">{displayRank}</span>
           </div>
         </header>
 
-        <section className="profile-card" style={{  }}>
+        <section className="profile-card" style={{}}>
           <div className="stats">
             <div className="stat">
               <div className="stat-label-group">
@@ -85,7 +85,7 @@ const Profile = () => {
             </div>
           </div>
 
-          <div className="badge" style={{ marginTop: '0px',padding:"20px 10px" }}>
+          <div className="badge" style={{ marginTop: '0px', padding: "20px 10px" }}>
             <div className="badge-image-container">
               <img
                 src={DemonImage}
@@ -97,10 +97,10 @@ const Profile = () => {
                   target.onerror = null;
                   target.src = 'https://i.ibb.co/7yqzP9x/dragon-badge.png';
                 }}
-                style={{ maxWidth: '100%', height: 'auto', display: 'block'}}
+                style={{ maxWidth: '100%', height: 'auto', display: 'block' }}
               />
             </div>
-            <span className="badge-title" style={{minWidth:"200px"}}>{profileData?.dungeonTitle}</span>
+            <span className="badge-title" style={{ minWidth: "200px" }}>{profileData?.dungeonTitle}</span>
           </div>
         </section>
       </div>
