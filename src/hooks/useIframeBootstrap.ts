@@ -29,14 +29,17 @@ export default function useIframeBootstrap() {
   useEffect(() => {
     const { pathname, search, hash } = location;
     if (typeof window === 'undefined') return;
-    const params = new URLSearchParams(search);
-    const incomingToken = params.get('jwt');
+    const hashParams = new URLSearchParams(search);
+    const queryParams = new URLSearchParams(window.location.search);
+
+    const incomingToken = hashParams.get('jwt') || queryParams.get('jwt');
+
     if (!incomingToken) {
       setState((prev) => (prev.status === 'idle' ? { status: 'skipped', error: null } : prev));
       return;
     }
 
-    const source = params.get('source') || 'browser';
+    const source = hashParams.get('source') || queryParams.get('source') || 'browser';
     let isActive = true;
     setState({ status: 'pending', error: null });
 
@@ -61,9 +64,19 @@ export default function useIframeBootstrap() {
           return;
         }
 
-        params.delete('jwt');
-        params.delete('source');
-        navigate(buildPath({ pathname, hash }, params), { replace: true });
+        // Clean up params from HashRouter search
+        hashParams.delete('jwt');
+        hashParams.delete('source');
+
+        // Use history API to clean up window.location.search if present, without reloading
+        if (queryParams.get('jwt') || queryParams.get('source')) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('jwt');
+          newUrl.searchParams.delete('source');
+          window.history.replaceState({}, '', newUrl.toString());
+        }
+
+        navigate(buildPath({ pathname, hash }, hashParams), { replace: true });
       })
       .catch((error: unknown) => {
         if (!isActive) return;
