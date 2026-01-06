@@ -62,7 +62,7 @@ const GamePage = () => {
     // if (typeof window === 'undefined') return false;
     const sessionWallet = localStorage.getItem('sessionWallet');
     const source = localStorage.getItem('sessionSource');
-    const isEligible = sessionWallet === 'VERIFIED' && source === 'iframe';
+    const isEligible = sessionWallet === 'VERIFIED' && source === 'browser';
     console.log("is Eligible ", isEligible, source, sessionWallet);
     return isEligible;
   };
