@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import ai from '../../assets/Ai-button.png';
 import human from '../../assets/Human-button.png';
 import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
+import StreakWinnerModel from '../../components/StreakWinnerModel';
 import './GamePage.css';
 
 type GameImage = {
@@ -54,6 +55,17 @@ const GamePage = () => {
   const [displaySrc, setDisplaySrc] = useState('');
   const [imageLoading, setImageLoading] = useState(false);
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
+  const [showStreakModal, setShowStreakModal] = useState(false);
+
+  const checkStreakModalEligibility = () => {
+
+    // if (typeof window === 'undefined') return false;
+    const sessionWallet = localStorage.getItem('sessionWallet');
+    const source = localStorage.getItem('sessionSource');
+    const isEligible = sessionWallet === 'VERIFIED' && source === 'iframe';
+    console.log("is Eligible ", isEligible, source, sessionWallet);
+    return isEligible;
+  };
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
   const objectUrlRef = useRef<string | null>(null);
@@ -319,10 +331,14 @@ const GamePage = () => {
       const profile = await getProfile();
       const data = profile.data?.data;
       if (data) {
+        const currentStreak = Number(data.currentStreak) || 0;
         setScores({
-          streak: Number(data.currentStreak) || 0,
+          streak: currentStreak,
           score: Number(data.correctAnswers) || 0,
         });
+        if (currentStreak === 5 && checkStreakModalEligibility()) {
+          setShowStreakModal(true);
+        }
       }
     } catch (profileError) {
       console.error('Failed to load profile', profileError);
@@ -343,10 +359,14 @@ const GamePage = () => {
       const response = await setAnswer(hashToSend, guess, extraPayload);
       const updatedProfile = response?.profile;
       if (updatedProfile) {
+        const newStreak = Number(updatedProfile.currentStreak) || 0;
         setScores({
           score: Number(updatedProfile.correctAnswers) || 0,
-          streak: Number(updatedProfile.currentStreak) || 0,
+          streak: newStreak,
         });
+        if (newStreak === 5 && checkStreakModalEligibility()) {
+          setShowStreakModal(true);
+        }
       }
       const corr = response && (response.isCorrect ?? response.correct ?? response?.data?.isCorrect ?? response?.data?.correct);
       if (typeof corr !== 'undefined') {
@@ -561,6 +581,10 @@ const GamePage = () => {
           {error && <div className="game-error">{error}</div>}
         </div>
       </div>
+      <StreakWinnerModel
+        visible={showStreakModal}
+        onClose={() => setShowStreakModal(false)}
+      />
     </div>
   );
 };

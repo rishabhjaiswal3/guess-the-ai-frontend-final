@@ -34,7 +34,7 @@ export const clearSessionStorage = () => {
   if (typeof window === 'undefined') return;
   localStorage.removeItem('walletAddress');
   localStorage.removeItem('username');
-  localStorage.removeItem('userName');
+
   localStorage.removeItem('token');
   localStorage.removeItem('presence.pendingMs');
   localStorage.removeItem('presence.pendingSec');

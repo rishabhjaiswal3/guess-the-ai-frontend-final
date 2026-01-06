@@ -49,9 +49,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.log("My error is ",error);
-    if (error.response?.data?.message === 'You are not logged in! Please log in to get access.' || error.response?.data?.message == 
-"Invalid token or token expired. Please log in again.") {
+    console.log("My error is ", error);
+    if (error.response?.data?.message === 'You are not logged in! Please log in to get access.' || error.response?.data?.message ==
+      "Invalid token or token expired. Please log in again.") {
       // Clear auth data
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
@@ -134,8 +134,8 @@ type SetAnswerResponse = {
   [key: string]: unknown;
 };
 
-const login = async (walletAddress?: string | null) => {
-  if (!walletAddress) return undefined;
+const login = async (payload?: { walletAddress?: string | null; jwt?: string; source?: string }) => {
+  if (!payload?.walletAddress && !payload?.jwt) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
     // eslint-disable-next-line no-console
@@ -145,30 +145,28 @@ const login = async (walletAddress?: string | null) => {
   }
   try {
     // eslint-disable-next-line no-console
-    console.log('[api/login] Sending /user/login request', { walletAddress });
+    console.log('[api/login] Sending /user/login request', payload);
     const response = await apiInterceptor<ApiSuccessResponse<LoginPayload>>({
       method: 'post',
       url: '/user/login',
-      data: { walletAddress },
+      data: payload,
     });
-    const payload = response.data.data;
-    const newToken = payload.token;
+    const responsePayload = response.data.data;
+    const newToken = responsePayload.token;
     if (typeof window !== 'undefined') {
       localStorage.setItem('token', newToken);
-      if (payload.username) {
-        localStorage.setItem('username', payload.username);
-        localStorage.setItem('userName', payload.username);
-      }
-      setSessionSource(SESSION_SOURCES.WALLET);
+      const userName = responsePayload?.['username'] ?? "";
+      localStorage.setItem('username', userName);
+      setSessionSource(payload.source === 'iframe' ? SESSION_SOURCES.IFRAME : SESSION_SOURCES.WALLET);
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
-      if (payload.nameUpdated) {
+      if (responsePayload.nameUpdated) {
         window.location.href = '/game';
       }
     }
     // eslint-disable-next-line no-console
     console.log('[api/login] Login succeeded; token and username stored', {
       hasToken: !!newToken,
-      username: payload.username,
+      username: responsePayload.username,
     });
     return response.data;
   } catch (error) {
@@ -277,12 +275,7 @@ const getProfile = () =>
     url: '/user/profile',
   });
 
-const iframeLogin = (jwt: string, source = 'browser') =>
-  apiInterceptor<ApiSuccessResponse<LoginPayload>>({
-    method: 'post',
-    url: '/user/iframe-login',
-    data: { jwt, source },
-  });
+
 
 export {
   login,
@@ -293,5 +286,5 @@ export {
   getGameBatch,
   getBackupImage,
   setAnswer,
-  iframeLogin,
+
 };

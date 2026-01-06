@@ -80,7 +80,7 @@ const WalletConnect = () => {
         walletAddress: address,
       });
       try {
-        const res = await backendLogin(address);
+        const res = await backendLogin({ walletAddress: address });
         // eslint-disable-next-line no-console
         console.log('[WalletConnect] Backend login response', res);
       } catch (err) {
@@ -119,13 +119,13 @@ const WalletConnect = () => {
     <>
       <div
         className="wallet-connect-wrap"
-        style={{ display: shouldHideConnect ? 'none' : 'block',minWidth:"300px" }}
+        style={{ display: shouldHideConnect ? 'none' : 'block', minWidth: "300px" }}
       >
         <button
           type="button"
           className="connect-wallet-button"
           onClick={() => setIsModalOpen(true)}
-          style={{minWidth:"260px"}}
+          style={{ minWidth: "260px" }}
           disabled={!ready}
         >
           {ready ? 'Connect' : <Loader size="sm" label="Loading" />}

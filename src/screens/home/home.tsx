@@ -33,13 +33,12 @@ const Home = () => {
     setError('');
     setSuccess('');
     console.log('my username is', name);
-    
+
     try {
       const res = await updateUserName(name);
       if (res.success) {
         if (typeof window !== 'undefined' && name.trim() && isSessionActive) {
           localStorage.setItem('username', name.trim());
-          localStorage.setItem('userName', name.trim());
         }
         setSuccess('Username updated Successfully !!');
         setError('');
@@ -76,7 +75,6 @@ const Home = () => {
       // const defaultName = 'Player' + Math.floor(Math.random() * 1000);
       // setName(defaultName);
       // localStorage.setItem('username', defaultName);
-      // localStorage.setItem('userName', defaultName);
       // setSuccess('');
       // // Redirect to game page after a short delay to show the success message
       setTimeout(() => {
@@ -101,7 +99,7 @@ const Home = () => {
     <div className="home-page">
       <div className={`content-container ${isSessionActive ? 'session-active' : ''}`}>
         <div className="content-wrap" >
-          <img src={logo2} alt="" className="logo-circle"/>
+          <img src={logo2} alt="" className="logo-circle" />
           <div className="hero-title">GUESS THE AI</div>
           <div>
             <WalletConnect />
@@ -109,84 +107,84 @@ const Home = () => {
           {
             isSessionActive &&
             <div className="name-input-container" >
-             <div className="input-label">Enter user name here</div>
-             <div>
-             </div>
-             <div className="input-with-button">
-               <span className="input-icon" aria-hidden>
-                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                   <path d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6zm0 2c-4.337 0-8 3.134-8 7v1h16v-1c0-3.866-3.663-7-8-7z" />
-                 </svg>
-               </span>
-               <input
-                 type="text"
-                 value={name}
-                 onChange={handleNameChange}
-                 onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
-                   if (e.key === 'Enter' && name.trim()) {
-                     navigateToGame();
-                   }
-                 }}
-                 className="name-input"
-                 maxLength={50}
-                 placeholder="Type your name"
-                 autoFocus
-               />
+              <div className="input-label">Enter user name here</div>
+              <div>
+              </div>
+              <div className="input-with-button">
+                <span className="input-icon" aria-hidden>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 12c2.761 0 5-2.686 5-6s-2.239-6-5-6-5 2.686-5 6 2.239 6 5 6zm0 2c-4.337 0-8 3.134-8 7v1h16v-1c0-3.866-3.663-7-8-7z" />
+                  </svg>
+                </span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={handleNameChange}
+                  onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                    if (e.key === 'Enter' && name.trim()) {
+                      navigateToGame();
+                    }
+                  }}
+                  className="name-input"
+                  maxLength={50}
+                  placeholder="Type your name"
+                  autoFocus
+                />
 
-               <button 
-                 className="enter-button" 
-                 onClick={() => name.trim() && navigateToGame()}
-                 disabled={!name.trim()}
-               >
-                 Save &amp; continue
-               </button>
+                <button
+                  className="enter-button"
+                  onClick={() => name.trim() && navigateToGame()}
+                  disabled={!name.trim()}
+                >
+                  Save &amp; continue
+                </button>
+              </div>
+
+              <div className="status-row">
+                {success && (
+                  <span className="status success">{success}</span>
+                )}
+                {!success && error && (
+                  <span className="status error">{error}</span>
+                )}
+              </div>
+              <div style={{
+                width: '100%',
+                textAlign: 'center'
+              }}>
+                <button
+                  onClick={skipForNow}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textDecoration: 'underline',
+                    padding: '5px 10px',
+                    fontFamily: 'inherit',
+                    fontWeight: 'bold',
+                    //  opacity: 0.8,
+                    transition: 'opacity 0.2s ease'
+                  }}
+                >
+                  Skip for now
+                </button>
+              </div>
+
             </div>
-               
-            <div className="status-row">
-              {success && (
-                <span className="status success">{success}</span>
-              )}
-              {!success && error && (
-                <span className="status error">{error}</span>
-              )}
-            </div>
-            <div style={{
-            width:'100%',
-              textAlign: 'center'
-            }}>
-              <button
-                onClick={skipForNow}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: '#fff',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  textDecoration: 'underline',
-                  padding: '5px 10px',
-                  fontFamily: 'inherit',
-                  fontWeight: 'bold',
-                //  opacity: 0.8,
-                  transition: 'opacity 0.2s ease'
-                }}
-              >
-                Skip for now
-              </button>
-            </div>
-      
-          </div>
           }
           <div >
-            <img 
-              src={og} 
-              alt="" 
+            <img
+              src={og}
+              alt=""
               style={{
                 height: '40px',
                 border: '1px solid #ffffff',
                 padding: '8px',
                 borderRadius: '10px',
                 marginBottom: '30px'
-              }} 
+              }}
             />
           </div>
         </div>

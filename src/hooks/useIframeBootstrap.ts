@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { iframeLogin } from '../api/auth';
+import { login } from '../api/auth';
 import { SESSION_SOURCES, setSessionSource } from '../utils/session';
 
 type BootstrapStatus =
@@ -40,22 +40,19 @@ export default function useIframeBootstrap() {
     let isActive = true;
     setState({ status: 'pending', error: null });
 
-    iframeLogin(incomingToken, source)
+    login({ jwt: incomingToken, source })
       .then((response) => {
         if (!isActive) return;
-        const payload = response?.data?.data;
-        if (!response?.data?.success || !payload?.token) {
-          const message = response?.data?.message || 'iframe login failed';
+        const payload = response?.data;
+        // Check for success (the login function returns {success:true, data:...} on success)
+        if (!response?.success || !payload?.token) {
+          const message = response?.message || 'iframe login failed';
           throw new Error(message);
         }
-        const token = payload.token;
-        localStorage.setItem('token', token);
-        if (payload.username) {
-          localStorage.setItem('username', payload.username);
-          localStorage.setItem('userName', payload.username);
-        }
-        setSessionSource(SESSION_SOURCES.IFRAME);
-        window.dispatchEvent(new CustomEvent('presence:token-change', { detail: token }));
+
+        // Note: The login() function already handles session storage and dispatching events.
+        // We just need to handle navigation.
+
         setState({ status: 'success', error: null });
 
         // If backend indicates the name is already set, go straight to game.

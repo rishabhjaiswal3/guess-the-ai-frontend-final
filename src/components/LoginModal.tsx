@@ -328,7 +328,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
         console.log('[LoginModal] Calling backendLogin from wallet connect', {
           walletAddress: address,
         });
-        const res = await backendLogin(address);
+        const res = await backendLogin({ walletAddress: address });
         // eslint-disable-next-line no-console
         console.log('[LoginModal] backendLogin result (wallet)', res);
       } catch (err) {
@@ -454,7 +454,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
         <div style={styles.hero}>
           <div style={styles.heroGlow} />
           {logoSrc && (
-            <img src={logoSrc} alt="Logo" style={{height:'120px',width:'120px',background:'black',borderRadius:"100px",padding:"10px"}} />
+            <img src={logoSrc} alt="Logo" style={{ height: '120px', width: '120px', background: 'black', borderRadius: "100px", padding: "10px" }} />
           )}
           <h2 style={styles.title}>GUESS THE AI</h2>
         </div>
@@ -476,7 +476,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   style={styles.input}
-                  // Always allow editing the email
+                // Always allow editing the email
                 />
                 <small style={styles.hint}>
                   We&apos;ll email you a 6‑digit OTP.
