@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+
 import { usePrivy, type User } from '@privy-io/react-auth';
 import { login as backendLogin } from '../api/auth';
 import useSessionSource from '../hooks/useSessionSource';
@@ -29,6 +30,7 @@ const WalletConnect = () => {
   const { ready, authenticated, user } = usePrivy();
   const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -97,7 +99,7 @@ const WalletConnect = () => {
 
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log('[WalletConnect] Auth / iframe state changed', {
+    console.log('Auth / iframe state changed', {
       authenticated,
       isIframeSession,
       isWalletSession,
@@ -108,7 +110,7 @@ const WalletConnect = () => {
       loginUser();
     } else if (!isIframeSession && !isWalletSession && !hasToken) {
       // eslint-disable-next-line no-console
-      console.log('[WalletConnect] Not authenticated and not iframe session – clearing session storage');
+      console.log('Not authenticated and not iframe session – clearing session storage');
       clearSessionStorage();
     }
   }, [authenticated, loginUser, isIframeSession, isWalletSession, hasToken]);

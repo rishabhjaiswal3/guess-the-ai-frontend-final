@@ -10,7 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
 // Debug: log API base URL once on module load
 // eslint-disable-next-line no-console
-console.log('[api] Using API_BASE_URL:', API_BASE_URL || '(none)');
+console.log(' ---- [api] Using API_BASE_URL:', API_BASE_URL || '(none)');
 
 const api = axios.create({
   baseURL: API_BASE_URL || undefined,

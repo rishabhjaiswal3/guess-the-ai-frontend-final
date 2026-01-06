@@ -31,7 +31,7 @@ type LayoutProps = {
 
 const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
-  useIframeBootstrap();
+  // useIframeBootstrap();
   const noPad = location.pathname === '/';
   return (
     <div className="app-layout">

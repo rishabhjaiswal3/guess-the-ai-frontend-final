@@ -10,13 +10,14 @@ type ShellProps = {
 };
 
 export default function Shell({ onConnect, connecting }: ShellProps) {
+
   return (
     <div className="home-page">
       <div className="content-container">
         <div className="content-wrap">
           <img src={logo2} alt="" className="logo-circle" />
+          
           <div className="hero-title">GUESS THE AI</div>
-
           <div className="wallet-connect-wrap" style={{ minWidth: '300px' }}>
             <button
               type="button"
@@ -51,7 +52,6 @@ export default function Shell({ onConnect, connecting }: ShellProps) {
           </div>
         </div>
       </div>
-      
     </div>
   );
 }

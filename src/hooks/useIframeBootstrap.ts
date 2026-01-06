@@ -31,10 +31,17 @@ export default function useIframeBootstrap() {
     if (typeof window === 'undefined') return;
     const hashParams = new URLSearchParams(search);
     const queryParams = new URLSearchParams(window.location.search);
+    console.log('[useIframeBootstrap] Checking for params', {
+      hashSearch: search,
+      windowSearch: window.location.search,
+      hashJwt: hashParams.get('jwt'),
+      queryJwt: queryParams.get('jwt')
+    });
 
     const incomingToken = hashParams.get('jwt') || queryParams.get('jwt');
 
     if (!incomingToken) {
+      console.log('[useIframeBootstrap] No token found, skipping');
       setState((prev) => (prev.status === 'idle' ? { status: 'skipped', error: null } : prev));
       return;
     }
@@ -43,8 +50,10 @@ export default function useIframeBootstrap() {
     let isActive = true;
     setState({ status: 'pending', error: null });
 
+    console.log('[useIframeBootstrap] Token found, attempting login', { jwt: incomingToken, source });
     login({ jwt: incomingToken, source })
       .then((response) => {
+        console.log('[useIframeBootstrap] Login response received', response);
         if (!isActive) return;
         const payload = response?.data;
         // Check for success (the login function returns {success:true, data:...} on success)
@@ -79,6 +88,7 @@ export default function useIframeBootstrap() {
         navigate(buildPath({ pathname, hash }, hashParams), { replace: true });
       })
       .catch((error: unknown) => {
+        console.error('[useIframeBootstrap] Login error', error);
         if (!isActive) return;
         const message =
           (typeof error === 'object' && error && 'response' in error &&

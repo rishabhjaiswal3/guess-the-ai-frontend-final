@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { usePrivy } from '@privy-io/react-auth';
 import WalletConnect from '../../components/WalletConnect';
 import './home.css';
-import { updateUserName } from '../../api/auth';
+import { updateUserName, login } from '../../api/auth';
+import { clearSessionStorage } from '../../utils/session';
 import useSessionSource from '../../hooks/useSessionSource';
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
@@ -27,6 +28,67 @@ const Home = () => {
     if (savedName) {
       setName(savedName);
     }
+  }, []);
+
+  // Auto-login logic moved from WalletConnect
+  useEffect(() => {
+    console.log('[Home] Auto-login effect running');
+    console.log('[Home] Window location:', {
+      href: window.location.href,
+      search: window.location.search,
+      hash: window.location.hash
+    });
+
+    if (typeof window === 'undefined') return;
+    const queryParams = new URLSearchParams(window.location.search);
+    // manually parse hash search if needed, though usually window.location.search is enough if params are before hash
+    const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+
+    const incomingToken = queryParams.get('jwt') || hashParams.get('jwt');
+    console.log('[Home] Extracted token:', incomingToken);
+
+    if (!incomingToken) {
+      console.log('[Home] No token found in URL, skipping auto-login');
+      return;
+    }
+
+    if (localStorage.getItem('token')) {
+      console.log('[Home] Found URL JWT with existing session, clearing session to force new login');
+      clearSessionStorage();
+    }
+
+    const source = queryParams.get('source') || hashParams.get('source') || 'browser';
+    console.log('[Home] Found login params in URL', { jwt: incomingToken, source });
+
+    login({ jwt: incomingToken, source })
+      .then((response) => {
+        console.log('[Home] Auto-login response', response);
+        const payload = response?.data;
+        if (response?.success && payload?.token) {
+          // Cleanup URL
+          if (queryParams.get('jwt')) {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.delete('jwt');
+            newUrl.searchParams.delete('source');
+            window.history.replaceState({}, '', newUrl.toString());
+          } else if (hashParams.get('jwt')) {
+            // If it was in hash, we might just want to navigate to clean route
+            // or let the replace below handle it if it doesn't affect hash params?
+            // Simplest is to just proceed.
+          }
+
+          if (payload.nameUpdated) {
+            navigate('/game', { replace: true });
+          } else {
+            // If name not updated, maybe stay here or reload? 
+            // If params were in hash, refreshing to '/' effectively cleans them.
+            navigate('/', { replace: true });
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('[Home] Auto-login failed', err);
+      });
   }, []);
 
   const navigateToGame = async () => {

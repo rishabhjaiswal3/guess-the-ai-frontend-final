@@ -10,8 +10,19 @@ export default function App() {
   const [connectPending, setConnectPending] = useState(false);
   const [showPrivyApp, setShowPrivyApp] = useState(() => {
     if (typeof window === 'undefined') return true;
+    // Check if we have a token in storage
+    const hasToken = Boolean(window.localStorage.getItem('token'));
+    if (hasToken) return true;
+
+    // Check if we have a JWT in the URL (query or hash)
+    const queryParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const hasJwtParams = queryParams.has('jwt') || hashParams.has('jwt');
+
+    if (hasJwtParams) return true;
+
     if (window.location.pathname !== '/') return true;
-    return Boolean(window.localStorage.getItem('token'));
+    return false;
   });
 
   useEffect(() => {
