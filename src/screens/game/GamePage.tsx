@@ -58,7 +58,7 @@ const GamePage = () => {
   const [showStreakModal, setShowStreakModal] = useState(false);
 
   const checkStreakModalEligibility = () => {
-
+    return true;
     // if (typeof window === 'undefined') return false;
     const sessionWallet = localStorage.getItem('sessionWallet');
     const source = localStorage.getItem('sessionSource');

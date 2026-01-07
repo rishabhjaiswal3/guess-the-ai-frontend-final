@@ -140,7 +140,7 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; so
   if (token) {
     // eslint-disable-next-line no-console
     console.log('[api/login] Existing JWT found, redirecting to /game');
-    window.location.href = '/#/game';
+    // window.location.href = '/#/game';
     return undefined;
   }
   try {
@@ -160,7 +160,7 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; so
       setSessionSource(payload.source === 'iframe' ? SESSION_SOURCES.IFRAME : SESSION_SOURCES.WALLET);
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
       if (responsePayload.nameUpdated) {
-        window.location.href = '/#/game';
+        // window.location.href = '/#/game';
       }
     }
     // eslint-disable-next-line no-console
