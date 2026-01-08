@@ -19,6 +19,8 @@ type ConfirmationModalProps = {
 const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: ConfirmationModalProps) => {
   if (!isOpen) return null;
 
+  const isBrowserLogin = localStorage.getItem('source') === 'browser';
+
   return (
     <div style={{
       position: 'fixed',
@@ -122,9 +124,11 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '14px',
+          justifyContent: 'center',
+          minHeight: '200px',
         }}>
-          <div style={{
+          { !isBrowserLogin && <div style={{
             background: 'var(--theme-card-surface)',
             border: '1px solid var(--theme-card-border)',
             borderRadius: '12px',
@@ -158,7 +162,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
             >
               Logout
             </button>
-          </div>
+          </div>}
 
           <div style={{
             background: 'var(--theme-card-surface)',
@@ -269,6 +273,10 @@ const BottomNav = (): ReactElement | null => {
 
 
   if (!isSessionActive) return null;
+
+    // const isBrowserLogin = localStorage.getItem('source') === 'browser';
+  // const showWalletIcon = !isBrowserLogin;
+  // const bottomBarClassName = `bottom-bar${showWalletIcon ? '' : ' bottom-bar--compact'}`;
 
   return (
     <>

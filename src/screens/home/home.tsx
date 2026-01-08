@@ -57,10 +57,25 @@ const Home = () => {
       clearSessionStorage();
     }
 
-    const source = queryParams.get('source') || hashParams.get('source') || 'browser';
-    console.log('[Home] Found login params in URL', { jwt: incomingToken, source });
+    const sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet');
+    const source = queryParams.get('source') || hashParams.get('source');
+    if(sessionWallet){
+      localStorage.setItem('sessionWallet', sessionWallet);
+    }
 
-    login({ jwt: incomingToken, source })
+    if(source){
+      localStorage.setItem('source', source);
+    }
+
+    // const source = queryParams.get('source') || hashParams.get('source') || 'browser';
+    // console.log('[Home] Found login params in URL', { jwt: incomingToken, source });
+
+    let loginPayoad: any = { jwt: incomingToken, source, sessionWallet: ''};
+    // if(localStorage.getItem("sessionWallet")){
+      loginPayoad.sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet') ||localStorage.getItem("sessionWallet");
+    // }
+
+    login(loginPayoad)
       .then((response) => {
         console.log('[Home] Auto-login response', response);
         const payload = response?.data;

@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import ai from '../../assets/Ai-button.png';
 import human from '../../assets/Human-button.png';
-import { getGameData, getGameBatch, setAnswer, getProfile } from '../../api/auth';
+import {
+  getGameData,
+  getGameBatch,
+  setAnswer,
+  getProfile,
+  isGateUserElligibleForAward,
+  awardGateUser,
+} from '../../api/auth';
 import StreakWinnerModel from '../../components/StreakWinnerModel';
 import './GamePage.css';
 
@@ -57,15 +64,25 @@ const GamePage = () => {
   const [initialPreloadProgress, setInitialPreloadProgress] = useState({ total: 0, completed: 0 });
   const [showStreakModal, setShowStreakModal] = useState(false);
 
-  const checkStreakModalEligibility = () => {
-    return true;
-    // if (typeof window === 'undefined') return false;
+  const checkStreakModalEligibility = async (): Promise<boolean> => {
+    if (typeof window === 'undefined') return false;
     const sessionWallet = localStorage.getItem('sessionWallet');
-    const source = localStorage.getItem('sessionSource');
-    const isEligible = sessionWallet === 'VERIFIED' && source === 'browser';
-    console.log("is Eligible ", isEligible, source, sessionWallet);
-    return isEligible;
+    const source = localStorage.getItem('source');
+    const isSessionEligible = sessionWallet === 'VERIFIED' && source === 'browser';
+    if (!isSessionEligible) {
+      console.log('is Eligible local storage ', false, source, sessionWallet);
+      return false;
+    }
+    const isApiEligible = await isGateUserElligibleForAward();
+    if (!isApiEligible) {
+      console.log('is Eligible api ', false, source, sessionWallet);
+      return false;
+    }
+    const awarded = await awardGateUser();
+    console.log('is Eligible awarded ', awarded, source, sessionWallet);
+    return awarded;
   };
+  
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
   const objectUrlRef = useRef<string | null>(null);
@@ -336,7 +353,7 @@ const GamePage = () => {
           streak: currentStreak,
           score: Number(data.correctAnswers) || 0,
         });
-        if (currentStreak === 5 && checkStreakModalEligibility()) {
+        if (currentStreak === 5 && await checkStreakModalEligibility()) {
           setShowStreakModal(true);
         }
       }
@@ -364,7 +381,7 @@ const GamePage = () => {
           score: Number(updatedProfile.correctAnswers) || 0,
           streak: newStreak,
         });
-        if (newStreak === 5 && checkStreakModalEligibility()) {
+        if (newStreak === 5 && await checkStreakModalEligibility()) {
           setShowStreakModal(true);
         }
       }

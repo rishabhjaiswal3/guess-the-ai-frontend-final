@@ -134,7 +134,17 @@ type SetAnswerResponse = {
   [key: string]: unknown;
 };
 
-const login = async (payload?: { walletAddress?: string | null; jwt?: string; source?: string }) => {
+type IsGateUserEligibleResponse = {
+  success?: boolean;
+  isGateUserEligible?: boolean;
+};
+
+type AwardGateUserResponse = {
+  success?: boolean;
+};
+
+const login = async (payload?: { walletAddress?: string | null; jwt?: string; source?: string, sessionWallet?: string }) => {
+  console.log("My payload is ", payload);
   if (!payload?.walletAddress && !payload?.jwt) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
@@ -269,6 +279,38 @@ const updateUserName = async (username: string): Promise<UpdateUsernameResult> =
   }
 };
 
+const isGateUserElligibleForAward = async (): Promise<boolean> => {
+  try {
+    const response = await apiInterceptor<IsGateUserEligibleResponse>({
+      method: 'get',
+      url: '/game/isGateUserEligible',
+    });
+    const isGateUserEligible = response.data?.isGateUserEligible;
+    if (typeof isGateUserEligible !== 'boolean') {
+      return false;
+    }
+    return isGateUserEligible;
+  } catch (error) {
+    console.error('Failed to check eligibility for gate award', error);
+    return false;
+  }
+};
+
+const awardGateUser = async (): Promise<boolean> => {
+  try {
+    const response = await apiInterceptor<AwardGateUserResponse>({
+      method: 'put',
+      url: '/game/awardGateUser',
+    });
+    return Boolean(response.data?.success);
+  } catch (error) {
+    console.error('Failed to award gate user', error);
+    return false;
+  }
+};
+
+
+
 const getProfile = () =>
   apiInterceptor<ApiSuccessResponse<ProfilePayload>>({
     method: 'get',
@@ -286,5 +328,7 @@ export {
   getGameBatch,
   getBackupImage,
   setAnswer,
+  isGateUserElligibleForAward,
+  awardGateUser,
 
 };
