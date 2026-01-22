@@ -34,8 +34,32 @@ const Layout = ({ children }: LayoutProps) => {
   // useIframeBootstrap();
   const noPad = location.pathname === '/';
 
+  // Debug logging
+  useEffect(() => {
+    console.log('[Layout] ===== LAYOUT RENDER =====', {
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      fullUrl: window.location.href,
+      noPad,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Experimental: try to remove trailing / from hash at root if user finds it ugly 'extra'
   useEffect(() => {
+    // Don't clean up URL if we have OAuth callback parameters
+    const hasOAuthParams =
+      window.location.search.includes('privy_oauth_state') ||
+      window.location.search.includes('jwt') ||
+      window.location.hash.includes('privy_oauth_state') ||
+      window.location.hash.includes('jwt');
+
+    if (hasOAuthParams) {
+      console.log('[Layout] Preserving URL with OAuth/JWT parameters:', window.location.href);
+      return;
+    }
+
     if (window.location.hash === '#/') {
       // visual cleanup: replace #/ with just # or nothing if possible, keeping functionality
       // This removes the hash from the address bar visual, but HashRouter can still work if it re-reads it?

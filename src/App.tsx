@@ -19,7 +19,13 @@ export default function App() {
     const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
     const hasJwtParams = queryParams.has('jwt') || hashParams.has('jwt');
 
-    if (hasJwtParams) return true;
+    const hasPrivyOauthParams =
+      queryParams.has('privy_oauth_state') ||
+      hashParams.has('privy_oauth_state') ||
+      queryParams.has('privy_oauth_code') ||
+      hashParams.has('privy_oauth_code');
+
+    if (hasJwtParams || hasPrivyOauthParams) return true;
 
     if (window.location.pathname !== '/') return true;
     return false;

@@ -29,18 +29,21 @@ const WalletConnect = () => {
   // const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Debug: Log component mount and OAuth state
+  // Debug: Log component mount and OAuth state on EVERY render
   useEffect(() => {
     const isOAuthCallback =
       (typeof window !== 'undefined') &&
       (window.location.search.includes('privy_oauth_state') || window.location.hash.includes('privy_oauth_state'));
 
-    console.log('[WalletConnect] Component mounted/updated', {
+    console.log('[WalletConnect] ===== RENDER =====', {
       ready,
       authenticated,
       hasUser: !!user,
+      userId: user?.id,
       isOAuthCallback,
-      url: typeof window !== 'undefined' ? window.location.href : 'N/A'
+      url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+      searchParams: typeof window !== 'undefined' ? window.location.search : 'N/A',
+      hashParams: typeof window !== 'undefined' ? window.location.hash : 'N/A',
     });
   });
 
@@ -66,7 +69,13 @@ const WalletConnect = () => {
     if (typeof window === 'undefined') return;
 
     // Log entry into effect
-    console.log('[WalletConnect] Auto-Open Check:', { ready, authenticated, localToken: !!localToken, flag: window.sessionStorage.getItem('gta:auto-open-login') });
+    console.log('[WalletConnect] ===== AUTO-OPEN EFFECT =====', {
+      ready,
+      authenticated,
+      localToken: !!localToken,
+      flag: window.sessionStorage.getItem('gta:auto-open-login'),
+      url: window.location.href
+    });
 
     if (authenticated || localToken) {
       if (window.sessionStorage.getItem('gta:auto-open-login')) {
@@ -78,7 +87,7 @@ const WalletConnect = () => {
     const shouldAutoOpen = window.sessionStorage.getItem('gta:auto-open-login') === '1';
 
     if (!shouldAutoOpen) {
-      // console.log('[WalletConnect] No auto-open flag found');
+      console.log('[WalletConnect] No auto-open flag, skipping modal auto-open');
       return;
     }
 
@@ -87,7 +96,7 @@ const WalletConnect = () => {
       return;
     }
 
-    console.log('[WalletConnect] Triggering Auto-Open Modal');
+    console.log('[WalletConnect] ✅ Triggering Auto-Open Modal');
     window.sessionStorage.removeItem('gta:auto-open-login');
     setIsModalOpen(true);
   }, [ready, authenticated, localToken]);
@@ -98,15 +107,18 @@ const WalletConnect = () => {
   const loginUser = useCallback(async () => {
     // Debug logs to trace wallet-based login flow
     // eslint-disable-next-line no-console
-    console.log('[WalletConnect] loginUser invoked', {
+    console.log('[WalletConnect] ===== loginUser() CALLED =====', {
       authenticated,
       hasUser: !!user,
-      retryCount
+      userId: user?.id,
+      retryCount,
+      hasLocalToken: !!localStorage.getItem('token'),
+      timestamp: new Date().toISOString()
     });
 
     if (!authenticated) {
       // eslint-disable-next-line no-console
-      console.log('[WalletConnect] Skipping backend login – not authenticated');
+      console.log('[WalletConnect] ❌ Skipping backend login – not authenticated');
       return;
     }
 
@@ -146,7 +158,7 @@ const WalletConnect = () => {
     const token = localStorage.getItem('token');
 
     if (!address && !token) {
-      // If we are authenticated but have no address AND no token, 
+      // If we are authenticated but have no address AND no token,
       // it might be an embedded wallet provisioning delay.
       console.warn(
         '[WalletConnect] No wallet address found on Privy user and no local token. Waiting for wallet creation...',
@@ -220,9 +232,14 @@ const WalletConnect = () => {
   }, [authenticated, user, retryCount]);
 
   useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('Auth state changed', {
+    // eslint-disable-next-line no-con  useEffect(() => {
+    console.log('[WalletConnect] ===== AUTH STATE EFFECT =====', {
       authenticated,
+      ready,
+      hasUser: !!user,
+      localToken: !!localToken,
+      retryCount,
+      url: typeof window !== 'undefined' ? window.location.href : 'N/A'
     });
 
     // Check for OAuth callback param
@@ -231,16 +248,18 @@ const WalletConnect = () => {
       (window.location.search.includes('privy_oauth_state') || window.location.hash.includes('privy_oauth_state'));
 
     if (isOAuthCallback) {
-      console.log('[WalletConnect] OAuth callback detected in URL');
+      console.log('[WalletConnect] 🔵 OAuth callback detected in URL');
     }
 
     if (authenticated) {
+      console.log('[WalletConnect] ✅ User is authenticated, calling loginUser()');
       loginUser();
     } else if (isOAuthCallback && ready) {
       // If we are back from OAuth but not authenticated yet, we simply wait for Privy to flip 'authenticated' to true.
       // But we log it to be sure.
-      console.log('[WalletConnect] OAuth callback present, waiting for Privy authentication...');
+      console.log('[WalletConnect] ⏳ OAuth callback present, waiting for Privy authentication...');
     } else if (!localToken) {
+      console.log('[WalletConnect] ❌ Not authenticated, no local token');
       // If not authenticated and no local token, we might want to clear session
       // console.log('Not authenticated and no local token – clearing session storage');
       // clearSessionStorage();
@@ -255,12 +274,29 @@ const WalletConnect = () => {
       window.location.search.includes('privy_oauth_state') ||
       window.location.hash.includes('privy_oauth_state');
 
-    if (!isOAuthCallback) return;
+    console.log('[WalletConnect] ===== OAUTH DEDICATED EFFECT =====', {
+      isOAuthCallback,
+      ready,
+      authenticated,
+      localToken: !!localToken,
+      url: window.location.href
+    });
+
+    if (!isOAuthCallback) {
+      console.log('[WalletConnect] No OAuth callback, skipping dedicated handler');
+      return;
+    }
 
     // If we detect OAuth callback and Privy is authenticated, ensure login is triggered
     if (ready && authenticated && !localToken) {
-      console.log('[WalletConnect] OAuth callback - forcing immediate login attempt');
+      console.log('[WalletConnect] 🚀 OAuth callback - forcing immediate login attempt');
       loginUser();
+    } else {
+      console.log('[WalletConnect] OAuth callback detected but conditions not met:', {
+        ready,
+        authenticated,
+        hasLocalToken: !!localToken
+      });
     }
   }, [ready, authenticated, localToken, loginUser]);
 

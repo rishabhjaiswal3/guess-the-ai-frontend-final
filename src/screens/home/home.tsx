@@ -43,6 +43,24 @@ const Home = () => {
     }
   }, []);
 
+  // Log every render to debug OAuth redirect issue
+  useEffect(() => {
+    const isOAuthCallback =
+      window.location.search.includes('privy_oauth_state') ||
+      window.location.hash.includes('privy_oauth_state');
+
+    console.log('[Home] ===== COMPONENT RENDER =====', {
+      authenticated,
+      hasLocalToken: !!localToken,
+      isSessionActive,
+      isOAuthCallback,
+      url: window.location.href,
+      searchParams: window.location.search,
+      hashParams: window.location.hash,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   // Auto-login logic moved from WalletConnect
   useEffect(() => {
     console.log('[Home] Auto-login effect running');
