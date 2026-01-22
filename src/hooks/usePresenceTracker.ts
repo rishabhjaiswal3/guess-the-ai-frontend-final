@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { SESSION_CHANGE_EVENT, SESSION_SOURCES, getSessionSource } from '../utils/session';
 
 const FRONT_BUFFER_MS = Number(import.meta.env.VITE_PRESENCE_FRONT_BUFFER_MS ?? 10_000);
 const FLUSH_QUANTUM_SEC = Number(import.meta.env.VITE_PRESENCE_QUANTUM_SEC ?? 60);
@@ -30,10 +29,8 @@ export default function usePresenceTracker(token?: string | null, hasWalletSessi
   const frontTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inFlightRef = useRef(false);
   const pendingRef = useRef(readPending());
-  const [allowWithoutWallet, setAllowWithoutWallet] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return getSessionSource() === SESSION_SOURCES.IFRAME;
-  });
+  // Removed iframe-specific logic; default to false or rely on hasWalletSession
+  const allowWithoutWallet = false;
 
   const writePending = (next: number) => {
     pendingRef.current = next;
@@ -121,16 +118,10 @@ export default function usePresenceTracker(token?: string | null, hasWalletSessi
     return cleanup;
   }, [token, hasWalletSession, allowWithoutWallet]);
 
+  // Removed session change listeners as we no longer support iframe sessions
+  /*
   useEffect(() => {
-    const handleSessionChange = () => {
-      if (typeof window === 'undefined') return;
-      setAllowWithoutWallet(getSessionSource() === SESSION_SOURCES.IFRAME);
-    };
-    window.addEventListener(SESSION_CHANGE_EVENT, handleSessionChange);
-    window.addEventListener('presence:token-change', handleSessionChange);
-    return () => {
-      window.removeEventListener(SESSION_CHANGE_EVENT, handleSessionChange);
-      window.removeEventListener('presence:token-change', handleSessionChange);
-    };
+    // ...
   }, []);
+  */
 }

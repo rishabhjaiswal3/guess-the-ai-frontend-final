@@ -5,7 +5,7 @@ import WalletConnect from '../../components/WalletConnect';
 import './home.css';
 import { updateUserName, login } from '../../api/auth';
 import { clearSessionStorage } from '../../utils/session';
-import useSessionSource from '../../hooks/useSessionSource';
+
 import logo2 from '../../assets/Logo2.png';
 import og from '../../assets/og.png';
 // import Base from '../../assets/Base.png';
@@ -18,8 +18,21 @@ const Home = () => {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = authenticated || isIframeSession || hasToken;
+  const [localToken, setLocalToken] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  );
+
+  useEffect(() => {
+    const handleTokenChange = (e: CustomEvent<string>) => {
+      setLocalToken(e.detail);
+    };
+    window.addEventListener('presence:token-change', handleTokenChange as EventListener);
+    return () => {
+      window.removeEventListener('presence:token-change', handleTokenChange as EventListener);
+    };
+  }, []);
+
+  const isSessionActive = authenticated || !!localToken;
 
   // Load name from localStorage on component mount
   useEffect(() => {
@@ -59,20 +72,20 @@ const Home = () => {
 
     const sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet');
     const source = queryParams.get('source') || hashParams.get('source');
-    if(sessionWallet){
+    if (sessionWallet) {
       localStorage.setItem('sessionWallet', sessionWallet);
     }
 
-    if(source){
+    if (source) {
       localStorage.setItem('source', source);
     }
 
     // const source = queryParams.get('source') || hashParams.get('source') || 'browser';
     // console.log('[Home] Found login params in URL', { jwt: incomingToken, source });
 
-    let loginPayoad: any = { jwt: incomingToken, source, sessionWallet: ''};
+    let loginPayoad: any = { jwt: incomingToken, source, sessionWallet: '' };
     // if(localStorage.getItem("sessionWallet")){
-      loginPayoad.sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet') ||localStorage.getItem("sessionWallet");
+    loginPayoad.sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet') || localStorage.getItem("sessionWallet");
     // }
 
     login(loginPayoad)

@@ -4,7 +4,7 @@ import axios, {
   type AxiosResponse,
 } from 'axios';
 import axiosRetry from 'axios-retry';
-import { SESSION_SOURCES, setSessionSource } from '../utils/session';
+
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -143,7 +143,16 @@ type AwardGateUserResponse = {
   success?: boolean;
 };
 
-const login = async (payload?: { walletAddress?: string | null; jwt?: string; source?: string, sessionWallet?: string }) => {
+
+type PrivyMetaData = {
+  address: string;
+  discord?: string;
+  email: string;
+  type: string;
+  privyUserId: string;
+};
+
+const login = async (payload?: { walletAddress?: string | null; jwt?: string; sessionWallet?: string; email?: string; privyUserId?: string; privyMetaData?: PrivyMetaData }) => {
   console.log("My payload is ", payload);
   if (!payload?.walletAddress && !payload?.jwt) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -167,7 +176,7 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; so
       localStorage.setItem('token', newToken);
       const userName = responsePayload?.['username'] ?? "";
       localStorage.setItem('username', userName);
-      setSessionSource(payload.source === 'iframe' ? SESSION_SOURCES.IFRAME : SESSION_SOURCES.WALLET);
+
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
       if (responsePayload.nameUpdated) {
         // window.location.href = '/#/game';

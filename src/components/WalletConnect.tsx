@@ -2,8 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { usePrivy, type User } from '@privy-io/react-auth';
 import { login as backendLogin } from '../api/auth';
-import useSessionSource from '../hooks/useSessionSource';
-import { clearSessionStorage } from '../utils/session';
 import LoginModal from './LoginModal';
 import { Loader } from './Loader';
 import logo2 from '../assets/Logo2.png';
@@ -28,7 +26,7 @@ const getWalletAddress = (user?: User | null) => {
 
 const WalletConnect = () => {
   const { ready, authenticated, user } = usePrivy();
-  const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
+  // const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
@@ -52,16 +50,36 @@ const WalletConnect = () => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (authenticated || hasToken || localToken || isIframeSession || isWalletSession) {
-      window.sessionStorage.removeItem('gta:auto-open-login');
+
+    // Log entry into effect
+    console.log('[WalletConnect] Auto-Open Check:', { ready, authenticated, localToken: !!localToken, flag: window.sessionStorage.getItem('gta:auto-open-login') });
+
+    if (authenticated || localToken) {
+      if (window.sessionStorage.getItem('gta:auto-open-login')) {
+        console.log('[WalletConnect] Already logged in, clearing auto-open flag');
+        window.sessionStorage.removeItem('gta:auto-open-login');
+      }
       return;
     }
     const shouldAutoOpen = window.sessionStorage.getItem('gta:auto-open-login') === '1';
-    if (!shouldAutoOpen) return;
-    if (!ready) return;
+
+    if (!shouldAutoOpen) {
+      // console.log('[WalletConnect] No auto-open flag found');
+      return;
+    }
+
+    if (!ready) {
+      console.log('[WalletConnect] Auto-open pending: Privy not ready');
+      return;
+    }
+
+    console.log('[WalletConnect] Triggering Auto-Open Modal');
     window.sessionStorage.removeItem('gta:auto-open-login');
     setIsModalOpen(true);
-  }, [ready, authenticated, hasToken, localToken, isIframeSession, isWalletSession]);
+  }, [ready, authenticated, localToken]);
+
+  // Retry logic state
+  const [retryCount, setRetryCount] = useState(0);
 
   const loginUser = useCallback(async () => {
     // Debug logs to trace wallet-based login flow
@@ -69,7 +87,9 @@ const WalletConnect = () => {
     console.log('[WalletConnect] loginUser invoked', {
       authenticated,
       hasUser: !!user,
+      retryCount
     });
+
     if (!authenticated) {
       // eslint-disable-next-line no-console
       console.log('[WalletConnect] Skipping backend login – not authenticated');
@@ -77,30 +97,100 @@ const WalletConnect = () => {
     }
 
     const address = getWalletAddress(user);
+
+
+    // --- DETAILED MEMBER LOGGING ---
+    const activeWallet = user?.wallet;
+    const emailObj = user?.email;
+    const linked = user?.linkedAccounts || [];
+
+    console.log('[WalletConnect] === USER PROFILE DUMP ===');
+    console.log('[WalletConnect] User ID:', user?.id);
+    console.log('[WalletConnect] Active Wallet:', {
+      address: activeWallet?.address || 'None',
+      connectorType: activeWallet?.connectorType || 'Unknown', // e.g. 'injected', 'embedded', 'wallet_connect'
+      walletClientType: activeWallet?.walletClientType || 'Unknown', // e.g. 'metamask', 'phantom'
+      chainId: activeWallet?.chainId
+    });
+    console.log('[WalletConnect] Email:', emailObj?.address || 'None');
+    console.log('[WalletConnect] Linked Accounts:', linked.map(acc => ({
+      type: acc.type,
+      // dynamically grab relevant identifier based on type
+      identifier: (acc as any).address || (acc as any).email || (acc as any).username || (acc as any).subject || 'N/A',
+      verifiedAt: acc.verifiedAt
+    })));
+    console.log('[WalletConnect] =========================');
+
     // eslint-disable-next-line no-console
     console.log('[WalletConnect] Resolved wallet address from Privy user', {
       address,
       linkedAccountsCount: user?.linkedAccounts?.length ?? 0,
+      linkedAccountTypes: user?.linkedAccounts?.map(a => a.type) ?? [],
     });
-
-    if (!address) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        '[WalletConnect] No wallet address found on Privy user; backend login will be skipped',
-        user,
-      );
-      return;
-    }
 
     if (typeof window === 'undefined') return;
     const token = localStorage.getItem('token');
+
+    if (!address && !token) {
+      // If we are authenticated but have no address AND no token, 
+      // it might be an embedded wallet provisioning delay.
+      console.warn(
+        '[WalletConnect] No wallet address found on Privy user and no local token. Waiting for wallet creation...',
+        {
+          id: user?.id,
+          linkedAccounts: user?.linkedAccounts,
+          wallet: user?.wallet,
+          typesFound: user?.linkedAccounts?.map(a => a.type)
+        }
+      );
+      // Reduced retries to 5 before falling back to email-only login
+      if (retryCount < 5) {
+        console.log(`[WalletConnect] Scheduling retry #${retryCount + 1} in 1000ms...`);
+        setTimeout(() => setRetryCount(c => c + 1), 1000);
+        return; // Return here to wait for the next retry
+      } else {
+        console.warn('[WalletConnect] FINAL FAILURE: Could not find wallet address after 5 seconds. Proceeding to fallback login with Email/ID only.');
+        // We DO NOT return here; we fall through to the login logic below with address=""
+      }
+    }
+
+    console.log('[WalletConnect] Checking existing token before calling backend login', {
+      hasTokenInLocalStorage: !!token,
+      tokenPreview: token ? token.slice(0, 10) : 'null'
+    });
+
     if (!token) {
       // eslint-disable-next-line no-console
       console.log('[WalletConnect] No existing JWT token; calling backend /user/login', {
-        walletAddress: address,
+        walletAddress: address || '(fallback: empty)',
+        email: emailObj?.address,
       });
+
+      // --- CONSTRUCT METADATA ---
+      const discordAccount = linked.find(a => a.type === 'discord_oauth');
+      const discordUsername = (discordAccount as any)?.username || (discordAccount as any)?.email || (discordAccount as any)?.subject;
+
+      let loginType = activeWallet?.walletClientType || 'unknown';
+      if (loginType === 'privy') {
+        if (linked.some(a => a.type === 'discord_oauth')) loginType = 'discord';
+        else if (linked.some(a => a.type === 'google_oauth')) loginType = 'google';
+        else if (linked.some(a => a.type === 'email')) loginType = 'email';
+      }
+
+      // Prepare payload
+      const payload: any = {
+        walletAddress: address || '', // Send empty string if no address found
+        privyMetaData: {
+          address: address || '',
+          discord: discordUsername,
+          email: emailObj?.address || '',
+          type: loginType,
+          privyUserId: user?.id || ''
+        }
+      };
+
       try {
-        const res = await backendLogin({ walletAddress: address });
+        const res = await backendLogin(payload);
         // eslint-disable-next-line no-console
         console.log('[WalletConnect] Backend login response', res);
       } catch (err) {
@@ -113,27 +203,45 @@ const WalletConnect = () => {
         tokenPreview: token.slice(0, 12),
       });
     }
-  }, [authenticated, user]);
+  }, [authenticated, user, retryCount]);
 
   useEffect(() => {
     // eslint-disable-next-line no-console
-    console.log('Auth / iframe state changed', {
+    console.log('Auth state changed', {
       authenticated,
-      isIframeSession,
-      isWalletSession,
-      hasToken,
     });
+
+    // Check for OAuth callback param
+    const isOAuthCallback =
+      (typeof window !== 'undefined') &&
+      (window.location.search.includes('privy_oauth_state') || window.location.hash.includes('privy_oauth_state'));
+
+    if (isOAuthCallback) {
+      console.log('[WalletConnect] OAuth callback detected in URL');
+    }
 
     if (authenticated) {
       loginUser();
-    } else if (!isIframeSession && !isWalletSession && !hasToken) {
-      // eslint-disable-next-line no-console
-      console.log('Not authenticated and not iframe session – clearing session storage');
-      clearSessionStorage();
+    } else if (isOAuthCallback && ready) {
+      // If we are back from OAuth but not authenticated yet, we simply wait for Privy to flip 'authenticated' to true.
+      // But we log it to be sure.
+      console.log('[WalletConnect] OAuth callback present, waiting for Privy authentication...');
+    } else if (!localToken) {
+      // If not authenticated and no local token, we might want to clear session
+      // console.log('Not authenticated and no local token – clearing session storage');
+      // clearSessionStorage();
     }
-  }, [authenticated, loginUser, isIframeSession, isWalletSession, hasToken]);
+  }, [authenticated, loginUser, localToken, retryCount, ready]);
 
-  const shouldHideConnect = authenticated || hasToken || !!localToken || isIframeSession || isWalletSession;
+  const shouldHideConnect = authenticated || !!localToken;
+
+  // Log why we are showing/hiding the button
+  if (authenticated || !!localToken) {
+    console.log('[WalletConnect] Render decision:', {
+      shouldHideConnect,
+      reason: { authenticated, localToken: !!localToken }
+    });
+  }
 
   return (
     <>

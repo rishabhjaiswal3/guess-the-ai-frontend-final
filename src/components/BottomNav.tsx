@@ -6,7 +6,6 @@ import LeaderboardIcon from '../assets/Leaderboard.png';
 import ProfileIcon from '../assets/Profile.png';
 import WalletIcon from '../assets/Wallet.png';
 import '../components/BottomNav.css';
-import useSessionSource from '../hooks/useSessionSource';
 import { clearSessionStorage } from '../utils/session';
 
 type ConfirmationModalProps = {
@@ -105,7 +104,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-3.87 0-7 2.24-7 5v2h14v-2c0-2.76-3.13-5-7-5Z" fill="currentColor"/>
+              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-3.87 0-7 2.24-7 5v2h14v-2c0-2.76-3.13-5-7-5Z" fill="currentColor" />
             </svg>
             <h3 style={{
               margin: 0,
@@ -128,7 +127,7 @@ const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: Confirmation
           justifyContent: 'center',
           minHeight: '200px',
         }}>
-          { !isBrowserLogin && <div style={{
+          {!isBrowserLogin && <div style={{
             background: 'var(--theme-card-surface)',
             border: '1px solid var(--theme-card-border)',
             borderRadius: '12px',
@@ -211,8 +210,21 @@ const BottomNav = (): ReactElement | null => {
   const [, setShowWalletInfo] = useState(false);
   const [showDisconnectModal, setShowDisconnectModal] = useState(false);
   const popupRef = useRef<HTMLDivElement | null>(null);
-  const { isIframeSession, hasToken } = useSessionSource();
-  const isSessionActive = authenticated || hasToken;
+  const [localToken, setLocalToken] = useState<string | null>(
+    typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  );
+
+  useEffect(() => {
+    const handleTokenChange = (e: CustomEvent<string>) => {
+      setLocalToken(e.detail);
+    };
+    window.addEventListener('presence:token-change', handleTokenChange as EventListener);
+    return () => {
+      window.removeEventListener('presence:token-change', handleTokenChange as EventListener);
+    };
+  }, []);
+
+  const isSessionActive = authenticated || !!localToken;
 
   const handleDisconnect = async () => {
     if (authenticated) {
@@ -255,7 +267,7 @@ const BottomNav = (): ReactElement | null => {
 
   const handleNavClick = (index: number) => {
     setShowWalletInfo(false);
-    switch(index) {
+    switch (index) {
       case 0: // Game
         navigate('/game');
         break;
@@ -274,7 +286,7 @@ const BottomNav = (): ReactElement | null => {
 
   if (!isSessionActive) return null;
 
-    // const isBrowserLogin = localStorage.getItem('source') === 'browser';
+  // const isBrowserLogin = localStorage.getItem('source') === 'browser';
   // const showWalletIcon = !isBrowserLogin;
   // const bottomBarClassName = `bottom-bar${showWalletIcon ? '' : ' bottom-bar--compact'}`;
 
@@ -286,7 +298,7 @@ const BottomNav = (): ReactElement | null => {
         onCancel={() => setShowDisconnectModal(false)}
         onEdit={handleEditProfile}
       />
-    <div className="bottom-bar">
+      <div className="bottom-bar">
         <button className="nav-icon" onClick={() => handleNavClick(0)}>
           <img src={GameIcon} alt="Game" className="icon" />
         </button>
@@ -297,14 +309,14 @@ const BottomNav = (): ReactElement | null => {
           <img src={ProfileIcon} alt="Profile" className="icon" />
         </button>
         <div className="wallet-icon-container">
-          <button 
+          <button
             className="nav-icon"
             onClick={() => setShowDisconnectModal(true)}
           >
             <img src={WalletIcon} alt="Wallet" className="icon" />
           </button>
         </div>
-    </div>
+      </div>
     </>
   );
 };
