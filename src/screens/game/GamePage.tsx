@@ -8,6 +8,7 @@ import {
   getProfile,
   isGateUserElligibleForAward,
   awardGateUser,
+  isGalaxyUserEligible,
 } from '../../api/auth';
 import StreakWinnerModel from '../../components/StreakWinnerModel';
 import './GamePage.css';
@@ -82,7 +83,7 @@ const GamePage = () => {
     console.log('is Eligible awarded ', awarded, source, sessionWallet);
     return awarded;
   };
-  
+
   const imgRef = useRef<HTMLImageElement | null>(null);
   const forcedLoaderRef = useRef(false);
   const objectUrlRef = useRef<string | null>(null);
@@ -353,8 +354,20 @@ const GamePage = () => {
           streak: currentStreak,
           score: Number(data.correctAnswers) || 0,
         });
-        if (currentStreak === 5 && await checkStreakModalEligibility()) {
-          setShowStreakModal(true);
+        if (currentStreak === 5) {
+          // Check Galaxy user eligibility
+          console.log('[GamePage] Streak reached 5, checking Galaxy user eligibility');
+          const isGalaxyEligible = await isGalaxyUserEligible();
+          console.log('[GamePage] Galaxy user eligible:', isGalaxyEligible);
+
+          // Also check Gate wallet eligibility (existing logic)
+          const isGateEligible = await checkStreakModalEligibility();
+          console.log('[GamePage] Gate wallet eligible:', isGateEligible);
+
+          // Show modal if either is eligible
+          if (isGalaxyEligible || isGateEligible) {
+            setShowStreakModal(true);
+          }
         }
       }
     } catch (profileError) {
@@ -381,8 +394,20 @@ const GamePage = () => {
           score: Number(updatedProfile.correctAnswers) || 0,
           streak: newStreak,
         });
-        if (newStreak === 5 && await checkStreakModalEligibility()) {
-          setShowStreakModal(true);
+        if (newStreak === 5) {
+          // Check Galaxy user eligibility
+          console.log('[GamePage] Streak reached 5 after answer, checking Galaxy user eligibility');
+          const isGalaxyEligible = await isGalaxyUserEligible();
+          console.log('[GamePage] Galaxy user eligible:', isGalaxyEligible);
+
+          // Also check Gate wallet eligibility (existing logic)
+          const isGateEligible = await checkStreakModalEligibility();
+          console.log('[GamePage] Gate wallet eligible:', isGateEligible);
+
+          // Show modal if either is eligible
+          if (isGalaxyEligible || isGateEligible) {
+            setShowStreakModal(true);
+          }
         }
       }
       const corr = response && (response.isCorrect ?? response.correct ?? response?.data?.isCorrect ?? response?.data?.correct);

@@ -29,6 +29,20 @@ const WalletConnect = () => {
   // const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Debug: Log component mount and OAuth state
+  useEffect(() => {
+    const isOAuthCallback =
+      (typeof window !== 'undefined') &&
+      (window.location.search.includes('privy_oauth_state') || window.location.hash.includes('privy_oauth_state'));
+
+    console.log('[WalletConnect] Component mounted/updated', {
+      ready,
+      authenticated,
+      hasUser: !!user,
+      isOAuthCallback,
+      url: typeof window !== 'undefined' ? window.location.href : 'N/A'
+    });
+  });
 
   const [localToken, setLocalToken] = useState<string | null>(localStorage.getItem('token'));
 
@@ -232,6 +246,23 @@ const WalletConnect = () => {
       // clearSessionStorage();
     }
   }, [authenticated, loginUser, localToken, retryCount, ready]);
+
+  // Dedicated OAuth callback handler - triggers login immediately when OAuth completes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const isOAuthCallback =
+      window.location.search.includes('privy_oauth_state') ||
+      window.location.hash.includes('privy_oauth_state');
+
+    if (!isOAuthCallback) return;
+
+    // If we detect OAuth callback and Privy is authenticated, ensure login is triggered
+    if (ready && authenticated && !localToken) {
+      console.log('[WalletConnect] OAuth callback - forcing immediate login attempt');
+      loginUser();
+    }
+  }, [ready, authenticated, localToken, loginUser]);
 
   const shouldHideConnect = authenticated || !!localToken;
 

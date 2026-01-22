@@ -137,6 +137,7 @@ type SetAnswerResponse = {
 type IsGateUserEligibleResponse = {
   success?: boolean;
   isGateUserEligible?: boolean;
+  isGalaxyUserEligible?: boolean;
 };
 
 type AwardGateUserResponse = {
@@ -318,6 +319,23 @@ const awardGateUser = async (): Promise<boolean> => {
   }
 };
 
+const isGalaxyUserEligible = async (): Promise<boolean> => {
+  try {
+    const response = await apiInterceptor<IsGateUserEligibleResponse>({
+      method: 'get',
+      url: '/game/isGalaxyUserEligible',
+    });
+    const isGalaxyUserEligible = response.data?.isGalaxyUserEligible;
+    if (typeof isGalaxyUserEligible !== 'boolean') {
+      return false;
+    }
+    return isGalaxyUserEligible;
+  } catch (error) {
+    console.error('Failed to check Galaxy user eligibility', error);
+    return false;
+  }
+};
+
 
 
 const getProfile = () =>
@@ -339,5 +357,5 @@ export {
   setAnswer,
   isGateUserElligibleForAward,
   awardGateUser,
-
+  isGalaxyUserEligible,
 };
