@@ -32,9 +32,27 @@ const WalletConnect = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
+  const [localToken, setLocalToken] = useState<string | null>(localStorage.getItem('token'));
+
+  // Listen for token changes dispatched from auth.ts or other components
+  useEffect(() => {
+    const handleTokenChange = (e: CustomEvent<string>) => {
+      setLocalToken(e.detail);
+      // Close modal if we got a token
+      if (e.detail) {
+        setIsModalOpen(false);
+      }
+    };
+
+    window.addEventListener('presence:token-change', handleTokenChange as EventListener);
+    return () => {
+      window.removeEventListener('presence:token-change', handleTokenChange as EventListener);
+    };
+  }, []);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (authenticated || hasToken || isIframeSession || isWalletSession) {
+    if (authenticated || hasToken || localToken || isIframeSession || isWalletSession) {
       window.sessionStorage.removeItem('gta:auto-open-login');
       return;
     }
@@ -43,7 +61,7 @@ const WalletConnect = () => {
     if (!ready) return;
     window.sessionStorage.removeItem('gta:auto-open-login');
     setIsModalOpen(true);
-  }, [ready, authenticated, hasToken, isIframeSession, isWalletSession]);
+  }, [ready, authenticated, hasToken, localToken, isIframeSession, isWalletSession]);
 
   const loginUser = useCallback(async () => {
     // Debug logs to trace wallet-based login flow
@@ -115,7 +133,7 @@ const WalletConnect = () => {
     }
   }, [authenticated, loginUser, isIframeSession, isWalletSession, hasToken]);
 
-  const shouldHideConnect = authenticated || hasToken || isIframeSession || isWalletSession;
+  const shouldHideConnect = authenticated || hasToken || !!localToken || isIframeSession || isWalletSession;
 
   return (
     <>

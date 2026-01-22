@@ -11,6 +11,14 @@ import {
   useLoginWithOAuth,
 } from '@privy-io/react-auth';
 import { login as backendLogin } from '../api/auth';
+import {
+  connectGateWallet,
+  getGateWalletCurrentNetwork,
+  getPrimaryGateWalletAddress,
+  isGateWalletAvailable,
+  switchGateWalletNetwork,
+  type NetworkInfo,
+} from '../lib/gateWallet';
 
 type LoginModalProps = {
   open: boolean;
@@ -86,6 +94,39 @@ const GoogleIcon = ({ size = 18 }: { size?: number }) => (
     <path
       fill="#1976D2"
       d="M43.611 20.083 43.6 20 42 20H24v8h11.303a11.996 11.996 0 0 1-4.103 5.249l.003-.002 5.792 4.894C36.67 38.366 44 34 44 24c0-1.341-.138-2.651-.389-3.917Z"
+    />
+  </svg>
+);
+
+const DiscordIcon = ({ size = 20 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 127.14 96.36"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path
+      fill="#5865F2"
+      d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.11,77.11,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.82,105.82,0,0,0,126.6,80.22c2.36-24.44-2.54-48.4-18.9-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"
+    />
+  </svg>
+);
+
+const GateWalletIcon = ({ size = 20 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <circle cx="12" cy="12" r="12" fill="white" />
+    <path
+      d="M7 12L10 15L17 8"
+      stroke="#a940ff"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     />
   </svg>
 );
@@ -284,6 +325,25 @@ const styles: Record<string, CSSProperties> = {
     cursor: 'pointer',
     fontWeight: 600,
   },
+  gateBtn: {
+    padding: '14px 18px',
+    borderRadius: 12,
+    border: 'none',
+    background: 'linear-gradient(180deg, #a940ff 0%, rgba(107, 0, 194, 0.55) 100%)',
+    color: '#fff',
+    cursor: 'pointer',
+    fontWeight: 700,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 10px 25px -5px rgba(169, 64, 255, 0.4)',
+    letterSpacing: 0.2,
+    transition: 'transform .08s ease, box-shadow .2s ease',
+    width: '100%',
+    marginTop: '10px',
+    position: 'relative',
+    overflow: 'hidden',
+  },
   error: {
     margin: '12px 0 6px',
     padding: '10px 12px',
@@ -304,6 +364,32 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
   return fallback;
 };
 
+
+
+const allowedChain = {
+  caip2: 'eip155:16661',
+  decimalChainId: 16661,
+  hexChainId: '0x4115',
+  chainName: '0G Mainnet',
+  rpcUrls: ['https://evmrpc.0g.ai'],
+  blockExplorerUrls: ['https://chainscan.0g.ai'],
+};
+
+function normalizeChainId(chainId?: string) {
+  if (!chainId) return undefined;
+  if (chainId.startsWith('0x')) {
+    const parsed = Number.parseInt(chainId, 16);
+    return Number.isFinite(parsed) ? String(parsed) : chainId;
+  }
+  return chainId;
+}
+
+function getNetworkLabel(network: NetworkInfo | null | undefined) {
+  if (network === null) return 'All Networks';
+  if (!network) return 'Unknown';
+  return network.name || network.chainId;
+}
+
 function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [email, setEmail] = useState('');
@@ -311,6 +397,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
   type EmailStep = 'enter-email' | 'enter-code';
   const [emailStep, setEmailStep] = useState<EmailStep>('enter-email');
   const [error, setError] = useState('');
+  const [gateConnecting, setGateConnecting] = useState(false);
 
   const { connectWallet } = useConnectWallet({
     onSuccess: async (wallet) => {
@@ -401,6 +488,70 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
         // ignore
       }
     }, 50);
+  };
+
+  const handleGateConnect = async () => {
+    if (gateConnecting) return;
+    setError('');
+    setGateConnecting(true);
+
+    try {
+      if (!isGateWalletAvailable()) {
+        throw new Error('Gate Wallet not detected. Please install or enable it.');
+      }
+
+      // 1. Connect first
+      const accountInfo = await connectGateWallet();
+      const address = getPrimaryGateWalletAddress(accountInfo);
+
+      if (!address) {
+        throw new Error('Gate Wallet did not return an address.');
+      }
+
+      // 2. Check Network
+      let network = await getGateWalletCurrentNetwork().catch(() => undefined);
+
+      const normalized = normalizeChainId(network?.chainId);
+      const allowed = String(allowedChain.decimalChainId);
+
+      // If network is null (All Networks) or mismatch, try to switch
+      if (network === null || (normalized && normalized !== allowed)) {
+        try {
+          await switchGateWalletNetwork(allowedChain.hexChainId);
+          // Re-check network after switch
+          network = await getGateWalletCurrentNetwork().catch(() => undefined);
+        } catch (switchError) {
+          console.warn('Failed to auto-switch network:', switchError);
+        }
+      }
+
+      // 3. Verify Final Network State
+      const finalNormalized = normalizeChainId(network?.chainId);
+      if (network === null) {
+        throw new Error(
+          'Gate Wallet is set to All Networks. Please select 0G Mainnet manually.'
+        );
+      }
+
+      if (!finalNormalized || finalNormalized !== allowed) {
+        throw new Error(
+          `Gate Wallet is on ${getNetworkLabel(network)}. Please switch to ${allowedChain.chainName}.`
+        );
+      }
+
+      // 4. Proceed to Backend Login
+      console.log('[LoginModal] Logging in with Gate Wallet address:', address);
+      const res = await backendLogin({ walletAddress: address });
+      console.log('[LoginModal] Gate Wallet backend login result', res);
+
+      localStorage.setItem('sessionWallet', 'VERIFIED');
+      onClose?.();
+    } catch (err: any) {
+      console.error('Gate wallet connection error:', err);
+      setError(err?.message || 'Failed to connect Gate Wallet.');
+    } finally {
+      setGateConnecting(false);
+    }
   };
 
   const onEmailSubmit = (event?: FormEvent) => {
@@ -533,6 +684,26 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
           )}
         </form>
 
+        <div style={{ marginTop: 14 }}>
+          <button
+            style={styles.gateBtn}
+            onClick={handleGateConnect}
+            disabled={gateConnecting}
+            type="button"
+          >
+            {gateConnecting ? (
+              <span style={styles.btnIcon}>
+                <GateWalletIcon />
+              </span>
+            ) : (
+              <span style={styles.btnIcon}>
+                <GateWalletIcon />
+              </span>
+            )}
+            <span>{gateConnecting ? 'Connecting...' : 'Connect Gate Wallet'}</span>
+          </button>
+        </div>
+
         <div style={{ marginTop: 14, display: 'flex' }}>
           <button
             style={{ ...styles.primary, width: '100%' }}
@@ -556,8 +727,23 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
               aria-label="Continue with Google"
               type="button"
             >
-              <GoogleIcon />
-              <span style={{ marginLeft: 8 }}>Google</span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <GoogleIcon />
+                <span style={{ marginLeft: 8 }}>Google</span>
+              </div>
+            </button>
+
+            <button
+              style={styles.oauth}
+              disabled={oauthLoading}
+              onClick={() => initOAuth({ provider: 'discord' })}
+              aria-label="Continue with Discord"
+              type="button"
+            >
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <DiscordIcon />
+                <span style={{ marginLeft: 8 }}>Discord</span>
+              </div>
             </button>
           </div>
         </div>
