@@ -194,11 +194,18 @@ const WalletConnect = () => {
 
       // --- CONSTRUCT MINIMAL PAYLOAD ---
       const discordAccount = linked.find(a => a.type === 'discord_oauth');
+      const googleAccount = linked.find(a => a.type === 'google_oauth');
+      const emailAccount = linked.find(a => a.type === 'email');
+
       const discordUsername = (discordAccount as any)?.username || (discordAccount as any)?.email || (discordAccount as any)?.subject;
       const discordUserId = (discordAccount as any)?.subject || (discordAccount as any)?.id;
 
+      const googleEmail = (googleAccount as any)?.email || (googleAccount as any)?.address;
+      const googleSubject = (googleAccount as any)?.subject;
+      const resolvedEmail = emailObj?.address || googleEmail || (emailAccount as any)?.address;
+
       const hasWallet = Boolean(address);
-      const hasEmail = Boolean(emailObj?.address);
+      const hasEmail = Boolean(resolvedEmail);
       const hasDiscord = Boolean(discordUsername || discordUserId);
 
       let loginType = 'unknown';
@@ -209,21 +216,13 @@ const WalletConnect = () => {
 
       const payload: any = {};
       if (user?.id) payload.privyUserId = user.id;
+      if (hasWallet) payload.walletAddress = address;
 
-      if (loginType === 'discord') {
-        if (discordUsername) payload.discord = discordUsername;
-        if (discordUserId) payload.discordUserId = discordUserId;
-      } else if (loginType === 'email' || loginType === 'google') {
-        if (emailObj?.address) payload.email = emailObj.address;
-      } else if (loginType === 'wallet') {
-        if (hasWallet) payload.walletAddress = address;
-      } else {
-        if (hasWallet) payload.walletAddress = address;
-        else if (hasEmail) payload.email = emailObj?.address;
-        else if (hasDiscord) {
-          if (discordUsername) payload.discord = discordUsername;
-          if (discordUserId) payload.discordUserId = discordUserId;
-        }
+      if (resolvedEmail) payload.email = resolvedEmail;
+      if (discordUsername) payload.discord = discordUsername;
+      if (discordUserId) payload.discordUserId = discordUserId;
+      if (!resolvedEmail && loginType === 'google' && googleSubject) {
+        payload.otherId = googleSubject;
       }
 
       console.log('[WalletConnect] Minimal login payload', {
