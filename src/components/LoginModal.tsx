@@ -411,24 +411,13 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
         return;
       }
       try {
-        // Extract wallet type from wallet object
-        const walletType = (wallet as any)?.walletClientType || 'unknown';
-
         // eslint-disable-next-line no-console
         console.log('[LoginModal] Calling backendLogin from wallet connect', {
           walletAddress: address,
-          walletType,
         });
 
         const res = await backendLogin({
-          walletAddress: address,
-          privyMetaData: {
-            address: address,
-            discord: '',
-            email: '',
-            type: walletType,
-            privyUserId: ''
-          }
+          walletAddress: address
         });
         // eslint-disable-next-line no-console
         console.log('[LoginModal] backendLogin result (wallet)', res);
@@ -558,13 +547,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
 
       const payload: any = {
         walletAddress: address,
-        privyMetaData: {
-          address: address,
-          discord: '', // Gate wallet flow doesn't have discord info
-          email: '', // Gate wallet flow doesn't have email info
-          type: 'gate_wallet',
-          privyUserId: '' // Gate wallet doesn't use Privy
-        }
+        sessionWallet: 'VERIFIED'
       };
 
       const res = await backendLogin(payload);
@@ -759,7 +742,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
               </div>
             </button>
 
-            {/* 
+            
             <button
               style={styles.oauth}
               disabled={oauthLoading}
@@ -772,7 +755,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
                 <span style={{ marginLeft: 8 }}>Discord</span>
               </div>
             </button>
-            */}
+           
           </div>
         </div>
       </div>
