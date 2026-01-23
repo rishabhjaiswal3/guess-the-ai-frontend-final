@@ -92,6 +92,7 @@ type LoginPayload = {
   token: string;
   username?: string;
   nameUpdated?: boolean;
+  user?: Record<string, unknown>;
 };
 
 type GameImageResponse = {
@@ -146,16 +147,61 @@ type AwardGateUserResponse = {
 
 
 type PrivyMetaData = {
-  address: string;
+  address?: string;
+  walletAddress?: string;
+  embeddedWalletAddress?: string;
   discord?: string;
-  email: string;
-  type: string;
-  privyUserId: string;
+  discordUserId?: string;
+  email?: string;
+  type?: string;
+  privyUserId?: string;
+  otherId?: string;
+  otherIds?: string[];
 };
 
-const login = async (payload?: { walletAddress?: string | null; jwt?: string; sessionWallet?: string; email?: string; privyUserId?: string; privyMetaData?: PrivyMetaData }) => {
+type LoginRequest = {
+  walletAddress?: string | null;
+  jwt?: string;
+  sessionWallet?: string;
+  source?: string;
+  email?: string;
+  privyUserId?: string;
+  discord?: string;
+  discordUserId?: string;
+  otherId?: string;
+  otherIds?: string[];
+  privyMetaData?: PrivyMetaData;
+};
+
+const hasNonEmptyString = (value?: unknown) =>
+  typeof value === 'string' && value.trim().length > 0;
+
+const hasLoginIdentifiers = (payload?: LoginRequest) => {
+  if (!payload) return false;
+  if (
+    hasNonEmptyString(payload.walletAddress) ||
+    hasNonEmptyString(payload.jwt) ||
+    hasNonEmptyString(payload.privyUserId) ||
+    hasNonEmptyString(payload.email) ||
+    hasNonEmptyString(payload.discord) ||
+    hasNonEmptyString(payload.discordUserId) ||
+    hasNonEmptyString(payload.otherId)
+  ) {
+    return true;
+  }
+  if (Array.isArray(payload.otherIds) && payload.otherIds.some(hasNonEmptyString)) {
+    return true;
+  }
+  if (!payload.privyMetaData) return false;
+  return Object.values(payload.privyMetaData).some((value) => {
+    if (Array.isArray(value)) return value.some(hasNonEmptyString);
+    return hasNonEmptyString(value);
+  });
+};
+
+const login = async (payload?: LoginRequest) => {
   console.log("My payload is ", payload);
-  if (!payload?.walletAddress && !payload?.jwt) return undefined;
+  if (!hasLoginIdentifiers(payload)) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   if (token) {
     // eslint-disable-next-line no-console
@@ -165,10 +211,10 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; se
   }
   try {
     // eslint-disable-next-line no-console
-    console.log('[api/login] Sending /user/login request', payload);
+    console.log('[api/login] Sending /v2/login request', payload);
     const response = await apiInterceptor<ApiSuccessResponse<LoginPayload>>({
       method: 'post',
-      url: '/user/login',
+      url: '/v2/login',
       data: payload,
     });
     const responsePayload = response.data.data;
@@ -179,6 +225,7 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; se
       localStorage.setItem('username', userName);
 
       window.dispatchEvent(new CustomEvent('presence:token-change', { detail: newToken }));
+      window.dispatchEvent(new CustomEvent('presence:username-change', { detail: userName }));
       if (responsePayload.nameUpdated) {
         // window.location.href = '/#/game';
       }
@@ -190,6 +237,15 @@ const login = async (payload?: { walletAddress?: string | null; jwt?: string; se
     });
     return response.data;
   } catch (error) {
+    const axiosError = error as AxiosError<{ success?: boolean; message?: string; code?: string; data?: unknown }>;
+    const responseData = axiosError.response?.data;
+    if (responseData && typeof responseData === 'object') {
+      return {
+        data: responseData.data ?? { token: '' },
+        success: false,
+        ...responseData,
+      };
+    }
     // eslint-disable-next-line no-console
     console.error('[api/login] Login failed', error);
     return { success: false, message: 'Login failed', data: { token: '' } };

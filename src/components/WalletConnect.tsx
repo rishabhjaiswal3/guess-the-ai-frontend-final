@@ -187,36 +187,64 @@ const WalletConnect = () => {
 
     if (!token) {
       // eslint-disable-next-line no-console
-      console.log('[WalletConnect] No existing JWT token; calling backend /user/login', {
+      console.log('[WalletConnect] No existing JWT token; calling backend /v2/login', {
         walletAddress: address || '(fallback: empty)',
         email: emailObj?.address,
       });
 
-      // --- CONSTRUCT METADATA ---
+      // --- CONSTRUCT MINIMAL PAYLOAD ---
       const discordAccount = linked.find(a => a.type === 'discord_oauth');
       const discordUsername = (discordAccount as any)?.username || (discordAccount as any)?.email || (discordAccount as any)?.subject;
+      const discordUserId = (discordAccount as any)?.subject || (discordAccount as any)?.id;
 
-      let loginType = activeWallet?.walletClientType || 'unknown';
-      if (loginType === 'privy') {
-        if (linked.some(a => a.type === 'discord_oauth')) loginType = 'discord';
-        else if (linked.some(a => a.type === 'google_oauth')) loginType = 'google';
-        else if (linked.some(a => a.type === 'email')) loginType = 'email';
+      const hasWallet = Boolean(address);
+      const hasEmail = Boolean(emailObj?.address);
+      const hasDiscord = Boolean(discordUsername || discordUserId);
+
+      let loginType = 'unknown';
+      if (linked.some(a => a.type === 'discord_oauth')) loginType = 'discord';
+      else if (linked.some(a => a.type === 'google_oauth')) loginType = 'google';
+      else if (linked.some(a => a.type === 'email')) loginType = 'email';
+      else if (hasWallet) loginType = 'wallet';
+
+      const payload: any = {};
+      if (user?.id) payload.privyUserId = user.id;
+
+      if (loginType === 'discord') {
+        if (discordUsername) payload.discord = discordUsername;
+        if (discordUserId) payload.discordUserId = discordUserId;
+      } else if (loginType === 'email' || loginType === 'google') {
+        if (emailObj?.address) payload.email = emailObj.address;
+      } else if (loginType === 'wallet') {
+        if (hasWallet) payload.walletAddress = address;
+      } else {
+        if (hasWallet) payload.walletAddress = address;
+        else if (hasEmail) payload.email = emailObj?.address;
+        else if (hasDiscord) {
+          if (discordUsername) payload.discord = discordUsername;
+          if (discordUserId) payload.discordUserId = discordUserId;
+        }
       }
 
-      // Prepare payload
-      const payload: any = {
-        walletAddress: address || '', // Send empty string if no address found
-        privyMetaData: {
-          address: address || '',
-          discord: discordUsername,
-          email: emailObj?.address || '',
-          type: loginType,
-          privyUserId: user?.id || ''
-        }
-      };
+      console.log('[WalletConnect] Minimal login payload', {
+        loginType,
+        hasWallet: Boolean(payload.walletAddress),
+        hasEmail: Boolean(payload.email),
+        hasDiscord: Boolean(payload.discord || payload.discordUserId),
+        hasPrivyUserId: Boolean(payload.privyUserId)
+      });
 
       try {
         const res = await backendLogin(payload);
+        if (res?.success === false && (res as any)?.code === 'wallet_address_pending') {
+          console.warn('[WalletConnect] Wallet address not ready yet; retrying login', {
+            retryCount,
+          });
+          if (retryCount < 8) {
+            setTimeout(() => setRetryCount(c => c + 1), 1500);
+          }
+          return;
+        }
         // eslint-disable-next-line no-console
         console.log('[WalletConnect] Backend login response', res);
       } catch (err) {

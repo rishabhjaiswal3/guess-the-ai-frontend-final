@@ -26,9 +26,17 @@ const Home = () => {
     const handleTokenChange = (e: CustomEvent<string>) => {
       setLocalToken(e.detail);
     };
+    const handleUsernameChange = (e: CustomEvent<string>) => {
+      const nextName = (e.detail || '').trim();
+      if (nextName) {
+        setName(nextName);
+      }
+    };
     window.addEventListener('presence:token-change', handleTokenChange as EventListener);
+    window.addEventListener('presence:username-change', handleUsernameChange as EventListener);
     return () => {
       window.removeEventListener('presence:token-change', handleTokenChange as EventListener);
+      window.removeEventListener('presence:username-change', handleUsernameChange as EventListener);
     };
   }, []);
 
