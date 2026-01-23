@@ -9,6 +9,7 @@ import {
   useConnectWallet,
   useLoginWithEmail,
   useLoginWithOAuth,
+  usePrivy,
 } from '@privy-io/react-auth';
 import { login as backendLogin } from '../api/auth';
 import {
@@ -398,6 +399,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
   const [emailStep, setEmailStep] = useState<EmailStep>('enter-email');
   const [error, setError] = useState('');
   const [gateConnecting, setGateConnecting] = useState(false);
+  const { user } = usePrivy();
 
   const { connectWallet } = useConnectWallet({
     onSuccess: async (wallet) => {
@@ -442,7 +444,6 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
   });
 
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
-    onComplete: () => onClose?.(),
     onError: (err) => setError(getErrorMessage(err, 'Email login error')),
   });
 
@@ -579,16 +580,28 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
       });
   };
 
-  const onCodeSubmit = (event?: FormEvent) => {
+  const onCodeSubmit = async (event?: FormEvent) => {
     event?.preventDefault();
     setError('');
-    loginWithCode({ code }).catch((err: unknown) => {
+    try {
+      await loginWithCode({ code });
+      const trimmedEmail = email.trim();
+      const payload: any = {};
+      if (trimmedEmail) payload.email = trimmedEmail;
+      if (user?.id) payload.privyUserId = user.id;
+      const res = await backendLogin(payload);
+      if (res?.success === false) {
+        setError(res.message || 'Login failed');
+        return;
+      }
+      onClose?.();
+    } catch (err: unknown) {
       if (err && typeof err === 'object' && 'message' in err) {
         setError(String((err as { message?: unknown }).message));
       } else {
         setError('Invalid code');
       }
-    });
+    }
   };
 
   const isSendingCode = emailState?.status === 'sending-code';
