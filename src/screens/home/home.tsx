@@ -131,7 +131,7 @@ const Home = () => {
             // Simplest is to just proceed.
           }
 
-          if (payload.nameUpdated) {
+          if (payload?.nameUpdated) {
             navigate('/game', { replace: true });
           } else {
             // If name not updated, maybe stay here or reload? 

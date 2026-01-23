@@ -95,6 +95,10 @@ type LoginPayload = {
   user?: Record<string, unknown>;
 };
 
+type LoginResponse = ApiSuccessResponse<LoginPayload> & {
+  code?: string;
+};
+
 type GameImageResponse = {
   hash?: string;
   imageId?: string;
@@ -199,7 +203,7 @@ const hasLoginIdentifiers = (payload?: LoginRequest) => {
   });
 };
 
-const login = async (payload?: LoginRequest) => {
+const login = async (payload?: LoginRequest): Promise<LoginResponse | undefined> => {
   console.log("My payload is ", payload);
   if (!hasLoginIdentifiers(payload)) return undefined;
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -237,18 +241,17 @@ const login = async (payload?: LoginRequest) => {
     });
     return response.data;
   } catch (error) {
-    const axiosError = error as AxiosError<{ success?: boolean; message?: string; code?: string; data?: unknown }>;
+    const axiosError = error as AxiosError<{ message?: string; code?: string }>;
     const responseData = axiosError.response?.data;
-    if (responseData && typeof responseData === 'object') {
-      return {
-        data: responseData.data ?? { token: '' },
-        success: false,
-        ...responseData,
-      };
-    }
+    const fallbackPayload: LoginPayload = { token: '' };
     // eslint-disable-next-line no-console
     console.error('[api/login] Login failed', error);
-    return { success: false, message: 'Login failed', data: { token: '' } };
+    return {
+      success: false,
+      message: responseData?.message || 'Login failed',
+      code: responseData?.code,
+      data: fallbackPayload,
+    };
   }
 };
 
