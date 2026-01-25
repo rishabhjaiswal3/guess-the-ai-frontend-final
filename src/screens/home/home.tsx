@@ -109,10 +109,17 @@ const Home = () => {
     // const source = queryParams.get('source') || hashParams.get('source') || 'browser';
     // console.log('[Home] Found login params in URL', { jwt: incomingToken, source });
 
+    const resolvedSessionWallet =
+      queryParams.get('sessionWallet') ||
+      hashParams.get('sessionWallet') ||
+      localStorage.getItem("sessionWallet");
     let loginPayoad: any = { jwt: incomingToken, source, sessionWallet: '' };
     // if(localStorage.getItem("sessionWallet")){
-    loginPayoad.sessionWallet = queryParams.get('sessionWallet') || hashParams.get('sessionWallet') || localStorage.getItem("sessionWallet");
+    loginPayoad.sessionWallet = resolvedSessionWallet;
     // }
+    if (resolvedSessionWallet === 'VERIFIED') {
+      loginPayoad.privyMetaData = { ...(loginPayoad.privyMetaData ?? {}), type: 'gate_wallet' };
+    }
 
     login(loginPayoad)
       .then((response) => {

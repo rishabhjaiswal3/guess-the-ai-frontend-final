@@ -365,6 +365,24 @@ const getErrorMessage = (err: unknown, fallback: string): string => {
   return fallback;
 };
 
+const normalizeAccountType = (value?: string | null) => {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().toLowerCase();
+  return trimmed;
+};
+
+const resolveWalletAccountType = (wallet?: {
+  walletClientType?: string;
+  connectorType?: string;
+  type?: string;
+}) => {
+  const walletClientType = normalizeAccountType(wallet?.walletClientType);
+  if (walletClientType) return walletClientType;
+  const connectorType = normalizeAccountType(wallet?.connectorType);
+  if (connectorType) return connectorType;
+  return normalizeAccountType(wallet?.type);
+};
+
 
 
 const allowedChain = {
@@ -418,9 +436,15 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
           walletAddress: address,
         });
 
-        const res = await backendLogin({
-          walletAddress: address
-        });
+        const walletType = resolveWalletAccountType(
+          wallet as { walletClientType?: string; connectorType?: string; type?: string }
+        );
+        const payload: any = { walletAddress: address };
+        if (walletType) {
+          payload.privyMetaData = { type: walletType };
+        }
+
+        const res = await backendLogin(payload);
         // eslint-disable-next-line no-console
         console.log('[LoginModal] backendLogin result (wallet)', res);
       } catch (err) {
@@ -548,7 +572,8 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
 
       const payload: any = {
         walletAddress: address,
-        sessionWallet: 'VERIFIED'
+        sessionWallet: 'VERIFIED',
+        privyMetaData: { type: 'gate_wallet' }
       };
 
       const res = await backendLogin(payload);
@@ -589,6 +614,7 @@ function LoginModal({ open, onClose, logoSrc }: LoginModalProps) {
       const payload: any = {};
       if (trimmedEmail) payload.email = trimmedEmail;
       if (user?.id) payload.privyUserId = user.id;
+      payload.privyMetaData = { ...(payload.privyMetaData ?? {}), type: 'email' };
       const res = await backendLogin(payload);
       if (res?.success === false) {
         setError(res.message || 'Login failed');

@@ -24,6 +24,38 @@ const getWalletAddress = (user?: User | null) => {
   return linkedWallet?.address ?? '';
 };
 
+const normalizeAccountType = (value?: string | null) => {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().toLowerCase();
+  return trimmed;
+};
+
+const getLinkedAccountType = (linked: Array<{ type?: string }> = []) => {
+  if (linked.some((account) => account.type === 'discord_oauth')) return 'discord';
+  if (linked.some((account) => account.type === 'google_oauth')) return 'google';
+  if (linked.some((account) => account.type === 'email')) return 'email';
+  if (linked.some((account) => account.type === 'sms')) return 'sms';
+  return '';
+};
+
+const getPrivyAccountType = (user?: User | null) => {
+  if (!user) return '';
+  const linked = (user.linkedAccounts ?? []) as Array<{ type?: string }>;
+  const linkedType = getLinkedAccountType(linked);
+  const walletClientType = normalizeAccountType((user.wallet as any)?.walletClientType);
+  const connectorType = normalizeAccountType((user.wallet as any)?.connectorType);
+  const isEmbedded = connectorType === 'embedded';
+  if (!isEmbedded) {
+    if (walletClientType) return walletClientType;
+    if (connectorType) return connectorType;
+  }
+  if (linkedType) return linkedType;
+  if (walletClientType) return walletClientType;
+  if (connectorType) return connectorType;
+  if (linked.some((account) => account.type === 'wallet')) return 'wallet';
+  return '';
+};
+
 const WalletConnect = () => {
   const { ready, authenticated, user } = usePrivy();
   // const { isIframeSession, isWalletSession, hasToken } = useSessionSource();
@@ -225,8 +257,14 @@ const WalletConnect = () => {
         payload.otherId = googleSubject;
       }
 
+      const accountType = getPrivyAccountType(user) || (loginType !== 'unknown' ? loginType : '');
+      if (accountType) {
+        payload.privyMetaData = { ...(payload.privyMetaData ?? {}), type: accountType };
+      }
+
       console.log('[WalletConnect] Minimal login payload', {
         loginType,
+        accountType: accountType || 'unknown',
         hasWallet: Boolean(payload.walletAddress),
         hasEmail: Boolean(payload.email),
         hasDiscord: Boolean(payload.discord || payload.discordUserId),
