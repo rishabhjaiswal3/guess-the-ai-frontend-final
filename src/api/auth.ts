@@ -83,7 +83,7 @@ export type LeaderboardEntry = {
   correctAnswers: number;
   currentStreak: number;
   streak: number;
-  rank: number;
+  rank: string | number;
 };
 
 type LeaderboardPayload = ApiSuccessResponse<LeaderboardEntry[]> | LeaderboardEntry[];
