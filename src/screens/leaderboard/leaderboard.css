@@ -1,7 +1,7 @@
 .leaderboard-page {
   position: relative;
   min-height: 100vh;
-  display:flex;
+  display: flex;
   justify-content: center;
   color: var(--theme-text);
   font-family: 'Orbitron', sans-serif;
@@ -10,50 +10,224 @@
 }
 
 .leaderboard-container {
-  position: relative;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 28px;
   box-sizing: border-box;
   z-index: 1;
-}
-
-.leaderboard-decor-bottom {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  opacity: 0.9;
-  pointer-events: none;
-  z-index: 1;
-  -webkit-mask-image: linear-gradient(to top, black 75%, transparent 98%);
-  mask-image: linear-gradient(to top, black 75%, transparent 98%);
-}
-
-.leaderboard-content {
-  width: 100%;
-  max-width: 1000px;
-  max-height: 76vh;
-  margin: 0 auto;
-  padding: 12px;
-  border-radius: 16px;
+  border-radius: 24px;
   border: 1px solid var(--theme-card-border);
-  background: var(--theme-card-bg);
+  background: rgba(5, 5, 10, 0.85);
   box-shadow: var(--theme-card-shadow);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+}
+
+.leaderboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.leaderboard-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.leaderboard-hero-logo {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  transform: scale(1.1);
+}
+
+.leaderboard-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.leaderboard-header p {
+  margin: 4px 0 0;
+  color: var(--theme-text-soft);
+  font-size: 0.95rem;
+}
+
+.leaderboard-switcher {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.leaderboard-switch {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: transparent;
   color: var(--theme-text);
-  /* margin-bottom: 10px; */
-  position: relative;
-  z-index: 2;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease, border 0.2s ease;
+}
+
+.leaderboard-switch.active {
+  background: var(--theme-accent-gradient);
+  border-color: transparent;
+  color: #fff;
+}
+
+.leaderboard-champion-card {
+  margin-top: 12px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--theme-card-border);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.leaderboard-champion-note {
+  margin: 4px 0 6px;
+  font-size: 0.85rem;
+  color: var(--theme-text-soft);
+  max-width: 320px;
+}
+
+.leaderboard-champion-card h2,
+.leaderboard-champion-card p {
+  margin: 2px 0;
+}
+
+.leaderboard-champion-label {
+  color: var(--theme-text-soft);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.leaderboard-champion-name {
+  font-size: 1.6rem;
+  margin: 6px 0;
+}
+
+.leaderboard-champion-stats {
+  display: flex;
+  gap: 14px;
+  color: var(--theme-text-soft);
+  font-size: 0.95rem;
+  flex-wrap: wrap;
+}
+
+.leaderboard-champion-loading {
+  color: var(--theme-text-soft);
+  font-size: 0.95rem;
+}
+
+.leaderboard-champion-action {
+  border: none;
+  background: var(--theme-accent-gradient);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s ease;
+}
+
+.leaderboard-champion-action:hover {
+  transform: translateY(-1px);
+}
+
+.leaderboard-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.leaderboard-panel {
+  border-radius: 18px;
+  border: 1px solid var(--theme-card-border);
+  background: rgba(12, 12, 22, 0.85);
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.leaderboard-panel.active {
+  border-color: var(--theme-accent-glow);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.65);
+}
+
+.leaderboard-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 12px;
+}
+
+.leaderboard-panel-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.leaderboard-panel-header p {
+  margin: 6px 0 0;
+  color: var(--theme-text-soft);
+  font-size: 0.85rem;
+  max-width: 220px;
+}
+
+.leaderboard-panel-switch {
+  border-radius: 10px;
+  border: 1px solid var(--theme-card-border);
+  background: transparent;
+  color: var(--theme-text);
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.leaderboard-panel-body {
+  padding: 0 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.leaderboard-panel-error,
+.leaderboard-panel-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  color: var(--theme-text-soft);
+  text-align: center;
+  flex: 1;
 }
 
-/* Loader styles */
+.leaderboard-panel-error span {
+  color: #ffb4b4;
+}
+
+.leaderboard-panel-empty {
+  font-size: 0.95rem;
+}
+
 .lb-loader-wrap {
   display: flex;
   flex-direction: column;
@@ -61,96 +235,46 @@
   justify-content: center;
   gap: 12px;
   width: 100%;
-  height: 52vh;
-}
-
-.lb-spinner {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 3px solid rgba(255,255,255,0.25);
-  border-top-color: var(--theme-accent-magenta);
-  animation: lb-spin 0.9s linear infinite;
-  box-shadow: 0 0 16px var(--theme-accent-glow);
-}
-
-.lb-loader-text {
-  font-size: 14px;
-  color: var(--theme-text-soft);
-  opacity: 0.9;
-}
-
-@keyframes lb-spin {
-  to { transform: rotate(360deg); }
-}
-
-.lb-error-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  color: #ffb4b4;
-}
-
-.lb-retry {
-  padding: 6px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--theme-card-border-strong);
-  background: var(--theme-accent-gradient);
-  color: #fff;
-  cursor: pointer;
-}
-
-.leaderboard-logo-container {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 1.5rem 0;
-  padding: 1rem 0;
-  transform: scale(1.2); /* Additional scaling for the container */
-}
-
-.leaderboard-logo {
-  max-width: 100%;
-  height: auto;
-  max-height: 80px; /* Increased from 200px */
-  width: auto;
-  object-fit: contain;
-  transform: scale(1.5); /* Scale up the logo */
+  flex: 1;
 }
 
 .leaderboard-list {
   width: 100%;
   text-align: left;
-  max-height: 58vh;
+  max-height: 56vh;
   overflow-x: hidden;
   overflow-y: auto;
   margin-top: 10px;
-  height:100%;
+  height: 100%;
   padding-bottom: 20px;
-  /* Define shared column template: rank, name, correct, streak, best, level */
   --lb-cols: minmax(0, 0.7fr) minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.7fr);
 }
-
 
 .leaderboard-item {
   display: grid;
   grid-template-columns: var(--lb-cols);
   align-items: center;
-  column-gap: 16px; /* add more breathing room between name and next column */
+  column-gap: 16px;
   min-height: 64px;
   margin: 10px 0;
   padding: 8px 12px;
   background: var(--theme-card-surface);
   border-radius: 12px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
   border: 1px solid var(--theme-card-border);
   position: relative;
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+.leaderboard-item.leaderboard-header {
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .leaderboard-item:hover {
@@ -169,158 +293,35 @@
   min-width: 0;
 }
 
-
-/* Name column: compact with ellipsis */
-.leaderboard-item .lb-name {
-  min-width: 0; /* allow shrinking so ellipsis can kick in */
-  padding-right: 10px; /* ensure visual space before next column */
-  display: inline-block; /* so width can respond to grid column */
-  justify-self: start;
-  text-align: left;
-  font-size: 0.95rem;
+.leaderboard-item .rank-badge {
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--theme-text-soft);
 }
 
-/* Reveal full name on hover (tooltip) */
-.leaderboard-item .lb-name:hover::after {
-  content: attr(data-full);
-  position: absolute;
-  left: 12px;
-  bottom: calc(100% + 6px);
-  max-width: 70%;
-  padding: 6px 8px;
-  font-size: 12px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 1px solid var(--theme-card-border);
-  border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+.lb-retry {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--theme-card-border-strong);
+  background: var(--theme-accent-gradient);
   color: #fff;
-  white-space: normal;
-  z-index: 5;
+  cursor: pointer;
 }
 
-.leaderboard-header {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: rgba(12, 6, 28, 0.7);
-  border: 1px solid var(--theme-card-border);
-  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.08);
-  font-weight: 700;
-}
-
-.leaderboard-header span {
-  color: #ffffff;
-  opacity: 1;
-}
-
-/* First column (name) base override so it isn't oversized */
-.leaderboard-item span:first-child {
-  font-weight: 600;
-  color: var(--theme-text-soft);
-  font-size: 0.95rem;
-  justify-self: start;
-  text-align: left;
-}
-
-/* Rank styling (keep subtle on mobile) */
-.leaderboard-item span:last-child {
-  font-weight: 500;
-  color: var(--theme-text-soft);
-  font-size: 0.95rem;
-  margin: auto;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
-  .leaderboard-item span:first-child {
-    font-size: 0.95rem; /* keep same size as web */
-  }
-}
-
-/* Responsive type scaling for small devices */
-@media (max-width: 600px) {
-  .leaderboard-page {
-    padding: 8px;
-  }
-  .leaderboard-container {
-    padding: 20px 6px;
-  }
-  .leaderboard-content {
-    width: 100%;
-    padding: 14px 8px;
-  }
-  .leaderboard-logo-container {
-    transform: scale(1);
-    margin: 1rem 0;
-    padding: 0.5rem 0;
-  }
-  .leaderboard-logo {
-    transform: none;
-    max-height: 72px;
-  }
-  .leaderboard-item {
-    padding: 6px 8px;
-    margin: 8px 0; /* a bit more space between rows on mobile */
-    column-gap: 14px; /* keep extra spacing on narrow screens */
-  }
-  .leaderboard-item:not(.leaderboard-header) span {
-    font-size: 0.9rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .leaderboard-header span {
-    font-size: 0.8rem;
-    white-space: normal; /* allow wrap on narrow screens */
-    line-height: 1.15;
-  }
-  .leaderboard-list {
-    /* adjust column widths for mobile */
-    --lb-cols: minmax(0, 0.6fr) minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 0.7fr) minmax(0, 0.7fr) minmax(0, 0.6fr);
-    overflow-x: hidden;
-  }
-  .leaderboard-item .lb-name {
-    font-size: 0.85rem;
-    max-width: 12ch; /* shorter names with ellipsis so they don't approach next column */
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+  .leaderboard-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  /* Show rank badge on mobile */
-  .leaderboard-item .rank-badge {
-    display: inline-flex !important;
-    min-width: 28px;
-    justify-content: center;
+  .leaderboard-switch {
+    flex: 1;
+    text-align: center;
   }
 
-  /* Adjust header for rank column */
-  .leaderboard-header span:last-child {
-    display: inline-flex !important;
-    justify-content: center;
-  }
-
-}
-
-@media (max-width: 360px) {
-  .leaderboard-list {
-    --lb-cols: minmax(0, 0.55fr) minmax(0, 1.2fr) minmax(0, 0.7fr) minmax(0, 0.6fr) minmax(0, 0.6fr) minmax(0, 0.55fr);
-  }
-  .leaderboard-item .lb-name { max-width: 10ch; font-size: 0.8rem; }
-}
-
-@media (max-width: 360px) {
-  .leaderboard-item span {
-    font-size: 0.8rem;
-  }
-  .leaderboard-header span {
-    font-size: 0.7rem;
-  }
-  .leaderboard-item {
-    padding: 5px 6px;
+  .leaderboard-panel {
+    min-height: auto;
   }
 }

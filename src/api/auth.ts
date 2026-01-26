@@ -86,7 +86,20 @@ export type LeaderboardEntry = {
   rank: number;
 };
 
+type LeaderboardPayload = ApiSuccessResponse<LeaderboardEntry[]> | LeaderboardEntry[];
 type LeaderboardResponse = ApiSuccessResponse<LeaderboardEntry[]>;
+
+const normalizeLeaderboardPayload = (payload: LeaderboardPayload): LeaderboardResponse => {
+  if (Array.isArray(payload)) {
+    return { success: true, data: payload };
+  }
+
+  return {
+    success: payload.success !== false,
+    message: payload.message,
+    data: payload.data ?? [],
+  };
+};
 
 type LoginPayload = {
   token: string;
@@ -255,15 +268,17 @@ const login = async (payload?: LoginRequest): Promise<LoginResponse | undefined>
   }
 };
 
-const getLeaderboard = async (): Promise<LeaderboardResponse> => {
+const fetchLeaderboard = async (
+  endpoint: '/leaderboard/alltime' | '/leaderboard/gateUsers',
+): Promise<LeaderboardResponse> => {
   try {
-    const response = await apiInterceptor<LeaderboardResponse>({
+    const response = await apiInterceptor<LeaderboardPayload>({
       method: 'get',
-      url: '/leaderboard/alltime',
+      url: endpoint,
     });
-    return response.data;
+    return normalizeLeaderboardPayload(response.data);
   } catch (error) {
-    console.error('Failed to fetch leaderboard', error);
+    console.error(`Failed to fetch leaderboard ${endpoint}`, error);
     return {
       success: false,
       message: 'Failed to fetch leaderboard',
@@ -271,6 +286,9 @@ const getLeaderboard = async (): Promise<LeaderboardResponse> => {
     };
   }
 };
+
+const getLeaderboard = async (): Promise<LeaderboardResponse> => fetchLeaderboard('/leaderboard/alltime');
+const getGateLeaderboard = async (): Promise<LeaderboardResponse> => fetchLeaderboard('/leaderboard/gateUsers');
 
 const getGameData = async (payload: Record<string, unknown> = {}): Promise<GameImageResponse> => {
   try {
@@ -408,6 +426,7 @@ const getProfile = () =>
 export {
   login,
   getLeaderboard,
+  getGateLeaderboard,
   updateUserName,
   getProfile,
   getGameData,
