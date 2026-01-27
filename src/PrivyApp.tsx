@@ -1,6 +1,7 @@
 import { ReactNode, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { PrivyProvider, type PrivyClientConfig } from '@privy-io/react-auth';
+import networkConfig from './utils/networkConfig';
 import PresenceProvider from './providers/PresenceProvider';
 
 import BottomNav from './components/BottomNav';
@@ -20,6 +21,8 @@ const privyConfig: PrivyClientConfig = {
     createOnLogin: 'users-without-wallets',
   },
   loginMethods: ['email', 'sms', 'wallet', 'google', 'discord'],
+  supportedChains: [networkConfig],
+  defaultChain: networkConfig,
   intl: {
     defaultCountry: 'US',
   },
