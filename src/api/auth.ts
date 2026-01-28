@@ -270,11 +270,16 @@ const login = async (payload?: LoginRequest): Promise<LoginResponse | undefined>
 
 const fetchLeaderboard = async (
   endpoint: '/leaderboard/alltime' | '/leaderboard/gateUsers',
+  params?: Record<string, string>,
 ): Promise<LeaderboardResponse> => {
   try {
+
+    const query = params && Object.keys(params).length
+      ? `?${new URLSearchParams(params).toString()}`
+      : '';
     const response = await apiInterceptor<LeaderboardPayload>({
       method: 'get',
-      url: endpoint,
+      url: `${endpoint}${query}`,
     });
     return normalizeLeaderboardPayload(response.data);
   } catch (error) {
@@ -288,7 +293,8 @@ const fetchLeaderboard = async (
 };
 
 const getLeaderboard = async (): Promise<LeaderboardResponse> => fetchLeaderboard('/leaderboard/alltime');
-const getGateLeaderboard = async (): Promise<LeaderboardResponse> => fetchLeaderboard('/leaderboard/gateUsers');
+const getGateLeaderboard = async (): Promise<LeaderboardResponse> =>
+  fetchLeaderboard('/leaderboard/gateUsers', { type: 'gate_wallet' });
 
 const getGameData = async (payload: Record<string, unknown> = {}): Promise<GameImageResponse> => {
   try {

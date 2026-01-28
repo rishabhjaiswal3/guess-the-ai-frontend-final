@@ -24,7 +24,7 @@ const LEADERBOARD_CONFIG: Record<
     buttonLabel: 'Show all-time stats',
   },
   campaign: {
-    title: 'Campaign Champion',
+    title: 'Gate Campaign Champion',
     description: 'Current gate challengers battling for the active promotion.',
     buttonLabel: 'Focus on champion board',
   },
@@ -138,7 +138,7 @@ const Leaderboard = () => {
           </div>
         </div>
 
-        <div className="leaderboard-champion-card">
+        {/* <div className="leaderboard-champion-card">
           <div>
             <p className="leaderboard-champion-label">Current Campaign</p>
             <p className="leaderboard-champion-note">
@@ -175,7 +175,7 @@ const Leaderboard = () => {
           >
             View champion leaderboard
           </button>
-        </div>
+        </div> */}
 
         <div className="leaderboard-grid">
           {(Object.keys(LEADERBOARD_CONFIG) as LeaderboardType[]).map(
