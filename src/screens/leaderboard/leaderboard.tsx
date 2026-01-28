@@ -20,12 +20,12 @@ const LEADERBOARD_CONFIG: Record<
 > = {
   alltime: {
     title: 'All-Time Legends',
-    description: 'Climb the leaderboard that tracks every correct guess since day one.',
+    description: '',
     buttonLabel: 'Show all-time stats',
   },
   campaign: {
     title: 'Gate Campaign Champion',
-    description: 'Current gate challengers battling for the active promotion.',
+    description: '',
     buttonLabel: 'Focus on champion board',
   },
 };
@@ -110,73 +110,44 @@ const Leaderboard = () => {
     <div className="leaderboard-page">
       <div className="leaderboard-container">
         <div className="leaderboard-header">
-          <div className="leaderboard-hero">
-            <img
-              src={LeaderboardLogo}
-              alt="Leaderboard banner"
-              className="leaderboard-hero-logo"
-            />
+        <div className="leaderboard-hero">
+          <img
+            src={LeaderboardLogo}
+            alt="Leaderboard banner"
+            className="leaderboard-hero-logo"
+          />
+          <div className="leaderboard-hero-text">
             <div>
               <h1>Leaderboards</h1>
-              <p>Track active champions and the all-time legends together.</p>
+              <p className="leaderboard-description">
+                Track active champions and the all-time legends together.
+              </p>
             </div>
-          </div>
-          <div className="leaderboard-switcher">
-            {(Object.keys(LEADERBOARD_CONFIG) as LeaderboardType[]).map(
-              (type) => (
-                <button
-                  key={type}
-                  className={`leaderboard-switch ${
-                    activeBoard === type ? 'active' : ''
-                  }`}
-                  onClick={() => setActiveBoard(type)}
-                >
-                  {LEADERBOARD_CONFIG[type].title}
-                </button>
-              ),
-            )}
+            <div >
+              <strong>Gate campaign stats refresh every 2 mins Reload the board when you need the latest snapshot.</strong>
+            </div>
           </div>
         </div>
+        <div className="leaderboard-tabs">
+          {(Object.keys(LEADERBOARD_CONFIG) as LeaderboardType[]).map(
+            (type) => (
+              <button
+                key={type}
+                className={`leaderboard-tab ${
+                  activeBoard === type ? 'active' : ''
+                }`}
+                onClick={() => setActiveBoard(type)}
+              >
+                {type === 'campaign'
+                  ? 'Gate Champion'
+                  : 'All-Time Legends'}
+              </button>
+            ),
+          )}
+        </div>
+        </div>
 
-        {/* <div className="leaderboard-champion-card">
-          <div>
-            <p className="leaderboard-champion-label">Current Campaign</p>
-            <p className="leaderboard-champion-note">
-              Campaign stats refresh every two minutes.
-            </p>
-            {loadingState.campaign ? (
-              <p className="leaderboard-champion-loading">
-                Loading champion details...
-              </p>
-            ) : champion ? (
-              <h2 className="leaderboard-champion-name">
-                #{champion.rank} {champion.username}
-              </h2>
-            ) : (
-              <p className="leaderboard-champion-loading">
-                Champion not determined yet.
-              </p>
-            )}
-            <div className="leaderboard-champion-stats">
-              <span>
-                Correct: {champion?.correctAnswers ?? '--'} pts
-              </span>
-              <span>
-                Streak: {champion?.currentStreak ?? '--'}
-              </span>
-              <span>
-                Best: {champion?.streak ?? '--'}
-              </span>
-            </div>
-          </div>
-          <button
-            className="leaderboard-champion-action"
-            onClick={() => setActiveBoard('campaign')}
-          >
-            View champion leaderboard
-          </button>
-        </div> */}
-
+       
         <div className="leaderboard-grid">
           {(Object.keys(LEADERBOARD_CONFIG) as LeaderboardType[]).map(
             (type) => {
@@ -196,12 +167,12 @@ const Leaderboard = () => {
                       <h2>{LEADERBOARD_CONFIG[type].title}</h2>
                       <p>{LEADERBOARD_CONFIG[type].description}</p>
                     </div>
-                    <button
+                    {/* <button
                       className="leaderboard-panel-switch"
                       onClick={() => setActiveBoard(type)}
                     >
                       {LEADERBOARD_CONFIG[type].buttonLabel}
-                    </button>
+                    </button> */}
                   </header>
                   <div className="leaderboard-panel-body">
                     {loading ? (
