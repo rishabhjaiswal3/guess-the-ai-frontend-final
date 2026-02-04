@@ -231,11 +231,14 @@ const GamePage = () => {
 
   const fetchImageObjectUrlWithFallback = async (hash: string): Promise<string> => {
     let lastError: unknown = null;
+    const OG_FETCH_RETRIES = 3;
     if (ogBaseUrl) {
-      try {
-        return await fetchImageObjectUrlFromBase(ogBaseUrl, hash, 'og', OG_IMAGE_TIMEOUT_MS);
-      } catch (err) {
-        lastError = err;
+      for (let attempt = 0; attempt < OG_FETCH_RETRIES; attempt += 1) {
+        try {
+          return await fetchImageObjectUrlFromBase(ogBaseUrl, hash, 'og', OG_IMAGE_TIMEOUT_MS);
+        } catch (err) {
+          lastError = err;
+        }
       }
     }
     for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
