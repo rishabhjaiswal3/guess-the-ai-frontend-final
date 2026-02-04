@@ -47,6 +47,42 @@ const blobToDataUrl = (blob: Blob): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
+const fetchImageBlob = async (url: string, label: string, timeoutMs?: number): Promise<Blob> => {
+  const controller = typeof timeoutMs === 'number' && timeoutMs > 0 ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  try {
+    const response = await fetch(url, { cache: 'default', signal: controller?.signal });
+    if (!response.ok) {
+      throw new Error(`${label} status ${response.status}`);
+    }
+    const contentType = response.headers.get('content-type') ?? '';
+    const isImage = contentType.toLowerCase().includes('image/');
+    if (!isImage) {
+      throw new Error(`unexpected content-type ${contentType}`);
+    }
+    const blob = await response.blob();
+    if (!blob || !blob.size) {
+      throw new Error('empty image payload');
+    }
+    return blob;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+};
+
+const fetchImageObjectUrlFromBase = async (
+  baseUrl: string,
+  hash: string,
+  label: string,
+  timeoutMs?: number,
+): Promise<string> => {
+  const url = `${baseUrl}${encodeURIComponent(hash)}.jpg`;
+  const blob = await fetchImageBlob(url, label, timeoutMs);
+  return URL.createObjectURL(blob);
+};
+
 const GamePage = () => {
   const PREFETCH_THRESHOLD = Number(import.meta.env.VITE_PREFETCH_THRESHOLD || 6);
   const PREFETCH_AHEAD = Number(import.meta.env.VITE_PREFETCH_AHEAD || 4);
@@ -90,6 +126,8 @@ const GamePage = () => {
   const preloadedHashesRef = useRef<Set<string>>(new Set());
   const imageBlobUrlCacheRef = useRef<Map<string, string>>(new Map());
   const indexerBaseUrl = import.meta.env.VITE_INDEXER_BASE_URL ?? 'https://indexer-storage-turbo.0g.ai/file?root=';
+  const ogBaseUrl = import.meta.env.VITE_OG_URL ?? '';
+  const OG_IMAGE_TIMEOUT_MS = Number(import.meta.env.VITE_OG_FETCH_TIMEOUT_MS || 2000);
   const current = imageState.current;
 
   const clampImageHeight = (rawHeight: number | undefined | null) => {
@@ -191,6 +229,28 @@ const GamePage = () => {
     return '';
   };
 
+  const fetchImageObjectUrlWithFallback = async (hash: string): Promise<string> => {
+    let lastError: unknown = null;
+    const OG_FETCH_RETRIES = 3;
+    if (ogBaseUrl) {
+      for (let attempt = 0; attempt < OG_FETCH_RETRIES; attempt += 1) {
+        try {
+          return await fetchImageObjectUrlFromBase(ogBaseUrl, hash, 'og', OG_IMAGE_TIMEOUT_MS);
+        } catch (err) {
+          lastError = err;
+        }
+      }
+    }
+    for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
+      try {
+        return await fetchImageObjectUrlFromBase(indexerBaseUrl, hash, 'indexer');
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError ?? new Error('image fetch failed');
+  };
+
   const fetchImageBatch = async (): Promise<GameImage[]> => {
     try {
       const response = await getGameBatch();
@@ -235,32 +295,16 @@ const GamePage = () => {
 
     await Promise.all(unique.map(async (hash) => {
       let lastError: unknown = null;
-      for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
-        try {
-          const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
-          const response = await fetch(url, { cache: 'default' });
-          if (!response.ok) {
-            throw new Error(`indexer status ${response.status}`);
-          }
-          const contentType = response.headers.get('content-type') ?? '';
-          const isImage = contentType.toLowerCase().includes('image/');
-          if (!isImage) {
-            throw new Error(`unexpected content-type ${contentType}`);
-          }
-          const blob = await response.blob();
-          if (!blob || !blob.size) {
-            throw new Error('empty image payload');
-          }
-          const objectUrl = URL.createObjectURL(blob);
-          imageBlobUrlCacheRef.current.set(hash, objectUrl);
-          completed += 1;
-          if (onProgress) {
-            onProgress(completed, total);
-          }
-          return;
-        } catch (err) {
-          lastError = err;
+      try {
+        const objectUrl = await fetchImageObjectUrlWithFallback(hash);
+        imageBlobUrlCacheRef.current.set(hash, objectUrl);
+        completed += 1;
+        if (onProgress) {
+          onProgress(completed, total);
         }
+        return;
+      } catch (err) {
+        lastError = err;
       }
       completed += 1;
       if (onProgress) {
@@ -445,28 +489,10 @@ const GamePage = () => {
     preloadHashes(hashes).catch((err) => {
       console.error('Error preloading queue images:', err);
     });
-  }, [imageState.queue, indexerBaseUrl]);
+  }, [imageState.queue, indexerBaseUrl, ogBaseUrl, OG_IMAGE_TIMEOUT_MS]);
 
   useEffect(() => {
     let cancelled = false;
-
-    const fetchIndexerImage = async (hash: string): Promise<string> => {
-      const url = `${indexerBaseUrl}${encodeURIComponent(hash)}.jpg`;
-      const response = await fetch(url, { cache: 'default' });
-      if (!response.ok) {
-        throw new Error(`indexer status ${response.status}`);
-      }
-      const contentType = response.headers.get('content-type') ?? '';
-      const isImage = contentType.toLowerCase().includes('image/');
-      if (!isImage) {
-        throw new Error(`unexpected content-type ${contentType}`);
-      }
-      const blob = await response.blob();
-      if (!blob || !blob.size) {
-        throw new Error('empty image payload');
-      }
-      return URL.createObjectURL(blob);
-    };
 
     const ensureImage = async () => {
       cleanupObjectUrl();
@@ -492,21 +518,19 @@ const GamePage = () => {
         return;
       }
       let lastError: unknown = null;
-      for (let attempt = 0; attempt < MAX_IMAGE_FETCH_RETRIES; attempt += 1) {
-        try {
-          const objectUrl = await fetchIndexerImage(current.hash);
-          if (cancelled) {
-            if (objectUrl) URL.revokeObjectURL(objectUrl);
-            return;
-          }
-          imageBlobUrlCacheRef.current.set(current.hash, objectUrl);
-          objectUrlRef.current = objectUrl;
-          setDisplaySrc(objectUrl);
-          setError('');
+      try {
+        const objectUrl = await fetchImageObjectUrlWithFallback(current.hash);
+        if (cancelled) {
+          if (objectUrl) URL.revokeObjectURL(objectUrl);
           return;
-        } catch (err) {
-          lastError = err;
         }
+        imageBlobUrlCacheRef.current.set(current.hash, objectUrl);
+        objectUrlRef.current = objectUrl;
+        setDisplaySrc(objectUrl);
+        setError('');
+        return;
+      } catch (err) {
+        lastError = err;
       }
       const backupImage = await fetchBackupImageFromApi();
       if (cancelled) return;
@@ -537,7 +561,7 @@ const GamePage = () => {
     return () => {
       cancelled = true;
     };
-  }, [current?.hash, current?.sourceType, current?.imageDataUrl, indexerBaseUrl]);
+  }, [current?.hash, current?.sourceType, current?.imageDataUrl, indexerBaseUrl, ogBaseUrl, OG_IMAGE_TIMEOUT_MS]);
 
   useEffect(() => () => {
     cleanupObjectUrl();
