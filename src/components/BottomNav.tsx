@@ -1,323 +1,98 @@
-import { useEffect, useRef, useState, type ReactElement } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { usePrivy } from '@privy-io/react-auth';
-import GameIcon from '../assets/Game.png';
-import LeaderboardIcon from '../assets/Leaderboard.png';
-import ProfileIcon from '../assets/Profile.png';
-import WalletIcon from '../assets/Wallet.png';
-import '../components/BottomNav.css';
-import { clearSessionStorage } from '../utils/session';
+import { motion } from "framer-motion";
+import { Gamepad2, Trophy, User, Wallet, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type ConfirmationModalProps = {
-  isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-  onEdit: () => void;
-};
+export type TabType = "game" | "leaderboard" | "profile" | "wallet";
 
-const ConfirmationModal = ({ isOpen, onConfirm, onCancel, onEdit }: ConfirmationModalProps) => {
-  if (!isOpen) return null;
+interface BottomNavProps {
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+}
 
-  const isBrowserLogin = localStorage.getItem('source') === 'browser';
+const tabs = [
+  { id: "game" as TabType, icon: Gamepad2, label: "Game", activeColor: "text-primary" },
+  { id: "leaderboard" as TabType, icon: Trophy, label: "Leaderboard", activeColor: "text-secondary" },
+  { id: "profile" as TabType, icon: User, label: "Profile", activeColor: "text-accent" },
+  { id: "wallet" as TabType, icon: Wallet, label: "Wallet", activeColor: "text-yellow" },
+];
 
+const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(5, 2, 16, 0.75)',
-      backdropFilter: 'blur(3px)',
-      WebkitBackdropFilter: 'blur(3px)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10000
-    }}>
-      <div style={{
-        padding: '32px 26px 22px',
-        borderRadius: '20px',
-        textAlign: 'left',
-        color: 'var(--theme-text)',
-        width: 'clamp(340px, 94vw, 520px)',
-        minHeight: '280px',
-        maxHeight: '88vh',
-        border: '1px solid var(--theme-card-border-strong)',
-        background: 'var(--theme-card-bg)',
-        boxShadow: 'var(--theme-card-shadow)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        position: 'relative',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        transform: 'translateY(0)',
-        transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '2px',
-          background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)'
-        }} />
-        <button
-          onClick={onCancel}
-          aria-label="Close"
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: '1px solid var(--theme-card-border)',
-            background: 'var(--theme-card-surface)',
-            color: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            lineHeight: 0
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.05)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.filter = 'none'; }}
+    <nav className="fixed bottom-0 left-0 right-0 z-50">
+      <div className="max-w-lg mx-auto px-4 pb-4">
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
+          className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around relative overflow-hidden shadow-[0_-4px_30px_rgba(0,255,255,0.1)]"
         >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden
-          >
-            <path
-              d="M6 6l12 12M18 6L6 18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-              <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-3.87 0-7 2.24-7 5v2h14v-2c0-2.76-3.13-5-7-5Z" fill="currentColor" />
-            </svg>
-            <h3 style={{
-              margin: 0,
-              fontSize: '20px',
-              background: 'var(--theme-title-gradient)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-              WebkitTextFillColor: 'transparent',
-              textShadow: '0 0 18px rgba(210,75,255,0.35)'
-            }}>Account</h3>
-          </div>
-          <div style={{ fontSize: 13, color: 'var(--theme-text-soft)', marginTop: 8, textAlign: 'center' }}>Manage your session and profile</div>
-        </div>
+          {/* Animated background gradient */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-cyan/5 via-magenta/5 to-cyan/5"
+            animate={{ 
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+            }}
+            transition={{ duration: 5, repeat: Infinity }}
+            style={{ backgroundSize: "200% 100%" }}
+          />
 
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '14px',
-          justifyContent: 'center',
-          minHeight: '200px',
-        }}>
-          {!isBrowserLogin && <div style={{
-            background: 'var(--theme-card-surface)',
-            border: '1px solid var(--theme-card-border)',
-            borderRadius: '12px',
-            padding: '12px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12
-          }}>
-            <div>
-              <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span role="img" aria-hidden>🚪</span> Logout
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--theme-text-soft)' }}>Disconnect your wallet and logout from this device.</div>
-            </div>
-            <button
-              onClick={onConfirm}
-              style={{
-                padding: '10px 14px',
-                borderRadius: '12px',
-                border: '1px solid var(--theme-card-border-strong)',
-                background: 'var(--theme-accent-gradient)',
-                color: '#fff',
-                cursor: 'pointer',
-                boxShadow: '0 10px 22px rgba(210, 75, 255, 0.35)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
-                minWidth: 120
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.filter = 'brightness(1.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.filter = 'none'; }}
-            >
-              Logout
-            </button>
-          </div>}
+          {/* Top edge glow */}
+          <div className="absolute top-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-cyan/40 to-transparent" />
 
-          <div style={{
-            background: 'var(--theme-card-surface)',
-            border: '1px solid var(--theme-card-border)',
-            borderRadius: '12px',
-            padding: '12px 14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12
-          }}>
-            <div>
-              <div style={{ fontWeight: 700, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span role="img" aria-hidden>🖊️</span> Edit Profile
-              </div>
-              <div style={{ fontSize: 13, color: 'var(--theme-text-soft)' }}>Update your profile details like name and avatar.</div>
-            </div>
-            <button
-              onClick={onEdit}
-              style={{
-                padding: '10px 14px',
-                borderRadius: '12px',
-                border: '1px solid var(--theme-card-border-strong)',
-                background: 'var(--theme-accent-gradient)',
-                color: '#fff',
-                cursor: 'pointer',
-                boxShadow: '0 10px 22px rgba(210, 75, 255, 0.35)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease',
-                minWidth: 120
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.filter = 'brightness(1.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.filter = 'none'; }}
-            >
-              Edit
-            </button>
-          </div>
-        </div>
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 z-10",
+                  isActive
+                    ? tab.activeColor
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {isActive && (
+                  <>
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gradient-to-t from-primary/25 via-primary/10 to-transparent rounded-xl border border-primary/20"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 left-1/2 -translate-x-1/2"
+                    >
+                      <Sparkles className="w-3 h-3 text-primary" />
+                    </motion.div>
+                  </>
+                )}
+                
+                <motion.div
+                  animate={isActive ? { 
+                    y: [0, -2, 0],
+                    rotate: [0, 5, -5, 0]
+                  } : {}}
+                  transition={{ duration: 0.5 }}
+                >
+                  <tab.icon className={cn("w-6 h-6 relative z-10", isActive && "drop-shadow-[0_0_8px_currentColor]")} />
+                </motion.div>
+                
+                <span className={cn(
+                  "text-xs font-medium relative z-10",
+                  isActive && "font-bold"
+                )}>
+                  {tab.label}
+                </span>
+              </motion.button>
+            );
+          })}
+        </motion.div>
       </div>
-    </div>
-  );
-};
-
-const BottomNav = (): ReactElement | null => {
-  const navigate = useNavigate();
-  const { authenticated, logout } = usePrivy();
-  const [, setShowWalletInfo] = useState(false);
-  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
-  const popupRef = useRef<HTMLDivElement | null>(null);
-  const [localToken, setLocalToken] = useState<string | null>(
-    typeof window !== 'undefined' ? localStorage.getItem('token') : null
-  );
-
-  useEffect(() => {
-    const handleTokenChange = (e: CustomEvent<string>) => {
-      setLocalToken(e.detail);
-    };
-    window.addEventListener('presence:token-change', handleTokenChange as EventListener);
-    return () => {
-      window.removeEventListener('presence:token-change', handleTokenChange as EventListener);
-    };
-  }, []);
-
-  const isSessionActive = authenticated || !!localToken;
-
-  const handleDisconnect = async () => {
-    if (authenticated) {
-      await logout();
-    }
-    clearSessionStorage();
-    setShowDisconnectModal(false);
-    setShowWalletInfo(false);
-    navigate('/');
-  };
-
-  const handleEditProfile = () => {
-    setShowDisconnectModal(false);
-    setShowWalletInfo(false);
-    navigate('/');
-  };
-
-  // Close popup when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node | null;
-      if (popupRef.current && target && !popupRef.current.contains(target)) {
-        // Check if the click is not on any nav icon
-        const navIcons = document.querySelectorAll('.nav-icon');
-        const clickedOnNavIcon = Array.from(navIcons).some((icon) =>
-          icon.contains(target) || icon === target
-        );
-
-        if (!clickedOnNavIcon) {
-          setShowWalletInfo(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleNavClick = (index: number) => {
-    setShowWalletInfo(false);
-    switch (index) {
-      case 0: // Game
-        navigate('/game');
-        break;
-      case 1: // Leaderboard
-        navigate('/leaderboard');
-        break;
-      case 2: // Profile
-        navigate('/profile');
-        break;
-      // Wallet case removed as it's now handled directly in the onClick
-      default:
-        break;
-    }
-  };
-
-
-  if (!isSessionActive) return null;
-
-  // const isBrowserLogin = localStorage.getItem('source') === 'browser';
-  // const showWalletIcon = !isBrowserLogin;
-  // const bottomBarClassName = `bottom-bar${showWalletIcon ? '' : ' bottom-bar--compact'}`;
-
-  return (
-    <>
-      <ConfirmationModal
-        isOpen={showDisconnectModal}
-        onConfirm={handleDisconnect}
-        onCancel={() => setShowDisconnectModal(false)}
-        onEdit={handleEditProfile}
-      />
-      <div className="bottom-bar">
-        <button className="nav-icon" onClick={() => handleNavClick(0)}>
-          <img src={GameIcon} alt="Game" className="icon" />
-        </button>
-        <button className="nav-icon" onClick={() => handleNavClick(1)}>
-          <img src={LeaderboardIcon} alt="Leaderboard" className="icon" />
-        </button>
-        <button className="nav-icon" onClick={() => handleNavClick(2)}>
-          <img src={ProfileIcon} alt="Profile" className="icon" />
-        </button>
-        <div className="wallet-icon-container">
-          <button
-            className="nav-icon"
-            onClick={() => setShowDisconnectModal(true)}
-          >
-            <img src={WalletIcon} alt="Wallet" className="icon" />
-          </button>
-        </div>
-      </div>
-    </>
+    </nav>
   );
 };
 

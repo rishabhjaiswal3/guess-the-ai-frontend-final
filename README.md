@@ -1,47 +1,73 @@
-# React + Vite
+# Welcome to your Lovable project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Project info
 
-Currently, two official plugins are available:
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## How can I edit this code?
 
-## Expanding the ESLint configuration
+There are several ways of editing your application.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+**Use Lovable**
 
-## Performance note (Privy bundle)
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-If `dist/assets/privy-*.js` (or similar) takes many seconds to load in production, it's usually because your static server is sending it **uncompressed** and without long-term caching.
+Changes made via Lovable will be committed automatically to this repo.
 
-This repo generates precompressed assets on build (`.gz` + `.br`) via `scripts/precompress-assets.mjs` (runs automatically via `postbuild`).
+**Use your preferred IDE**
 
-To benefit from this on an Nginx server, enable `gzip_static` (and optionally `brotli_static`) and cache hashed assets:
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-```nginx
-# HTTPS: enable HTTP/2 if possible
-listen 443 ssl http2;
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-location ^~ /assets/ {
-  gzip_static on;
-  # If you have nginx brotli module enabled:
-  # brotli_static on;
+Follow these steps:
 
-  add_header Vary "Accept-Encoding";
-  add_header Cache-Control "public, max-age=31536000, immutable";
-  expires 1y;
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-  try_files $uri =404;
-}
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-# Fallback dynamic gzip
-gzip on;
-gzip_vary on;
-gzip_comp_level 6;
-gzip_min_length 1024;
-gzip_types application/javascript text/css application/json image/svg+xml;
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
+npm run dev
 ```
-# Guess-The-AI
 
-<!-- https://api.guesstheai.xyz/ -->
+**Edit a file directly in GitHub**
+
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
+
+**Use GitHub Codespaces**
+
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
+
+## What technologies are used for this project?
+
+This project is built with:
+
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
+
+## How can I deploy this project?
+
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+
+## Can I connect a custom domain to my Lovable project?
+
+Yes, you can!
+
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)

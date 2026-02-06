@@ -1,68 +1,27 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
-import { FullPageLoader } from './components/Loader';
-import AppBackground from './components/AppBackground';
-import Shell from './Shell';
-import { warmPrivy, warmPrivyApp } from './warm';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
 
-const PrivyApp = lazy(() => import('./PrivyApp'));
+const queryClient = new QueryClient();
 
-export default function App() {
-  const [connectPending, setConnectPending] = useState(false);
-  const [showPrivyApp, setShowPrivyApp] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    // Check if we have a token in storage
-    const hasToken = Boolean(window.localStorage.getItem('token'));
-    if (hasToken) return true;
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-    // Check if we have a JWT in the URL (query or hash)
-    const queryParams = new URLSearchParams(window.location.search);
-    const hashParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
-    const hasJwtParams = queryParams.has('jwt') || hashParams.has('jwt');
-
-    const hasPrivyOauthParams =
-      queryParams.has('privy_oauth_state') ||
-      hashParams.has('privy_oauth_state') ||
-      queryParams.has('privy_oauth_code') ||
-      hashParams.has('privy_oauth_code');
-
-    if (hasJwtParams || hasPrivyOauthParams) return true;
-
-    if (window.location.pathname !== '/') return true;
-    return false;
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // Start fetching Privy in the background ASAP so Connect is instant.
-    setTimeout(() => {
-      void warmPrivy();
-      void warmPrivyApp();
-    }, 0);
-  }, []);
-
-  const isRoot = typeof window !== 'undefined' ? window.location.pathname === '/' : false;
-
-  return (
-    <>
-      <AppBackground />
-      {showPrivyApp ? (
-        <Suspense fallback={<FullPageLoader />}>
-          <PrivyApp />
-        </Suspense>
-      ) : (
-        <Shell
-          onConnect={() => {
-            setConnectPending(true);
-            if (typeof window !== 'undefined') {
-              window.sessionStorage.setItem('gta:auto-open-login', '1');
-            }
-            Promise.all([warmPrivy(), warmPrivyApp()])
-              .then(() => setShowPrivyApp(true))
-              .finally(() => setConnectPending(false));
-          }}
-          connecting={connectPending}
-        />
-      )}
-    </>
-  );
-}
+export default App;
