@@ -3,6 +3,7 @@ import {
   useConnectWallet,
   useLogin,
   useLoginWithEmail,
+  useLoginWithOAuth,
   useModalStatus,
   usePrivy,
 } from "@privy-io/react-auth";
@@ -121,6 +122,33 @@ const NewLoginScreen = () => {
       setError(getErrorMessage(error, "Failed to connect wallet"));
       setWalletConnecting(false);
     },
+  });
+
+  useEffect(() => {
+    if (missingWalletConnectId) {
+      console.warn("[Privy] WalletConnect project ID missing – mobile wallet deep links will fail.");
+    }
+  }, [missingWalletConnectId]);
+
+  const openWalletModal = () => {
+    console.log("[Privy] wallet login requested", { ready, isOpen, privyOpening, missingWalletConnectId });
+    if (!ready) {
+      setError("Privy is still loading. Please wait a moment.");
+      return;
+    }
+    if (missingWalletConnectId) {
+      setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
+      return;
+    }
+    if (privyOpening) return;
+    setPrivyOpening(true);
+    openPrivyLogin({ loginMethods: ["wallet"] });
+    // reset latch after a short window so user can retry
+    setTimeout(() => setPrivyOpening(false), 8000);
+  };
+
+  const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
+    onError: (err) => setError(getErrorMessage(err, "OAuth error")),
   });
 
   useEffect(() => {
@@ -390,29 +418,40 @@ const NewLoginScreen = () => {
               <Button
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
-                onClick={() => {
-                  console.log("[Privy] open login clicked", { ready, isOpen });
-                  if (!ready) {
-                    setError("Privy is still loading. Please wait a moment.");
-                    return;
-                  }
-                  if (missingWalletConnectId) {
-                    setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
-                    return;
-                  }
-                  if (walletConnecting) return;
-                  setWalletConnecting(true);
-                  connectWallet();
-                }}
-                disabled={walletConnecting}
+                onClick={openWalletModal}
+                disabled={privyOpening}
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 Connect Wallet
               </Button>
             </div>
 
-            <div className="mt-6 text-xs text-muted-foreground text-center">
-              Wallet + email OTP login only.
+            <div className="mt-6">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                <span className="flex-1 h-px bg-border" />
+                Or continue with
+                <span className="flex-1 h-px bg-border" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => initOAuth({ provider: "google" })}
+                  disabled={oauthLoading}
+                >
+                  Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => initOAuth({ provider: "discord" })}
+                  disabled={oauthLoading}
+                >
+                  Discord
+                </Button>
+              </div>
             </div>
           </motion.div>
         </GlowingBorder>
