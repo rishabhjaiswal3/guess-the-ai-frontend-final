@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { useLogin, useLoginWithEmail, useLoginWithOAuth, useModalStatus, usePrivy } from "@privy-io/react-auth";
+import {
+  useConnectWallet,
+  useLogin,
+  useLoginWithEmail,
+  useModalStatus,
+  usePrivy,
+} from "@privy-io/react-auth";
 import { motion } from "framer-motion";
 import { Mail, KeyRound, Wallet, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -57,6 +63,7 @@ const NewLoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [gateConnecting, setGateConnecting] = useState(false);
   const [privyOpening, setPrivyOpening] = useState(false);
+  const [walletConnecting, setWalletConnecting] = useState(false);
 
   const persistLogin = async (payload: Record<string, unknown>) => {
     const response = await loginV2(payload);
@@ -67,12 +74,52 @@ const NewLoginScreen = () => {
     if (response.data.username) setStoredUsername(response.data.username);
   };
 
-  const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
-    onError: (err) => setError(getErrorMessage(err, "OAuth error")),
-  });
-
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
     onError: (err) => setError(getErrorMessage(err, "Email login error")),
+  });
+
+  const { connectWallet } = useConnectWallet({
+    onSuccess: async (walletData) => {
+      console.log("[Privy] connectWallet success", JSON.stringify(walletData, null, 2));
+      const walletObj = (walletData as { wallet?: Record<string, unknown> })?.wallet || walletData;
+      const address = (walletObj as any)?.address as string | undefined;
+      const walletClientType = (walletObj as any)?.walletClientType as string | undefined;
+      const connectorType = (walletObj as any)?.connectorType as string | undefined;
+
+      if (!address) {
+        console.warn("[Privy] Wallet connect succeeded but no address found. Full object:", walletData);
+        setError("Connected wallet has no address. Please try again.");
+        setWalletConnecting(false);
+        return;
+      }
+
+      try {
+        const walletType = walletClientType || connectorType || "wallet";
+        const payload: Record<string, unknown> = {
+          walletAddress: address,
+          privyMetaData: {
+            type: walletType,
+            address,
+            walletAddress: address,
+            providerName: (walletObj as any)?.providerName || connectorType || walletClientType,
+            chainId: (walletObj as any)?.chainId,
+            privyUserId: user?.id,
+          },
+        };
+        console.log("[Privy] calling persistLogin with:", payload);
+        await persistLogin(payload);
+      } catch (err) {
+        console.error("[Privy] backend login failed from wallet connect", err);
+        setError("Wallet login failed. Please try again.");
+      } finally {
+        setWalletConnecting(false);
+      }
+    },
+    onError: (error) => {
+      console.error("[Privy] connectWallet error", error);
+      setError(getErrorMessage(error, "Failed to connect wallet"));
+      setWalletConnecting(false);
+    },
   });
 
   useEffect(() => {
@@ -348,46 +395,19 @@ const NewLoginScreen = () => {
                     setError("Privy is still loading. Please wait a moment.");
                     return;
                   }
-                  if (isOpen || privyOpening) {
-                    setError("Login is already open. Please complete it in the wallet app.");
-                    return;
-                  }
-                  setPrivyOpening(true);
-                  openPrivyLogin();
+                  if (walletConnecting) return;
+                  setWalletConnecting(true);
+                  connectWallet();
                 }}
-                disabled={privyOpening}
+                disabled={walletConnecting}
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Sign in with Privy
+                Connect Wallet
               </Button>
             </div>
 
-            <div className="mt-6">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="flex-1 h-px bg-border" />
-                Or continue with
-                <span className="flex-1 h-px bg-border" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => initOAuth({ provider: "google" })}
-                  disabled={oauthLoading}
-                >
-                  Google
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => initOAuth({ provider: "discord" })}
-                  disabled={oauthLoading}
-                >
-                  Discord
-                </Button>
-              </div>
+            <div className="mt-6 text-xs text-muted-foreground text-center">
+              Wallet + email OTP login only.
             </div>
           </motion.div>
         </GlowingBorder>

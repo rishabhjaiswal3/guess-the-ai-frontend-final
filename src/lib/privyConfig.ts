@@ -24,8 +24,8 @@ export const privyConfig: PrivyClientConfig = {
   embeddedWallets: {
     createOnLogin: "users-without-wallets",
   },
-  // Include OAuth providers to avoid exited_auth_flow errors when users choose them
-  loginMethods: ["wallet", "email", "sms", "google", "discord"],
+  // Wallet + email OTP only
+  loginMethods: ["wallet", "email"],
   supportedChains: [networkConfig],
   defaultChain: networkConfig,
   mobileConfig: {
