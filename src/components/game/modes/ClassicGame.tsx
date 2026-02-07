@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Crown } from "lucide-react";
 import confetti from "canvas-confetti";
 import { getNext10ImagesWithUrls, submitAnswer, startSession, endSession, type GameImageWithUrl } from "@/services/gameApi";
+import { getProfile } from "@/services/authApi";
 import { preloadImages } from "@/lib/imageUrl";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import FloatingScorePopup from "@/components/effects/FloatingScorePopup";
@@ -24,7 +25,6 @@ interface ClassicGameProps {
   onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
 }
 
-const TIMER_DURATION = 10;
 const RESULT_DELAY_MS = 1400;
 const PREFETCH_THRESHOLD = Number(import.meta.env.VITE_PREFETCH_THRESHOLD || 6);
 const PREFETCH_AHEAD = 4;
@@ -36,10 +36,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [bestStreak, setBestStreak] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(1);
-  const [showResult, setShowResult] = useState<"correct" | "wrong" | "timeout" | null>(null);
+  const [showResult, setShowResult] = useState<"correct" | "wrong" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(TIMER_DURATION);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [scorePopups, setScorePopups] = useState<ScorePopup[]>([]);
   const [shakeScreen, setShakeScreen] = useState(false);
   const [totalGames, setTotalGames] = useState(0);
@@ -140,7 +138,6 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     } finally {
       setTimeout(() => {
         setIsLoading(false);
-        setIsTimerRunning(true);
       }, 300);
     }
   }, []);
@@ -149,7 +146,6 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const advanceToNextImage = useCallback(() => {
     setImageError(false);
     setTruthLabel(null);
-    setTimeLeft(TIMER_DURATION);
 
     if (imageQueue.length === 0) {
       setCurrentImage(null);
@@ -169,14 +165,38 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     // Preload upcoming images
     preloadQueueImages(rest);
 
-    setTimeout(() => {
-      setIsTimerRunning(true);
-    }, 100);
   }, [imageQueue, fetchImageBatch, preloadQueueImages]);
 
   useEffect(() => {
     loadInitialImages();
   }, [loadInitialImages]);
+
+  // Load user profile to get initial stats (streak, bestStreak, correctAnswers)
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const response = await getProfile();
+        const data = response?.data;
+        if (data) {
+          const currentStreakValue = Number(data.currentStreak) || 0;
+          const bestStreakValue = Number(data.streak) || 0;
+          const correctAnswersValue = Number(data.correctAnswers) || 0;
+
+          setStreak(currentStreakValue);
+          setBestStreak(bestStreakValue);
+          setCorrectAnswers(correctAnswersValue);
+          setScore(correctAnswersValue); // Score = correctAnswers (same as old frontend)
+
+          // Sync with parent component
+          onScoreUpdate(correctAnswersValue, currentStreakValue, bestStreakValue);
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [onScoreUpdate]);
 
   useEffect(() => {
     let mounted = true;
@@ -198,22 +218,6 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isTimerRunning || showResult) return;
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleGuess(null, true, 0);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [isTimerRunning, showResult]);
-
   const addScorePopup = (value: number, type: ScorePopup["type"]) => {
     const rect = gameCardRef.current?.getBoundingClientRect();
     const popup: ScorePopup = {
@@ -230,11 +234,9 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     setScorePopups((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleGuess = async (guessedAI: boolean | null, timeout = false, timeRemaining = timeLeft) => {
+  const handleGuess = async (guessedAI: boolean | null) => {
     if (!currentImage || showResult) return;
-    if (!timeout) playClick();
-
-    setIsTimerRunning(false);
+    playClick();
     setTotalGames((prev) => prev + 1);
 
     const guessLabel: "ai" | "human" = guessedAI === null
@@ -243,52 +245,51 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
 
     let isCorrect = false;
     let truth: "ai" | "human" | null = null;
+    let apiCurrentStreak: number | undefined;
+    let apiBestStreak: number | undefined;
+    let apiCorrectAnswers: number | undefined;
 
     try {
       const response = await submitAnswer(currentImage.hash, guessLabel);
       isCorrect = Boolean(response?.isCorrect ?? response?.correct);
       truth = response?.truth ?? null;
+      apiCurrentStreak = typeof response?.profile?.currentStreak === "number" ? response?.profile?.currentStreak : undefined;
+      apiBestStreak = typeof response?.profile?.streak === "number" ? response?.profile?.streak : undefined;
+      apiCorrectAnswers = typeof response?.profile?.correctAnswers === "number" ? response?.profile?.correctAnswers : undefined;
     } catch {
       isCorrect = false;
     }
 
     setTruthLabel(truth);
 
-    const resultType = timeout ? "timeout" : isCorrect ? "correct" : "wrong";
-
     if (isCorrect) {
       setShowResult("correct");
       playSuccess();
 
-      const baseScore = 10;
-      const timeBonus = Math.floor(timeRemaining * 2);
-      const comboMultiplier = combo;
-      const totalPoints = (baseScore + timeBonus) * comboMultiplier;
-
-      const newStreak = streak + 1;
+      const newStreak = typeof apiCurrentStreak === "number" ? apiCurrentStreak : streak + 1;
       const newCombo = Math.min(combo + 1, 5);
-      const newBestStreak = Math.max(bestStreak, newStreak);
-      const newScore = score + totalPoints;
+      const newBestStreak = typeof apiBestStreak === "number"
+        ? apiBestStreak
+        : Math.max(bestStreak, newStreak);
+      // Score = correctAnswers (increments by 1, same as old frontend)
+      const newCorrectAnswers = typeof apiCorrectAnswers === "number" ? apiCorrectAnswers : correctAnswers + 1;
+      const newScore = newCorrectAnswers;
 
       setStreak(newStreak);
       setCombo(newCombo);
       setBestStreak(newBestStreak);
       setScore(newScore);
-      setCorrectAnswers((prev) => prev + 1);
+      setCorrectAnswers(newCorrectAnswers);
       onScoreUpdate(newScore, newStreak, newBestStreak);
 
       if (newBestStreak > bestStreak) {
         setProgressMessage(`New best streak! Rookie progress: ${newBestStreak}`);
       }
 
-      addScorePopup(totalPoints, "score");
+      addScorePopup(1, "score"); // Show +1 instead of combo-based points
       if (newCombo > 1) {
         setTimeout(() => addScorePopup(newCombo, "combo"), 200);
       }
-      if (timeBonus > 10) {
-        setTimeout(() => addScorePopup(timeBonus, "bonus"), 400);
-      }
-
       if (newStreak % 5 === 0) {
         confetti({
           particleCount: 150,
@@ -298,25 +299,23 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
         });
       }
     } else {
-      setShowResult(resultType);
+      setShowResult("wrong");
       playFail();
-      setStreak(0);
+      setStreak(typeof apiCurrentStreak === "number" ? apiCurrentStreak : 0);
       setCombo(1);
       setShakeScreen(true);
       setTimeout(() => setShakeScreen(false), 500);
-      onScoreUpdate(score, 0, bestStreak);
+      const resolvedBestStreak = typeof apiBestStreak === "number" ? apiBestStreak : bestStreak;
+      if (typeof apiCorrectAnswers === "number") {
+        setCorrectAnswers(apiCorrectAnswers);
+      }
+      onScoreUpdate(score, 0, resolvedBestStreak);
     }
 
     setTimeout(() => {
       setShowResult(null);
       advanceToNextImage();
     }, RESULT_DELAY_MS);
-  };
-
-  const getTimerColor = () => {
-    if (timeLeft > 6) return "text-primary";
-    if (timeLeft > 3) return "text-yellow";
-    return "text-destructive animate-pulse";
   };
 
   const getComboGlow = () => {
@@ -331,15 +330,12 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     <>
       <FloatingScorePopup popups={scorePopups} onComplete={removeScorePopup} />
 
-      <ScreenShake trigger={shakeScreen} intensity={15}>
+      <ScreenShake trigger={shakeScreen} intensity={15} >
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
           <ClassicStatsBar
-            timeLeft={timeLeft}
             streak={streak}
-            combo={combo}
             score={score}
             onBack={() => { playBack(); onBack(); }}
-            timerColorClass={getTimerColor()}
           />
 
           <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="rounded-3xl">
@@ -349,7 +345,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
               animate={{ opacity: 1, scale: 1 }}
               className="glass-strong rounded-3xl p-7 w-full max-w-4xl"
             >
-              <div className="relative text-center mb-3">
+              <div className="relative text-center mb-3" >
                 <motion.h2
                   animate={{
                     textShadow: [
@@ -374,30 +370,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 )}
               </div>
 
-              <div className={`relative h-2 bg-muted rounded-full mb-4 overflow-hidden transition-shadow ${
-                timeLeft <= 3 ? "shadow-[0_0_10px_rgba(239,68,68,0.5)]" : ""
-              }`}>
-                <motion.div
-                  className={`absolute inset-y-0 left-0 rounded-full ${
-                    timeLeft > 6
-                      ? "bg-gradient-to-r from-primary via-secondary to-primary"
-                      : timeLeft > 3
-                      ? "bg-gradient-to-r from-yellow via-orange to-yellow"
-                      : "bg-gradient-to-r from-destructive via-orange to-destructive"
-                  }`}
-                  initial={{ width: "100%" }}
-                  animate={{ width: `${(timeLeft / TIMER_DURATION) * 100}%` }}
-                  transition={{ duration: 0.5 }}
-                />
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                  animate={{ x: ["-100%", "100%"] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
-              </div>
-
-              <div className="relative rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border">
-                {/* Aspect ratio placeholder - always rendered to maintain consistent size */}
+              <div className="relative rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border min-w-[340px] min-h-[300px]">
                 <div className="w-full" style={{ paddingBottom: '75%' }} />
 
                 <AnimatePresence mode="wait">
@@ -462,17 +435,6 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                           <span className="text-6xl block mb-2">✓</span>
                           <span className="text-3xl font-black text-foreground drop-shadow-lg">CORRECT!</span>
                         </motion.div>
-                      ) : showResult === "timeout" ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                          className="text-center"
-                        >
-                          <span className="text-6xl block mb-2">⏱</span>
-                          <span className="text-3xl font-black text-foreground drop-shadow-lg">TIME UP!</span>
-                          <span className="block text-sm text-foreground/80 mt-2">Auto-guess submitted.</span>
-                        </motion.div>
                       ) : (
                         <motion.div
                           initial={{ scale: 0 }}
@@ -507,7 +469,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
 
               <ClassicGuessButtons
                 disabled={!!showResult || isLoading || !currentImage}
-                onGuess={(isAi) => handleGuess(isAi, false)}
+                onGuess={(isAi) => handleGuess(isAi)}
               />
 
               <div className="mt-3 flex justify-between text-xs text-muted-foreground">

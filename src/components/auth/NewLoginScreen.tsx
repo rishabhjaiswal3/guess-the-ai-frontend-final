@@ -3,7 +3,6 @@ import {
   useConnectWallet,
   useLoginWithEmail,
   useLoginWithOAuth,
-  useLogin,
   useModalStatus,
   usePrivy,
 } from "@privy-io/react-auth";
@@ -27,24 +26,6 @@ const allowedChain = {
   decimalChainId: 16661,
   hexChainId: "0x4115",
   chainName: "0G Mainnet",
-};
-
-const normalizeAccountType = (value?: string | null) => {
-  if (typeof value !== "string") return "";
-  const trimmed = value.trim().toLowerCase();
-  return trimmed;
-};
-
-const resolveWalletAccountType = (wallet?: {
-  walletClientType?: string;
-  connectorType?: string;
-  type?: string;
-}) => {
-  const walletClientType = normalizeAccountType(wallet?.walletClientType);
-  if (walletClientType) return walletClientType;
-  const connectorType = normalizeAccountType(wallet?.connectorType);
-  if (connectorType) return connectorType;
-  return normalizeAccountType(wallet?.type);
 };
 
 function normalizeChainId(chainId?: string) {
@@ -87,36 +68,39 @@ const NewLoginScreen = () => {
   };
 
   const { connectWallet } = useConnectWallet({
-    onSuccess: async (wallet) => {
-      console.log("[Privy] connectWallet success", wallet);
-      const address =
-        (wallet as { address?: string }).address ||
-        (wallet as { wallet?: { address?: string } }).wallet?.address;
+    onSuccess: async (walletData) => {
+      console.log("[Privy] connectWallet success", JSON.stringify(walletData, null, 2));
+
+      // The wallet data has nested structure: { wallet: { address, walletClientType, ... } }
+      const walletObj = (walletData as { wallet?: Record<string, unknown> })?.wallet;
+      const address = walletObj?.address as string | undefined;
+      const walletClientType = walletObj?.walletClientType as string | undefined;
+      const connectorType = walletObj?.connectorType as string | undefined;
+
+      console.log("[Privy] extracted address:", address);
+
       if (!address) {
-        console.warn("[Privy] wallet connected but no address", wallet);
+        console.warn("[Privy] Wallet connect succeeded but no address found. Full object:", walletData);
         setError("Connected wallet has no address. Please try again.");
         return;
       }
+
       try {
-        const walletType = resolveWalletAccountType(
-          (wallet as { wallet?: { walletClientType?: string; connectorType?: string; type?: string } }).wallet ??
-            (wallet as { walletClientType?: string; connectorType?: string; type?: string })
-        );
-        console.log("[Privy] wallet type resolved", walletType);
-        const payload: any = { walletAddress: address };
-        if (walletType) {
-          payload.privyMetaData = { type: walletType };
-        }
-        console.log("[Auth] loginV2 payload (wallet)", payload);
+        const walletType = walletClientType || connectorType || "wallet";
+        const payload: Record<string, unknown> = {
+          walletAddress: address,
+          privyMetaData: { type: walletType },
+        };
+        console.log("[Privy] calling persistLogin with:", payload);
         await persistLogin(payload);
-      } catch {
-        console.error("[Auth] loginV2 failed after wallet connect");
+      } catch (err) {
+        console.error("[Privy] backend login failed from wallet connect", err);
         setError("Wallet login failed. Please try again.");
       }
     },
-    onError: (err) => {
-      console.error("[Privy] connectWallet error", err);
-      setError(getErrorMessage(err, "Failed to connect wallet"));
+    onError: (error) => {
+      console.error("[Privy] connectWallet error", error);
+      setError(getErrorMessage(error, "Failed to connect wallet"));
     },
   });
 
@@ -144,8 +128,39 @@ const NewLoginScreen = () => {
       hasUser: Boolean(user),
       userId: user?.id,
       modalOpen: isOpen,
+      userWallets: user?.linkedAccounts?.filter((a: { type: string }) => a.type === "wallet"),
     });
   }, [ready, authenticated, user, isOpen]);
+
+  // Handle wallet login when user becomes authenticated with a wallet
+  const [walletLoginHandled, setWalletLoginHandled] = useState(false);
+  useEffect(() => {
+    if (!authenticated || !user || walletLoginHandled) return;
+
+    // Find wallet address from linked accounts
+    const walletAccount = user.linkedAccounts?.find(
+      (account: { type: string; address?: string }) => account.type === "wallet" && account.address
+    ) as { type: string; address: string; walletClientType?: string } | undefined;
+
+    if (walletAccount?.address) {
+      console.log("[Privy] Found wallet in user linkedAccounts:", walletAccount);
+      setWalletLoginHandled(true);
+
+      const payload: Record<string, unknown> = {
+        walletAddress: walletAccount.address,
+        privyMetaData: { type: walletAccount.walletClientType || "wallet" },
+      };
+
+      persistLogin(payload)
+        .then(() => {
+          console.log("[Privy] Backend login successful via user wallet");
+        })
+        .catch((err) => {
+          console.error("[Privy] Backend login failed via user wallet", err);
+          setError("Wallet login failed. Please try again.");
+        });
+    }
+  }, [authenticated, user, walletLoginHandled]);
 
   useEffect(() => {
     setError("");
@@ -359,17 +374,12 @@ const NewLoginScreen = () => {
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
                 onClick={() => {
-                  console.log("[Privy] connectWallet clicked", { ready, isOpen });
+                  console.log("[Privy] connect wallet clicked", { ready, isOpen });
                   if (!ready) {
                     setError("Privy is still loading. Please wait a moment.");
                     return;
                   }
-                  try {
-                    connectWallet();
-                  } catch (err) {
-                    console.error("[Privy] connectWallet threw", err);
-                    openPrivyLogin({ loginMethods: ["wallet"] });
-                  }
+                  connectWallet();
                 }}
               >
                 <Wallet className="w-4 h-4 mr-2" />
