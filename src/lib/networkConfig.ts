@@ -19,21 +19,21 @@ const ogGalileoTestnet = {
 
 const ogMainnet = {
   id: 16661,
-  name: "Aristotle",
+  name: "0G Mainnet",
   nativeCurrency: {
     decimals: 18,
-    name: "OG",
-    symbol: "OG",
+    name: "0G",
+    symbol: "0G",
   },
   rpcUrls: {
     public: { http: ["https://evmrpc.0g.ai"] },
-    default: { http: ["https://rpc.ankr.com/0g_mainnet_evm"] },
+    default: { http: ["https://evmrpc.0g.ai"] },
   },
   blockExplorers: {
     etherscan: { name: "0G Explorer", url: "https://chainscan.0g.ai" },
     default: { name: "0G Explorer", url: "https://chainscan.0g.ai" },
   },
-  testnet: true,
+  testnet: false,
 };
 
 const networkConfig = import.meta.env.VITE_NETWORK === "mainnet" ? ogMainnet : ogGalileoTestnet;

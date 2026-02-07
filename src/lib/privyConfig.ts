@@ -2,6 +2,7 @@ import type { PrivyClientConfig } from "@privy-io/react-auth";
 import networkConfig from "@/lib/networkConfig";
 
 export const privyAppId = import.meta.env.VITE_PRIVY_APP_ID ?? "";
+const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
 
 export const privyConfig: PrivyClientConfig = {
   appearance: {
@@ -14,11 +15,17 @@ export const privyConfig: PrivyClientConfig = {
     injected: {
       enabled: true,
     },
+    walletConnect: walletConnectProjectId
+      ? {
+          projectId: walletConnectProjectId,
+        }
+      : undefined,
   },
   embeddedWallets: {
     createOnLogin: "users-without-wallets",
   },
-  loginMethods: ["wallet", "email", "sms"],
+  // Include OAuth providers to avoid exited_auth_flow errors when users choose them
+  loginMethods: ["wallet", "email", "sms", "google", "discord"],
   supportedChains: [networkConfig],
   defaultChain: networkConfig,
   mobileConfig: {
