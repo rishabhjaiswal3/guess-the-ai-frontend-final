@@ -25,6 +25,8 @@ export type PrivyMetaData = {
   privyUserId?: string;
   otherId?: string;
   otherIds?: string[];
+  chainId?: string | number;
+  providerName?: string;
 };
 
 export type LoginRequest = {

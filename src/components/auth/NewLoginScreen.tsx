@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  useConnectWallet,
-  useLogin,
-  useLoginWithEmail,
-  useLoginWithOAuth,
-  useModalStatus,
-  usePrivy,
-} from "@privy-io/react-auth";
+import { useLogin, useLoginWithEmail, useLoginWithOAuth, useModalStatus, usePrivy } from "@privy-io/react-auth";
 import { motion } from "framer-motion";
 import { Mail, KeyRound, Wallet, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,43 +60,6 @@ const NewLoginScreen = () => {
     setStoredToken(response.data.token);
     if (response.data.username) setStoredUsername(response.data.username);
   };
-
-  const { connectWallet } = useConnectWallet({
-    onSuccess: async (walletData) => {
-      console.log("[Privy] connectWallet success", JSON.stringify(walletData, null, 2));
-
-      // The wallet data has nested structure: { wallet: { address, walletClientType, ... } }
-      const walletObj = (walletData as { wallet?: Record<string, unknown> })?.wallet;
-      const address = walletObj?.address as string | undefined;
-      const walletClientType = walletObj?.walletClientType as string | undefined;
-      const connectorType = walletObj?.connectorType as string | undefined;
-
-      console.log("[Privy] extracted address:", address);
-
-      if (!address) {
-        console.warn("[Privy] Wallet connect succeeded but no address found. Full object:", walletData);
-        setError("Connected wallet has no address. Please try again.");
-        return;
-      }
-
-      try {
-        const walletType = walletClientType || connectorType || "wallet";
-        const payload: Record<string, unknown> = {
-          walletAddress: address,
-          privyMetaData: { type: walletType },
-        };
-        console.log("[Privy] calling persistLogin with:", payload);
-        await persistLogin(payload);
-      } catch (err) {
-        console.error("[Privy] backend login failed from wallet connect", err);
-        setError("Wallet login failed. Please try again.");
-      }
-    },
-    onError: (error) => {
-      console.error("[Privy] connectWallet error", error);
-      setError(getErrorMessage(error, "Failed to connect wallet"));
-    },
-  });
 
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
     onError: (err) => setError(getErrorMessage(err, "OAuth error")),
@@ -375,16 +331,16 @@ const NewLoginScreen = () => {
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
                 onClick={() => {
-                  console.log("[Privy] connect wallet clicked", { ready, isOpen });
+                  console.log("[Privy] open login clicked", { ready, isOpen });
                   if (!ready) {
                     setError("Privy is still loading. Please wait a moment.");
                     return;
                   }
-                  connectWallet();
+                  openPrivyLogin();
                 }}
               >
                 <Wallet className="w-4 h-4 mr-2" />
-                Connect Wallet
+                Sign in with Privy
               </Button>
             </div>
 

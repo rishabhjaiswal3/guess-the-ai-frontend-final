@@ -81,12 +81,23 @@ const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => 
   const discordAccount = linked.find((account) => account.type === "discord_oauth");
   const googleAccount = linked.find((account) => account.type === "google_oauth");
   const emailAccount = linked.find((account) => account.type === "email");
+  const walletAccount = linked.find((account) => account.type === "wallet");
 
   const discordUsername = discordAccount?.username || discordAccount?.email || discordAccount?.subject;
   const discordUserId = discordAccount?.subject || discordAccount?.id;
   const googleEmail = googleAccount?.email || googleAccount?.address;
   const googleSubject = googleAccount?.subject;
   const resolvedEmail = user.email?.address || googleEmail || emailAccount?.address;
+  const chainId =
+    (user.wallet as any)?.chainId ||
+    (walletAccount as any)?.chainId ||
+    (walletAccount as any)?.wallet?.chainId ||
+    (user.wallet as any)?.walletClientType?.chainId;
+  const providerName =
+    walletAccount?.providerName ||
+    walletAccount?.provider ||
+    linked.find((a) => a.providerName)?.providerName ||
+    linked.find((a) => a.provider)?.provider;
 
   const payload: LoginRequest = {};
   if (user.id) payload.privyUserId = user.id;
@@ -98,7 +109,18 @@ const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => 
 
   const accountType = getPrivyAccountType(user);
   if (accountType) {
-    payload.privyMetaData = { ...(payload.privyMetaData ?? {}), type: accountType };
+    payload.privyMetaData = {
+      ...(payload.privyMetaData ?? {}),
+      type: accountType,
+      address,
+      walletAddress: address,
+      email: resolvedEmail,
+      discord: discordUsername,
+      discordUserId,
+      privyUserId: user.id,
+      chainId,
+      providerName,
+    };
   }
 
   return payload;
