@@ -2,7 +2,7 @@ import type { PrivyClientConfig } from "@privy-io/react-auth";
 import networkConfig from "@/lib/networkConfig";
 
 export const privyAppId = import.meta.env.VITE_PRIVY_APP_ID ?? "";
-const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
+export const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
 
 export const privyConfig: PrivyClientConfig = {
   appearance: {
@@ -16,9 +16,7 @@ export const privyConfig: PrivyClientConfig = {
       enabled: true,
     },
     walletConnect: walletConnectProjectId
-      ? {
-          projectId: walletConnectProjectId,
-        }
+      ? { projectId: walletConnectProjectId }
       : undefined,
   },
   embeddedWallets: {

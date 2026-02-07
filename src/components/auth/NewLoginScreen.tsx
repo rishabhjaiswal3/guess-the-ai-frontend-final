@@ -64,6 +64,7 @@ const NewLoginScreen = () => {
   const [gateConnecting, setGateConnecting] = useState(false);
   const [privyOpening, setPrivyOpening] = useState(false);
   const [walletConnecting, setWalletConnecting] = useState(false);
+  const missingWalletConnectId = !import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 
   const persistLogin = async (payload: Record<string, unknown>) => {
     const response = await loginV2(payload);
@@ -393,6 +394,10 @@ const NewLoginScreen = () => {
                   console.log("[Privy] open login clicked", { ready, isOpen });
                   if (!ready) {
                     setError("Privy is still loading. Please wait a moment.");
+                    return;
+                  }
+                  if (missingWalletConnectId) {
+                    setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
                     return;
                   }
                   if (walletConnecting) return;
