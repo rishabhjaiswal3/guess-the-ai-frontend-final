@@ -15,25 +15,20 @@ export const privyConfig: PrivyClientConfig = {
     accentColor: "#00d4ff",
     walletChainType: "ethereum-only",
     showWalletLoginFirst: true,
-    // Show all popular wallets in the wallet list
     walletList: [
       "metamask",
       "coinbase_wallet",
       "rainbow",
-      "wallet_connect",
       "phantom",
       "zerion",
       "cryptocom",
       "uniswap",
       "okx_wallet",
-      "detected_wallets", // Shows any other installed wallets
+      "universal_profile",
     ],
   },
-  walletConnectCloudProjectId: walletConnectProjectId || undefined,
   embeddedWallets: {
-    ethereum: {
-      createOnLogin: "users-without-wallets",
-    },
+    createOnLogin: "users-without-wallets",
   },
   // Wallet + email OTP only
   loginMethods: ["wallet", "email"],
