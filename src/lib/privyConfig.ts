@@ -15,10 +15,21 @@ export const privyConfig: PrivyClientConfig = {
     accentColor: "#00d4ff",
     walletChainType: "ethereum-only",
     showWalletLoginFirst: true,
+    // Show all popular wallets in the wallet list
+    walletList: [
+      "metamask",
+      "coinbase_wallet",
+      "rainbow",
+      "wallet_connect",
+      "phantom",
+      "zerion",
+      "cryptocom",
+      "uniswap",
+      "okx_wallet",
+      "detected_wallets", // Shows any other installed wallets
+    ],
   },
   walletConnectCloudProjectId: walletConnectProjectId || undefined,
-  // Note: Coinbase Smart Wallet doesn't support 0G chain (16661), but users can still
-  // connect with regular Coinbase Wallet browser extension which works fine.
   embeddedWallets: {
     ethereum: {
       createOnLogin: "users-without-wallets",
