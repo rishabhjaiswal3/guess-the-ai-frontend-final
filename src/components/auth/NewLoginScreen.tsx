@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   useConnectWallet,
+  useLogin,
   useLoginWithEmail,
   useLoginWithOAuth,
   useModalStatus,
