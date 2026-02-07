@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import { loginV2 } from "@/services/authApi";
 import { setStoredToken, setStoredUsername, getStoredToken } from "@/lib/session";
+import networkConfig from "@/lib/networkConfig";
 import {
   connectGateWallet,
   getGateWalletCurrentNetwork,
@@ -28,6 +29,14 @@ const allowedChain = {
   hexChainId: "0x4115",
   chainName: "0G Mainnet",
 };
+
+const buildChainParams = () => ({
+  chainId: `0x${networkConfig.id.toString(16)}`,
+  chainName: networkConfig.name,
+  nativeCurrency: networkConfig.nativeCurrency,
+  rpcUrls: networkConfig.rpcUrls.default.http,
+  blockExplorerUrls: [networkConfig.blockExplorers.default.url],
+});
 
 function normalizeChainId(chainId?: string) {
   if (!chainId) return undefined;
@@ -73,6 +82,38 @@ const NewLoginScreen = () => {
   const missingWalletConnectId = !walletConnectProjectId;
   const hasInjectedWallet =
     typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
+
+  const ensureInjectedChain = async () => {
+    const ethereum = (window as { ethereum?: any }).ethereum;
+    if (!ethereum?.request) return true;
+    const targetChainId = `0x${networkConfig.id.toString(16)}`;
+    try {
+      const current = await ethereum.request({ method: "eth_chainId" });
+      if (typeof current === "string" && current.toLowerCase() === targetChainId.toLowerCase()) {
+        return true;
+      }
+      await ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: targetChainId }],
+      });
+      return true;
+    } catch (err: any) {
+      if (err?.code === 4902) {
+        try {
+          await ethereum.request({
+            method: "wallet_addEthereumChain",
+            params: [buildChainParams()],
+          });
+          return true;
+        } catch (addErr) {
+          console.error("[Privy] chain add failed", addErr);
+          return false;
+        }
+      }
+      console.error("[Privy] chain switch failed", err);
+      return false;
+    }
+  };
 
   const persistLogin = async (payload: Record<string, unknown>) => {
     const response = await loginV2(payload);
@@ -395,7 +436,7 @@ const NewLoginScreen = () => {
               <Button
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
-                onClick={() => {
+                onClick={async () => {
                   console.log("[Privy] wallet connect clicked", { ready, isOpen, privyOpening });
                   if (!ready) {
                     setError("Privy is still loading. Please wait a moment.");
@@ -407,6 +448,14 @@ const NewLoginScreen = () => {
                   }
                   if (privyOpening) return;
                   setPrivyOpening(true);
+                  if (hasInjectedWallet) {
+                    const switched = await ensureInjectedChain();
+                    if (!switched) {
+                      setError("Please switch MetaMask to the 0G network and try again.");
+                      setPrivyOpening(false);
+                      return;
+                    }
+                  }
                   openPrivyLogin({ loginMethods: ["wallet"] });
                 }}
                 disabled={privyOpening}

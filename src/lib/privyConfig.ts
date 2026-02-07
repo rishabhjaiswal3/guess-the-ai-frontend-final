@@ -18,6 +18,7 @@ export const privyConfig: PrivyClientConfig = {
     walletList: [
       "metamask",
       "coinbase_wallet",
+      "base_account",
       "rainbow",
       "phantom",
       "zerion",
