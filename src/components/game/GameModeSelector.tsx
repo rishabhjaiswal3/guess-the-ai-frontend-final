@@ -168,7 +168,7 @@ const GameModeSelector = ({ onSelectMode, onBack }: GameModeSelectorProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex justify-center gap-4 mt-3 text-xs text-muted-foreground"
+          className="flex justify-center gap-4  text-xs text-muted-foreground"
         >
           {[
             { icon: Star, label: "4 Modes", color: "text-yellow" },
