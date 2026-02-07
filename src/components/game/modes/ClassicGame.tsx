@@ -11,6 +11,8 @@ import ScreenShake from "@/components/effects/ScreenShake";
 import { useFeedbackSound } from "@/hooks/useFeedbackSound";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
 import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
+import networkConfig from "@/lib/networkConfig";
+import { toast } from "@/components/ui/sonner";
 
 interface ScorePopup {
   id: string;
@@ -46,6 +48,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [progressMessage, setProgressMessage] = useState<string | null>(null);
   const [truthLabel, setTruthLabel] = useState<"ai" | "human" | null>(null);
   const [prefetching, setPrefetching] = useState(false);
+  const [lastTxHash, setLastTxHash] = useState<string | null>(null);
 
   const gameCardRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -256,6 +259,21 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       apiCurrentStreak = typeof response?.profile?.currentStreak === "number" ? response?.profile?.currentStreak : undefined;
       apiBestStreak = typeof response?.profile?.streak === "number" ? response?.profile?.streak : undefined;
       apiCorrectAnswers = typeof response?.profile?.correctAnswers === "number" ? response?.profile?.correctAnswers : undefined;
+      const txHash = response?.onchain?.transactionHash;
+      if (txHash) {
+        setLastTxHash(txHash);
+        const shortHash = `${txHash.slice(0, 6)}...${txHash.slice(-4)}`;
+        const explorerBase = networkConfig.blockExplorers?.default?.url;
+        toast("Answer recorded on-chain", {
+          description: `Tx ${shortHash}`,
+          action: explorerBase
+            ? {
+                label: "View",
+                onClick: () => window.open(`${explorerBase}/tx/${txHash}`, "_blank")
+              }
+            : undefined
+        });
+      }
     } catch {
       isCorrect = false;
     }
@@ -337,6 +355,22 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
             score={score}
             onBack={() => { playBack(); onBack(); }}
           />
+          {lastTxHash ? (
+            <div className="mt-3 flex items-center gap-3 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs text-cyan-200/90">
+              <span className="font-semibold">Latest Tx</span>
+              <span className="font-mono">{`${lastTxHash.slice(0, 8)}...${lastTxHash.slice(-6)}`}</span>
+              {networkConfig.blockExplorers?.default?.url ? (
+                <a
+                  className="ml-auto rounded-full border border-cyan-400/40 px-2 py-0.5 text-[11px] text-cyan-200 hover:border-cyan-300 hover:text-cyan-100"
+                  href={`${networkConfig.blockExplorers.default.url}/tx/${lastTxHash}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View
+                </a>
+              ) : null}
+            </div>
+          ) : null}
 
           <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="rounded-3xl">
             <motion.div

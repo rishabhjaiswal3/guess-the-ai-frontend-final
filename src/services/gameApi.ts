@@ -33,6 +33,7 @@ export type SubmitAnswerResponse = {
     streak?: number;
   };
   gateStats?: Record<string, unknown> | null;
+  onchain?: { transactionHash?: string } | null;
 };
 
 export type SessionResponse = {
