@@ -337,30 +337,56 @@ const NewLoginScreen = () => {
 
   return (
     <div className="min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-24 pb-24 lg:pb-16">
-      <div className="max-w-lg mx-auto">
-        <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-strong rounded-3xl p-8"
-          >
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass glow-magenta mb-4">
-                <ShieldCheck className="w-8 h-8 text-secondary" />
-              </div>
-              <h1 className="text-3xl font-black gradient-text mb-2">Sign In</h1>
-              <p className="text-sm text-muted-foreground">
-                Login with OTP, wallet, or social accounts to start playing.
-              </p>
+      <div className="max-w-6xl mx-auto">
+        <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] items-stretch">
+          <div className="glass-strong rounded-3xl p-10 border border-secondary/25 h-full">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass glow-magenta mb-5">
+              <ShieldCheck className="w-8 h-8 text-secondary" />
             </div>
+            <h1 className="text-4xl font-black gradient-text mb-3">Welcome to Guess the AI</h1>
+            <p className="text-base text-foreground/80 mb-8 leading-relaxed">
+              Connect your wallet or login with OTP/social to start playing. Use the 0G network for
+              best compatibility with signing.
+            </p>
 
-            {error && (
-              <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                {error}
+            <div className="rounded-2xl border border-secondary/30 bg-secondary/10 p-6 text-sm text-foreground/85">
+              <p className="font-semibold text-base text-secondary mb-2">0G Network Required</p>
+              <p className="mb-3 leading-relaxed">
+                Please make sure your wallet is on the 0G network. If you do not have the 0G network
+                added, add it using the details below. Signing may fail if you are on a different
+                network.
+              </p>
+              <div className="space-y-2 font-mono text-xs text-foreground/80">
+                <div>Network Name: 0G Mainnet</div>
+                <div>Chain ID: 16661</div>
+                <div>Token Symbol: 0G</div>
+                <div>RPC URL: https://evmrpc.0g.ai</div>
+                <div>Storage Indexer: https://indexer-storage-turbo.0g.ai</div>
+                <div>Block Explorer: https://chainscan.0g.ai</div>
               </div>
-            )}
+            </div>
+          </div>
 
-            <div className="space-y-4">
+          <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl h-full">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-strong rounded-3xl p-10 h-full"
+            >
+              <div className="text-center mb-6">
+                <h2 className="text-3xl font-black gradient-text mb-2">Sign In</h2>
+                <p className="text-base text-foreground/80">
+                  Login with OTP, wallet, or social accounts to start playing.
+                </p>
+              </div>
+
+              {error && (
+                <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-4">
               {step === "email" ? (
                 <>
                   <div>
@@ -465,35 +491,36 @@ const NewLoginScreen = () => {
               </Button>
             </div>
 
-            <div className="mt-6">
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="flex-1 h-px bg-border" />
-                Or continue with
-                <span className="flex-1 h-px bg-border" />
+              <div className="mt-6">
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                  <span className="flex-1 h-px bg-border" />
+                  Or continue with
+                  <span className="flex-1 h-px bg-border" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => initOAuth({ provider: "google" })}
+                    disabled={oauthLoading}
+                  >
+                    Google
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => initOAuth({ provider: "discord" })}
+                    disabled={oauthLoading}
+                  >
+                    Discord
+                  </Button>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => initOAuth({ provider: "google" })}
-                  disabled={oauthLoading}
-                >
-                  Google
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => initOAuth({ provider: "discord" })}
-                  disabled={oauthLoading}
-                >
-                  Discord
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </GlowingBorder>
+            </motion.div>
+          </GlowingBorder>
+        </div>
       </div>
     </div>
   );
