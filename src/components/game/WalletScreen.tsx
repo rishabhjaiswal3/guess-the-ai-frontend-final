@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import networkConfig from "@/lib/networkConfig";
 
 const WalletScreen = () => {
-  const { openLogin, token, profile } = useAuth();
+  const { openLogin, token, profile, logout } = useAuth();
   const [showTransactions, setShowTransactions] = useState(false);
   const features = [
     { icon: "🏆", lucideIcon: Shield, title: "Compete Globally", desc: "Join the leaderboard and compete with players worldwide", color: "text-primary" },
@@ -28,7 +28,7 @@ const WalletScreen = () => {
           >
             {/* Animated Wallet Icon */}
             <motion.div
-              animate={{ 
+              animate={{
                 y: [0, -10, 0],
                 rotateY: [0, 10, -10, 0],
               }}
@@ -53,7 +53,7 @@ const WalletScreen = () => {
             </motion.div>
 
             <motion.h1
-              animate={{ 
+              animate={{
                 backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
               }}
               transition={{ duration: 5, repeat: Infinity }}
@@ -70,7 +70,7 @@ const WalletScreen = () => {
             
             <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
               {token
-                ? `Connected as ${profile?.walletAddress || "wallet"}`
+                ? `Connected as ${profile?.walletAddress.slice(0,6)}...${profile?.walletAddress.slice(-4)}`
                 : "Link your wallet to save progress, compete on leaderboards, and earn crypto rewards!"}
             </p>
 
@@ -93,6 +93,18 @@ const WalletScreen = () => {
                   />
                 </Button>
               </motion.div>
+
+              {token && (
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    variant="outline"
+                    className="w-full h-14 glass text-destructive border-destructive/40 hover:bg-destructive/10 font-semibold"
+                    onClick={logout}
+                  >
+                    Logout
+                  </Button>
+                </motion.div>
+              )}
 
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
@@ -132,7 +144,7 @@ const WalletScreen = () => {
                           address: "0x9663dA1163842cfbac83D382Bdf331227d012114",
                         },
                 ].map((entry) => {
-                  const shortAddress = `${entry.address.slice(0, 10)}...${entry.address.slice(-10)}`;
+                  const shortAddress = `${entry.address.slice(0, 4)}...${entry.address.slice(-4)}`;
                   return (
                   <div
                     key={entry.address}
