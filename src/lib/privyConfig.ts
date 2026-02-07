@@ -2,7 +2,12 @@ import type { PrivyClientConfig } from "@privy-io/react-auth";
 import networkConfig from "@/lib/networkConfig";
 
 export const privyAppId = import.meta.env.VITE_PRIVY_APP_ID ?? "";
-export const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
+const rawWalletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID ?? "";
+// Filter out placeholder values
+export const walletConnectProjectId =
+  rawWalletConnectProjectId && !rawWalletConnectProjectId.includes("YOUR_")
+    ? rawWalletConnectProjectId
+    : "";
 
 export const privyConfig: PrivyClientConfig = {
   appearance: {
@@ -11,24 +16,18 @@ export const privyConfig: PrivyClientConfig = {
     walletChainType: "ethereum-only",
     showWalletLoginFirst: true,
   },
-  wallets: {
-    injected: {
-      enabled: true,
-    },
-    walletConnect: walletConnectProjectId
-      ? { projectId: walletConnectProjectId }
-      : undefined,
-  },
+  walletConnectCloudProjectId: walletConnectProjectId || undefined,
+  // Note: Coinbase Smart Wallet doesn't support 0G chain (16661), but users can still
+  // connect with regular Coinbase Wallet browser extension which works fine.
   embeddedWallets: {
-    createOnLogin: "users-without-wallets",
+    ethereum: {
+      createOnLogin: "users-without-wallets",
+    },
   },
   // Wallet + email OTP only
   loginMethods: ["wallet", "email"],
   supportedChains: [networkConfig],
   defaultChain: networkConfig,
-  mobileConfig: {
-    preferredWalletConnectVersion: 2,
-  },
   intl: {
     defaultCountry: "US",
   },

@@ -1,11 +1,18 @@
-import { PrivyModal, useModalStatus } from "@privy-io/react-auth";
+import { useModalStatus } from "@privy-io/react-auth";
+import { useEffect } from "react";
 
 const PrivyModalHost = () => {
   const { isOpen } = useModalStatus();
-  if (isOpen) {
-    console.log("[Privy] modal open");
-  }
-  return <PrivyModal open={isOpen} />;
+
+  useEffect(() => {
+    if (isOpen) {
+      console.log("[Privy] modal open");
+    }
+  }, [isOpen]);
+
+  // Privy SDK v3+ handles modal rendering internally via PrivyProvider
+  // No need to render PrivyModal component manually
+  return null;
 };
 
 export default PrivyModalHost;

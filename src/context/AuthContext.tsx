@@ -130,6 +130,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { ready, authenticated, logout: privyLogout, user } = usePrivy();
   const { login: privyLogin } = useLogin({
     onError: (error) => {
+      // Ignore user-initiated exit (closing the modal)
+      if (error === "exited_auth_flow" || String(error).includes("exited_auth_flow")) {
+        console.log("[Privy] user exited auth flow");
+        return;
+      }
       console.error("[Privy] login error", error);
     },
   });
@@ -140,6 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const loginAttemptedRef = useRef(false);
   const jwtAttemptedRef = useRef(false);
+  const loggingOutRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -243,15 +249,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!ready || token || !authenticated) return;
     if (loginAttemptedRef.current) return;
+    if (loggingOutRef.current) return; // Don't auto-login during logout
     loginAttemptedRef.current = true;
     loginWithPrivy();
   }, [ready, authenticated, token, loginWithPrivy]);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    loggingOutRef.current = true;
+    loginAttemptedRef.current = false; // Reset so user can login again later
     clearStoredSession();
     setProfile(null);
     setError(null);
-    privyLogout();
+    try {
+      await privyLogout();
+    } catch (err) {
+      // Privy logout can fail (e.g., "Error destroying session") but we still
+      // want to clear local state. Log the error but don't block logout.
+      console.warn("[Privy] logout error (ignored):", err);
+    }
+    // Keep loggingOutRef true for a bit longer to prevent race conditions
+    // with auto-login effects that may still see authenticated=true briefly
+    setTimeout(() => {
+      loggingOutRef.current = false;
+    }, 500);
   }, [privyLogout]);
 
   const updateProfileUsername = useCallback(async (name: string) => {

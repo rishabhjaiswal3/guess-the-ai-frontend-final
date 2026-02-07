@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   useLogin,
   useLoginWithEmail,
@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import { loginV2 } from "@/services/authApi";
-import { setStoredToken, setStoredUsername } from "@/lib/session";
+import { setStoredToken, setStoredUsername, getStoredToken } from "@/lib/session";
 import {
   connectGateWallet,
   getGateWalletCurrentNetwork,
@@ -21,6 +21,7 @@ import {
   switchGateWalletNetwork,
   type NetworkInfo,
 } from "@/lib/gateWallet";
+import { walletConnectProjectId } from "@/lib/privyConfig";
 
 const allowedChain = {
   decimalChainId: 16661,
@@ -47,8 +48,14 @@ const NewLoginScreen = () => {
   const { user, ready, authenticated } = usePrivy();
   const { login: openPrivyLogin } = useLogin({
     onError: (error) => {
-      const errorCode = (error as { code?: number; details?: { eipCode?: number } })?.code;
-      const eipCode = (error as { details?: { eipCode?: number } })?.details?.eipCode;
+      // Ignore user-initiated exit (closing the modal)
+      if (error === "exited_auth_flow" || (error as unknown as { type?: string })?.type === "exited_auth_flow") {
+        console.log("[Privy] user exited auth flow");
+        return;
+      }
+      const err = error as unknown as { code?: number; details?: { eipCode?: number } };
+      const errorCode = err?.code;
+      const eipCode = err?.details?.eipCode;
       if (errorCode === -32002 || eipCode === -32002) {
         setError("Wallet connection already pending. Check your wallet app or other browser tabs.");
       }
@@ -63,7 +70,7 @@ const NewLoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [gateConnecting, setGateConnecting] = useState(false);
   const [privyOpening, setPrivyOpening] = useState(false);
-  const missingWalletConnectId = !import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+  const missingWalletConnectId = !walletConnectProjectId;
   const hasInjectedWallet =
     typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
 
@@ -77,7 +84,11 @@ const NewLoginScreen = () => {
   };
 
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
-    onError: (err) => setError(getErrorMessage(err, "Email login error")),
+    onError: (err) => {
+      const errStr = String(err);
+      if (errStr.includes("exited_auth_flow")) return;
+      setError(getErrorMessage(err, "Email login error"));
+    },
   });
 
   useEffect(() => {
@@ -87,7 +98,15 @@ const NewLoginScreen = () => {
   }, [missingWalletConnectId]);
 
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
-    onError: (err) => setError(getErrorMessage(err, "OAuth error")),
+    onError: (err) => {
+      // Ignore user-initiated exit (closing the modal)
+      const errStr = String(err);
+      if (errStr.includes("exited_auth_flow") || (err as unknown as { type?: string })?.type === "exited_auth_flow") {
+        console.log("[Privy] user exited OAuth flow");
+        return;
+      }
+      setError(getErrorMessage(err, "OAuth error"));
+    },
   });
 
   useEffect(() => {
@@ -118,8 +137,27 @@ const NewLoginScreen = () => {
 
   // Handle wallet login when user becomes authenticated with a wallet
   const [walletLoginHandled, setWalletLoginHandled] = useState(false);
+  const mountedWithAuthRef = useRef(authenticated);
+
+  // Reset walletLoginHandled when user logs out
   useEffect(() => {
+    if (!authenticated) {
+      setWalletLoginHandled(false);
+      // Reset the mount ref so next login works
+      mountedWithAuthRef.current = false;
+    }
+  }, [authenticated]);
+
+  useEffect(() => {
+    // Skip if not authenticated or already handled
     if (!authenticated || !user || walletLoginHandled) return;
+
+    // Skip if component mounted with authenticated=true (logout in progress)
+    // This prevents auto-login when NewLoginScreen appears during logout
+    if (mountedWithAuthRef.current) {
+      console.log("[Privy] Skipping auto-login - component mounted with auth (likely logout in progress)");
+      return;
+    }
 
     // Find wallet address from linked accounts
     const walletAccount = user.linkedAccounts?.find(
