@@ -49,6 +49,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [truthLabel, setTruthLabel] = useState<"ai" | "human" | null>(null);
   const [prefetching, setPrefetching] = useState(false);
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
 
   const gameCardRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -239,8 +240,10 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
 
   const handleGuess = async (guessedAI: boolean | null) => {
     if (!currentImage || showResult) return;
+    if (isSubmittingAnswer) return;
     playClick();
     setTotalGames((prev) => prev + 1);
+    setIsSubmittingAnswer(true);
 
     const guessLabel: "ai" | "human" = guessedAI === null
       ? (Math.random() > 0.5 ? "ai" : "human")
@@ -276,6 +279,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       }
     } catch {
       isCorrect = false;
+    } finally {
+      setIsSubmittingAnswer(false);
     }
 
     setTruthLabel(truth);
@@ -501,8 +506,19 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 </motion.div>
               )}
 
+              {isSubmittingAnswer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="glass px-4 py-2 rounded-xl text-sm text-center text-cyan-200/90 font-semibold mb-3"
+                >
+                  Submitting answer... please wait
+                </motion.div>
+              )}
+
               <ClassicGuessButtons
-                disabled={!!showResult || isLoading || !currentImage}
+                disabled={!!showResult || isLoading || !currentImage || isSubmittingAnswer}
                 onGuess={(isAi) => handleGuess(isAi)}
               />
 
