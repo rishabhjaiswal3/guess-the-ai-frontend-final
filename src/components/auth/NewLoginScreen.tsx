@@ -130,23 +130,6 @@ const NewLoginScreen = () => {
     }
   }, [missingWalletConnectId]);
 
-  const openWalletModal = () => {
-    console.log("[Privy] wallet login requested", { ready, isOpen, privyOpening, missingWalletConnectId });
-    if (!ready) {
-      setError("Privy is still loading. Please wait a moment.");
-      return;
-    }
-    if (missingWalletConnectId) {
-      setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
-      return;
-    }
-    if (privyOpening) return;
-    setPrivyOpening(true);
-    openPrivyLogin({ loginMethods: ["wallet"] });
-    // reset latch after a short window so user can retry
-    setTimeout(() => setPrivyOpening(false), 8000);
-  };
-
   const { initOAuth, loading: oauthLoading } = useLoginWithOAuth({
     onError: (err) => setError(getErrorMessage(err, "OAuth error")),
   });
@@ -418,8 +401,23 @@ const NewLoginScreen = () => {
               <Button
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
-                onClick={openWalletModal}
-                disabled={privyOpening}
+                onClick={() => {
+                  console.log("[Privy] wallet connect clicked", { ready, isOpen, walletConnecting });
+                  if (!ready) {
+                    setError("Privy is still loading. Please wait a moment.");
+                    return;
+                  }
+                  if (missingWalletConnectId) {
+                    setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
+                    return;
+                  }
+                  if (walletConnecting) return;
+                  setWalletConnecting(true);
+                  connectWallet();
+                  // allow re-click after a short window
+                  setTimeout(() => setWalletConnecting(false), 8000);
+                }}
+                disabled={walletConnecting}
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 Connect Wallet
