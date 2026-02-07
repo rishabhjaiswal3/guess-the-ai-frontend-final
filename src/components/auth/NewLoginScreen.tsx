@@ -41,6 +41,11 @@ const NewLoginScreen = () => {
   const { user, ready, authenticated } = usePrivy();
   const { login: openPrivyLogin } = useLogin({
     onError: (error) => {
+      const errorCode = (error as { code?: number; details?: { eipCode?: number } })?.code;
+      const eipCode = (error as { details?: { eipCode?: number } })?.details?.eipCode;
+      if (errorCode === -32002 || eipCode === -32002) {
+        setError("Wallet connection already pending. Check your wallet app or other browser tabs.");
+      }
       console.error("[Privy] login modal error", error);
     },
   });
@@ -51,6 +56,7 @@ const NewLoginScreen = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [gateConnecting, setGateConnecting] = useState(false);
+  const [privyOpening, setPrivyOpening] = useState(false);
 
   const persistLogin = async (payload: Record<string, unknown>) => {
     const response = await loginV2(payload);
@@ -88,6 +94,12 @@ const NewLoginScreen = () => {
       userWallets: user?.linkedAccounts?.filter((a: { type: string }) => a.type === "wallet"),
     });
   }, [ready, authenticated, user, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setPrivyOpening(false);
+    }
+  }, [isOpen]);
 
   // Handle wallet login when user becomes authenticated with a wallet
   const [walletLoginHandled, setWalletLoginHandled] = useState(false);
@@ -336,8 +348,14 @@ const NewLoginScreen = () => {
                     setError("Privy is still loading. Please wait a moment.");
                     return;
                   }
+                  if (isOpen || privyOpening) {
+                    setError("Login is already open. Please complete it in the wallet app.");
+                    return;
+                  }
+                  setPrivyOpening(true);
                   openPrivyLogin();
                 }}
+                disabled={privyOpening}
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 Sign in with Privy
