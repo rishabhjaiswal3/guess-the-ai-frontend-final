@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  useConnectWallet,
   useLogin,
   useLoginWithEmail,
   useLoginWithOAuth,
@@ -64,8 +63,9 @@ const NewLoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [gateConnecting, setGateConnecting] = useState(false);
   const [privyOpening, setPrivyOpening] = useState(false);
-  const [walletConnecting, setWalletConnecting] = useState(false);
   const missingWalletConnectId = !import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
+  const hasInjectedWallet =
+    typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
 
   const persistLogin = async (payload: Record<string, unknown>) => {
     const response = await loginV2(payload);
@@ -78,50 +78,6 @@ const NewLoginScreen = () => {
 
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
     onError: (err) => setError(getErrorMessage(err, "Email login error")),
-  });
-
-  const { connectWallet } = useConnectWallet({
-    onSuccess: async (walletData) => {
-      console.log("[Privy] connectWallet success", JSON.stringify(walletData, null, 2));
-      const walletObj = (walletData as { wallet?: Record<string, unknown> })?.wallet || walletData;
-      const address = (walletObj as any)?.address as string | undefined;
-      const walletClientType = (walletObj as any)?.walletClientType as string | undefined;
-      const connectorType = (walletObj as any)?.connectorType as string | undefined;
-
-      if (!address) {
-        console.warn("[Privy] Wallet connect succeeded but no address found. Full object:", walletData);
-        setError("Connected wallet has no address. Please try again.");
-        setWalletConnecting(false);
-        return;
-      }
-
-      try {
-        const walletType = walletClientType || connectorType || "wallet";
-        const payload: Record<string, unknown> = {
-          walletAddress: address,
-          privyMetaData: {
-            type: walletType,
-            address,
-            walletAddress: address,
-            providerName: (walletObj as any)?.providerName || connectorType || walletClientType,
-            chainId: (walletObj as any)?.chainId,
-            privyUserId: user?.id,
-          },
-        };
-        console.log("[Privy] calling persistLogin with:", payload);
-        await persistLogin(payload);
-      } catch (err) {
-        console.error("[Privy] backend login failed from wallet connect", err);
-        setError("Wallet login failed. Please try again.");
-      } finally {
-        setWalletConnecting(false);
-      }
-    },
-    onError: (error) => {
-      console.error("[Privy] connectWallet error", error);
-      setError(getErrorMessage(error, "Failed to connect wallet"));
-      setWalletConnecting(false);
-    },
   });
 
   useEffect(() => {
@@ -402,22 +358,20 @@ const NewLoginScreen = () => {
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
                 onClick={() => {
-                  console.log("[Privy] wallet connect clicked", { ready, isOpen, walletConnecting });
+                  console.log("[Privy] wallet connect clicked", { ready, isOpen, privyOpening });
                   if (!ready) {
                     setError("Privy is still loading. Please wait a moment.");
                     return;
                   }
-                  if (missingWalletConnectId) {
+                  if (missingWalletConnectId && !hasInjectedWallet) {
                     setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
                     return;
                   }
-                  if (walletConnecting) return;
-                  setWalletConnecting(true);
-                  connectWallet();
-                  // allow re-click after a short window
-                  setTimeout(() => setWalletConnecting(false), 8000);
+                  if (privyOpening) return;
+                  setPrivyOpening(true);
+                  openPrivyLogin({ loginMethods: ["wallet"] });
                 }}
-                disabled={walletConnecting}
+                disabled={privyOpening}
               >
                 <Wallet className="w-4 h-4 mr-2" />
                 Connect Wallet
