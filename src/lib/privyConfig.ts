@@ -25,6 +25,7 @@ export const privyConfig: PrivyClientConfig = {
       "cryptocom",
       "uniswap",
       "okx_wallet",
+      "bitget_wallet",
       "universal_profile",
     ],
   },
