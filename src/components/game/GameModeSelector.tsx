@@ -24,7 +24,7 @@ const difficultyColors = {
 };
 
 const GameModeSelector = ({ onSelectMode, onBack }: GameModeSelectorProps) => {
-  const isAvailable = (modeId: string) => modeId === "classic";
+  const isAvailable = (_modeId: string) => true;
 
   const renderCard = (mode: GameMode, index: number) => {
     const available = isAvailable(mode.id);
