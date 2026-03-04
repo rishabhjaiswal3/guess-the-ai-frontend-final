@@ -12,6 +12,7 @@ import { useFeedbackSound } from "@/hooks/useFeedbackSound";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
 import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
 import networkConfig from "@/lib/networkConfig";
+import { addGameTransaction } from "@/lib/gameTransactions";
 import { toast } from "@/components/ui/sonner";
 
 interface ScorePopup {
@@ -265,10 +266,11 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       const txHash = response?.onchain?.transactionHash;
       if (txHash) {
         setLastTxHash(txHash);
-        const shortHash = `${txHash.slice(0, 6)}...${txHash.slice(-4)}`;
+        addGameTransaction(txHash, "Classic");
         const explorerBase = networkConfig.blockExplorers?.default?.url;
         toast("Answer recorded on-chain", {
-          description: `Tx ${shortHash}`,
+          description: `Transaction Hash: ${txHash}`,
+          duration: 10000,
           action: explorerBase
             ? {
                 label: "View",

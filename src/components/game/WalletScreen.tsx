@@ -1,14 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Wallet, Link2, CreditCard, ArrowUpRight, Shield, Coins, Gift, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import { useAuth } from "@/context/AuthContext";
 import networkConfig from "@/lib/networkConfig";
+import { getGameTransactions, type GameTransactionRecord } from "@/lib/gameTransactions";
 
 const WalletScreen = () => {
   const { openLogin, token, profile, logout } = useAuth();
   const [showTransactions, setShowTransactions] = useState(false);
+  const [gameTransactions, setGameTransactions] = useState<GameTransactionRecord[]>([]);
+
+  useEffect(() => {
+    if (!showTransactions) return;
+    setGameTransactions(getGameTransactions());
+  }, [showTransactions, token]);
+
+  const explorer = networkConfig.blockExplorers?.default?.url || "https://chainscan.0g.ai";
   const features = [
     { icon: "🏆", lucideIcon: Shield, title: "Compete Globally", desc: "Join the leaderboard and compete with players worldwide", color: "text-primary" },
     { icon: "🎁", lucideIcon: Gift, title: "Earn Rewards", desc: "Win tokens and NFTs for your achievements", color: "text-secondary" },
@@ -130,11 +139,59 @@ const WalletScreen = () => {
                       0G Transaction Activity
                     </h2>
                     <div className="space-y-3">
-                {[
-                  {
-                    label: "Core Game Contract",
-                    address: "0x4aCfb1a2Dc270846A7913757189543e4C18F7826",
-                  },
+                      <div className="text-left">
+                        <p className="text-sm font-semibold text-foreground mb-2">Recent Game Transactions</p>
+                        {gameTransactions.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            No game transactions yet. Play a round to generate on-chain activity.
+                          </p>
+                        ) : (
+                          <div className="space-y-2">
+                            {gameTransactions.map((tx) => {
+                              const shortHash = `${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}`;
+                              return (
+                                <div key={tx.hash} className="flex items-center justify-between p-3 rounded-xl glass">
+                                  <div style={{ textAlign: "left" }}>
+                                    <p className="font-medium text-foreground">{tx.mode} Game</p>
+                                    <p className="text-xs text-muted-foreground font-mono">{shortHash}</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="border-secondary text-secondary hover:bg-secondary/10"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(tx.hash).catch(() => {});
+                                      }}
+                                    >
+                                      Copy
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="border-secondary text-secondary hover:bg-secondary/10"
+                                      onClick={() => {
+                                        window.open(`${explorer}/tx/${tx.hash}`, "_blank", "noopener,noreferrer");
+                                      }}
+                                    >
+                                      View
+                                      <ArrowUpRight className="w-4 h-4 ml-1" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="h-px bg-border/50 my-2" />
+
+                      {[
+                        {
+                          label: "Core Game Contract",
+                          address: "0x4aCfb1a2Dc270846A7913757189543e4C18F7826",
+                        },
                         {
                           label: "Answer Submissions",
                           address: "0x73d377634F906fD24fE342fd95182c3c80bCFe49",
@@ -143,46 +200,44 @@ const WalletScreen = () => {
                           label: "Leaderboard",
                           address: "0x9663dA1163842cfbac83D382Bdf331227d012114",
                         },
-                ].map((entry) => {
-                  const shortAddress = `${entry.address.slice(0, 4)}...${entry.address.slice(-4)}`;
-                  return (
-                  <div
-                    key={entry.address}
-                    className="flex items-center justify-between p-3 rounded-xl glass"
-                  >
-                    <div   style={{textAlign:'left'}}>
-                      <p className="font-medium text-foreground">{entry.label}</p>
-                      <p className="text-xs text-muted-foreground">{shortAddress}</p>
+                      ].map((entry) => {
+                        const shortAddress = `${entry.address.slice(0, 4)}...${entry.address.slice(-4)}`;
+                        return (
+                          <div
+                            key={entry.address}
+                            className="flex items-center justify-between p-3 rounded-xl glass"
+                          >
+                            <div style={{ textAlign: "left" }}>
+                              <p className="font-medium text-foreground">{entry.label}</p>
+                              <p className="text-xs text-muted-foreground">{shortAddress}</p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-secondary text-secondary hover:bg-secondary/10"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(entry.address).catch(() => {});
+                                }}
+                              >
+                                Copy
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-secondary text-secondary hover:bg-secondary/10"
+                                onClick={() => {
+                                  window.open(`${explorer}/address/${entry.address}`, "_blank", "noopener,noreferrer");
+                                }}
+                              >
+                                View
+                                <ArrowUpRight className="w-4 h-4 ml-1" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-secondary text-secondary hover:bg-secondary/10"
-                        onClick={() => {
-                          navigator.clipboard.writeText(entry.address).catch(() => {});
-                        }}
-                      >
-                        Copy
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-secondary text-secondary hover:bg-secondary/10"
-                        onClick={() => {
-                          const explorer = networkConfig.blockExplorers?.default?.url || "https://chainscan.0g.ai";
-                          const url = `${explorer}/address/${entry.address}`;
-                          window.open(url, "_blank", "noopener,noreferrer");
-                        }}
-                      >
-                        View
-                        <ArrowUpRight className="w-4 h-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-                })}
-              </div>
             </motion.div>
           )}
               </AnimatePresence>
