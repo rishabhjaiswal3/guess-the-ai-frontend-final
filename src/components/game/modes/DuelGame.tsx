@@ -19,7 +19,7 @@ interface DuelGameProps {
 type DuelMode = "normal" | "speed";
 
 const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
-  const [gameMode, setGameMode] = useState<DuelMode | null>(null);
+  const [gameMode, setGameMode] = useState<DuelMode>("normal");
   const [images, setImages] = useState<[ModeQuestionImage | null, ModeQuestionImage | null]>([null, null]);
   const [targetLabel, setTargetLabel] = useState<"ai" | "human">("ai");
   const [promptText, setPromptText] = useState<string>("Two images. Pick the right one!");

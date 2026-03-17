@@ -39,13 +39,29 @@ const AuthContext = createContext<{
   updateProfileUsername: async () => false,
 });
 
-const getWalletAddress = (user?: User | null) => {
+/** Returns the external (non-embedded) wallet address, or empty string. */
+const getExternalWalletAddress = (user?: User | null) => {
   if (!user) return "";
-  if (user.wallet?.address) return user.wallet.address;
-  const linkedWallet = (user.linkedAccounts as Array<{ type?: string; address?: string }>)?.find(
-    (account) => account.type === "wallet" && account.address
+  const linked = (user.linkedAccounts ?? []) as Array<Record<string, any>>;
+  const externalWallet = linked.find(
+    (account) => account.type === "wallet" && account.address && account.connectorType !== "embedded"
   );
-  return linkedWallet?.address ?? "";
+  return externalWallet?.address ?? "";
+};
+
+/** Returns the embedded wallet address, or empty string. */
+const getEmbeddedWalletAddress = (user?: User | null) => {
+  if (!user) return "";
+  const linked = (user.linkedAccounts ?? []) as Array<Record<string, any>>;
+  const embeddedWallet = linked.find(
+    (account) => account.type === "wallet" && account.address && account.connectorType === "embedded"
+  );
+  if (embeddedWallet?.address) return embeddedWallet.address;
+  // Fallback: if primary wallet is embedded
+  if ((user.wallet as any)?.connectorType === "embedded" && user.wallet?.address) {
+    return user.wallet.address;
+  }
+  return "";
 };
 
 const getLinkedAccountType = (linked: Array<{ type?: string }> = []) => {
@@ -76,12 +92,11 @@ const getPrivyAccountType = (user?: User | null) => {
 
 const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => {
   if (!user) return null;
-  const address = getWalletAddress(user);
   const linked = (user.linkedAccounts ?? []) as Array<Record<string, any>>;
   const discordAccount = linked.find((account) => account.type === "discord_oauth");
   const googleAccount = linked.find((account) => account.type === "google_oauth");
   const emailAccount = linked.find((account) => account.type === "email");
-  const walletAccount = linked.find((account) => account.type === "wallet");
+  const walletAccount = linked.find((account) => account.type === "wallet" && account.connectorType !== "embedded");
 
   const discordUsername = discordAccount?.username || discordAccount?.email || discordAccount?.subject;
   const discordUserId = discordAccount?.subject || discordAccount?.id;
@@ -99,9 +114,16 @@ const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => 
     linked.find((a) => a.providerName)?.providerName ||
     linked.find((a) => a.provider)?.provider;
 
+  // Separate external wallet (MetaMask etc.) from embedded wallet (Privy-managed).
+  // The backend uses walletAddress as the primary key for external wallets and
+  // privyMetaData.embeddedWalletAddress to attach embedded wallets to an account.
+  const externalAddress = getExternalWalletAddress(user);
+  const embeddedAddress = getEmbeddedWalletAddress(user);
+
   const payload: LoginRequest = {};
   if (user.id) payload.privyUserId = user.id;
-  if (address) payload.walletAddress = address;
+  // Only send walletAddress if it is an external wallet — embedded wallet goes in privyMetaData only
+  if (externalAddress) payload.walletAddress = externalAddress;
   if (resolvedEmail) payload.email = resolvedEmail;
   if (discordUsername) payload.discord = discordUsername;
   if (discordUserId) payload.discordUserId = discordUserId;
@@ -112,8 +134,9 @@ const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => 
     payload.privyMetaData = {
       ...(payload.privyMetaData ?? {}),
       type: accountType,
-      address,
-      walletAddress: address,
+      address: externalAddress || embeddedAddress,
+      walletAddress: externalAddress || embeddedAddress,
+      ...(embeddedAddress ? { embeddedWalletAddress: embeddedAddress } : {}),
       email: resolvedEmail,
       discord: discordUsername,
       discordUserId,
