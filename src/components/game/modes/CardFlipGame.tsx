@@ -4,6 +4,8 @@ import { ArrowLeft, Bot, UserRound, RotateCcw, CheckCircle, XCircle } from "luci
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ScreenShake from "@/components/effects/ScreenShake";
+import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import confetti from "canvas-confetti";
 import {
   getCardFlipDeck,
@@ -21,24 +23,23 @@ interface CardState {
 
 interface CardFlipGameProps {
   onBack: () => void;
-  onScoreUpdate: (points: number) => void;
+  onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
 }
 
 const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
   const [cards, setCards] = useState<CardState[]>([]);
   const [activeCard, setActiveCard] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [isShuffling, setIsShuffling] = useState(true);
   const [showFinalScore, setShowFinalScore] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
+  const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const initGame = useCallback(async () => {
     setIsShuffling(true);
     setShowFinalScore(false);
     setActiveCard(null);
-    setScore(0);
     setAnsweredCount(0);
     setCorrectCount(0);
 
@@ -87,6 +88,13 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
       });
       isCorrect = Boolean(response?.results?.[0]?.isCorrect);
       awardedPoints = Number(response?.score?.delta || 0);
+      const nextStats = applyProfileStats(response?.profile, {
+        score: score + Math.max(0, awardedPoints),
+        streak: isCorrect ? streak + 1 : 0,
+        bestStreak: isCorrect ? Math.max(bestStreak, streak + 1) : bestStreak,
+      });
+      onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
+      refreshProfile().catch(() => {});
     } catch {
       isCorrect = false;
       awardedPoints = 0;
@@ -101,9 +109,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
     );
 
     if (isCorrect) {
-      setScore((prev) => prev + awardedPoints);
       setCorrectCount((prev) => prev + 1);
-      onScoreUpdate(awardedPoints);
 
       if ((correctCount + 1) % 5 === 0) {
         confetti({
@@ -188,17 +194,14 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
   return (
     <ScreenShake trigger={shakeScreen} intensity={10}>
       <div className="flex flex-col items-center px-3 pt-[4.5rem] pb-24">
-        <div className="flex items-center justify-between w-full max-w-2xl mb-3">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Modes
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="glass px-3 py-1.5 rounded-full text-sm">
-              <span className="text-muted-foreground">{answeredCount}</span>
-              <span className="text-muted-foreground">/{cards.length || 20}</span>
-            </div>
-            <div className="glass px-3 py-1.5 rounded-full text-sm font-bold gradient-text">{score} pts</div>
+        <div className="w-full max-w-2xl">
+          <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
+        </div>
+
+        <div className="flex justify-end w-full max-w-2xl mb-3">
+          <div className="glass px-3 py-1.5 rounded-full text-sm">
+            <span className="text-muted-foreground">{answeredCount}</span>
+            <span className="text-muted-foreground">/{cards.length || 20}</span>
           </div>
         </div>
 

@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Swords, CheckCircle, XCircle, RotateCcw, Zap, Timer } from "lucide-react";
+import { ArrowLeft, Swords, CheckCircle, XCircle, RotateCcw, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
+import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import confetti from "canvas-confetti";
 import {
   getDuelQuestion,
@@ -13,13 +15,13 @@ import {
 
 interface DuelGameProps {
   onBack: () => void;
-  onScoreUpdate: (points: number) => void;
+  onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
 }
 
 type DuelMode = "normal" | "speed";
 
 const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
-  const [gameMode, setGameMode] = useState<DuelMode>("normal");
+  const gameMode: DuelMode = "normal";
   const [images, setImages] = useState<[ModeQuestionImage | null, ModeQuestionImage | null]>([null, null]);
   const [targetLabel, setTargetLabel] = useState<"ai" | "human">("ai");
   const [promptText, setPromptText] = useState<string>("Two images. Pick the right one!");
@@ -27,18 +29,15 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [round, setRound] = useState(1);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(3);
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
   const [lastRoundPoints, setLastRoundPoints] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
-    if (!gameMode) return;
-
     setIsLoading(true);
     setSelectedPosition(null);
     setShowResult(false);
@@ -59,12 +58,10 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   };
 
   useEffect(() => {
-    if (gameMode) {
-      loadNewRound();
-      if (gameMode === "speed") {
-        setLives(3);
-        setGameOver(false);
-      }
+    loadNewRound();
+    if (gameMode === "speed") {
+      setLives(3);
+      setGameOver(false);
     }
   }, [gameMode]);
 
@@ -106,7 +103,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
         hashes: [images[0].hash, images[1].hash],
         selectedHash: selectedImage.hash,
         askingFor: targetLabel,
-        variant: gameMode || "normal",
+        variant: gameMode,
       });
 
       const results = response.results || [];
@@ -117,15 +114,17 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
       const selectedResult = results.find((item) => item.hash === selectedImage.hash);
       const isCorrect = Boolean(selectedResult?.isCorrect);
       const points = Number(response?.score?.delta || 0);
+      const nextStats = applyProfileStats(response?.profile, {
+        score: score + Math.max(0, points),
+        streak: isCorrect ? streak + 1 : 0,
+        bestStreak: isCorrect ? Math.max(bestStreak, streak + 1) : bestStreak,
+      });
       setLastRoundPoints(points);
-
       setShowResult(true);
+      refreshProfile().catch(() => {});
+      onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
 
       if (isCorrect) {
-        setScore((prev) => prev + points);
-        setStreak((prev) => prev + 1);
-        onScoreUpdate(points);
-
         if ((streak + 1) % 3 === 0) {
           confetti({
             particleCount: 50,
@@ -134,15 +133,10 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
             colors: ["#00FFFF", "#FF00FF"],
           });
         }
-      } else {
-        setScore((prev) => prev + points);
-        onScoreUpdate(points);
-        setStreak(0);
-        if (gameMode === "speed") {
-          const nextLives = lives - 1;
-          setLives(nextLives);
-          if (nextLives <= 0) setGameOver(true);
-        }
+      } else if (gameMode === "speed") {
+        const nextLives = lives - 1;
+        setLives(nextLives);
+        if (nextLives <= 0) setGameOver(true);
       }
     } catch {
       setShowResult(false);
@@ -155,8 +149,11 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   };
 
   const handleRestart = () => {
-    setScore(0);
-    setStreak(0);
+    applyProfileStats(undefined, {
+      score,
+      streak: 0,
+      bestStreak,
+    });
     setRound(1);
     setLives(3);
     setGameOver(false);
@@ -164,60 +161,6 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   };
 
   const isCorrect = selectedPosition !== null && selectedPosition === correctPosition;
-
-  if (!gameMode) {
-    return (
-      <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
-        <div className="max-w-lg mx-auto">
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-            <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </motion.div>
-
-          <GlowingBorder glowColor="cyan" intensity="medium" className="rounded-3xl mb-8">
-            <div className="glass-strong rounded-3xl p-6 text-center">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <Swords className="w-8 h-8 text-primary" />
-                <h2 className="text-2xl font-black gradient-text">DUEL MODE</h2>
-                <Swords className="w-8 h-8 text-primary transform scale-x-[-1]" />
-              </div>
-              <p className="text-muted-foreground">Choose your challenge</p>
-            </div>
-          </GlowingBorder>
-
-          <div className="grid grid-cols-1 gap-4">
-            <motion.button initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setGameMode("normal")} className="glass-strong rounded-2xl p-6 text-left group hover:border-primary/50 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                  <Timer className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Normal Mode</h3>
-                  <p className="text-sm text-muted-foreground">Take your time, no pressure</p>
-                </div>
-                <span className="text-2xl opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-              </div>
-            </motion.button>
-
-            <motion.button initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setGameMode("speed")} className="glass-strong rounded-2xl p-6 text-left group hover:border-secondary/50 transition-all">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-yellow to-orange-500 flex items-center justify-center">
-                  <Zap className="w-7 h-7 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-foreground mb-1">Speed Blitz</h3>
-                  <p className="text-sm text-muted-foreground">3 seconds only! 3 lives!</p>
-                </div>
-                <span className="px-2 py-1 rounded-full text-xs font-bold bg-destructive/20 text-destructive">Expert</span>
-              </div>
-            </motion.button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (gameOver) {
     return (
@@ -236,7 +179,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={() => setGameMode(null)} variant="outline" className="flex-1">
+                <Button onClick={onBack} variant="outline" className="flex-1">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Back
                 </Button>
@@ -255,22 +198,20 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   return (
     <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
       <div className="max-w-lg mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={() => setGameMode(null)} className="text-muted-foreground">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex items-center gap-4">
-            {gameMode === "speed" && (
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <span key={i} className={`text-lg ${i < lives ? "" : "opacity-30"}`}>❤️</span>
-                ))}
-              </div>
-            )}
-            <span className="text-orange font-bold">🔥 {streak}</span>
-            <div className="glass px-4 py-2 rounded-full font-bold text-primary">Score: {score}</div>
-          </div>
+        <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
+
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
+          {gameMode === "speed" ? (
+            <div className="flex gap-1">
+              {[...Array(3)].map((_, i) => (
+                <span key={i} className={`text-lg ${i < lives ? "" : "opacity-30"}`}>❤️</span>
+              ))}
+            </div>
+          ) : (
+            <div className="glass px-4 py-2 rounded-full text-sm text-muted-foreground">
+              Round {round}
+            </div>
+          )}
         </motion.div>
 
         <GlowingBorder glowColor={gameMode === "speed" ? "rainbow" : "cyan"} intensity="medium" className="rounded-3xl mb-6">

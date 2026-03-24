@@ -27,15 +27,7 @@ const GameScreen = ({ onScoreUpdate }: GameScreenProps) => {
     setSelectedMode(null);
   };
 
-  const handleScoreUpdate = useCallback((points: number) => {
-    setTotalScore(prev => {
-      const newScore = prev + points;
-      onScoreUpdate(newScore, totalStreak, bestStreak);
-      return newScore;
-    });
-  }, [totalStreak, bestStreak, onScoreUpdate]);
-
-  const handleClassicScoreUpdate = useCallback((newScore: number, newStreak: number, newBestStreak: number) => {
+  const handleScoreUpdate = useCallback((newScore: number, newStreak: number, newBestStreak: number) => {
     setTotalScore(newScore);
     setTotalStreak(newStreak);
     setBestStreak(newBestStreak);
@@ -48,7 +40,7 @@ const GameScreen = ({ onScoreUpdate }: GameScreenProps) => {
         return (
           <ClassicGame 
             onBack={handleBack} 
-            onScoreUpdate={handleClassicScoreUpdate}
+            onScoreUpdate={handleScoreUpdate}
           />
         );
       case "multiselect":

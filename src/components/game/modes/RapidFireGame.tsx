@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Bot, UserRound, Timer, Zap, Heart, RotateCcw, Star } from "lucide-react";
+import { ArrowLeft, Bot, UserRound, Timer, Zap, Heart, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import AnimatedCounter from "@/components/effects/AnimatedCounter";
 import ScreenShake from "@/components/effects/ScreenShake";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
+import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import confetti from "canvas-confetti";
 import {
   getRapidFireQuestion,
@@ -15,12 +17,11 @@ import {
 
 interface RapidFireGameProps {
   onBack: () => void;
-  onScoreUpdate: (points: number) => void;
+  onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
 }
 
 const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   const [currentImage, setCurrentImage] = useState<ModeQuestionImage | null>(null);
-  const [score, setScore] = useState(0);
   const [lives, setLives] = useState(3);
   const [timeLeft, setTimeLeft] = useState(30);
   const [isGameActive, setIsGameActive] = useState(false);
@@ -32,6 +33,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNextImage = useCallback(async () => {
     setIsLoading(true);
@@ -70,7 +72,6 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   }, [isGameActive, gameOver, handleGameOver]);
 
   const handleStart = () => {
-    setScore(0);
     setLives(3);
     setTimeLeft(30);
     setCombo(0);
@@ -98,6 +99,13 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
       });
       isCorrect = Boolean(response?.results?.[0]?.isCorrect);
       points = Number(response?.score?.delta || 0);
+      const nextStats = applyProfileStats(response?.profile, {
+        score: score + Math.max(0, points),
+        streak: isCorrect ? streak + 1 : 0,
+        bestStreak: isCorrect ? Math.max(bestStreak, streak + 1) : bestStreak,
+      });
+      onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
+      refreshProfile().catch(() => {});
     } catch {
       isCorrect = false;
       points = 0;
@@ -108,9 +116,6 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
       const newCombo = combo + 1;
       setCombo(newCombo);
       setCorrectAnswers((prev) => prev + 1);
-
-      setScore((prev) => prev + points);
-      onScoreUpdate(points);
 
       if (newCombo % 5 === 0) {
         confetti({
@@ -123,8 +128,6 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
     } else {
       setShowResult("wrong");
       setCombo(0);
-      setScore((prev) => prev + points);
-      onScoreUpdate(points);
       const newLives = lives - 1;
       setLives(newLives);
       setShakeScreen(true);
@@ -240,12 +243,9 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   return (
     <ScreenShake trigger={shakeScreen} intensity={15}>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between w-full max-w-md mb-4">
-          <Button variant="ghost" size="sm" onClick={handleGameOver} className="text-muted-foreground">
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Quit
-          </Button>
+        <ClassicStatsBar streak={streak} score={score} onBack={handleGameOver} />
 
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-end gap-3 w-full max-w-md mb-4">
           <div className={`glass px-3 py-1.5 rounded-full flex items-center gap-1.5 ${timeLeft <= 10 ? "text-destructive animate-pulse" : timeLeft <= 20 ? "text-yellow" : "text-primary"}`}>
             <Timer className="w-4 h-4" />
             <span className="font-bold text-sm w-5 text-center"><AnimatedCounter value={timeLeft} /></span>
@@ -255,11 +255,6 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
             {[0, 1, 2].map((i) => (
               <motion.span key={i} animate={i >= lives ? { scale: 0.6, opacity: 0.2 } : { scale: 1, opacity: 1 }} className="text-xl">❤️</motion.span>
             ))}
-          </div>
-
-          <div className="glass px-3 py-2 rounded-full flex items-center gap-1">
-            <Star className="w-4 h-4 text-secondary fill-secondary" />
-            <AnimatedCounter value={score} className="font-bold text-lg" />
           </div>
         </motion.div>
 

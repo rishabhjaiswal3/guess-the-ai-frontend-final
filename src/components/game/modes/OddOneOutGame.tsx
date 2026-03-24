@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Eye, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Eye, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
+import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import confetti from "canvas-confetti";
 import {
   getOddOneOutQuestion,
@@ -13,7 +15,7 @@ import {
 
 interface OddOneOutGameProps {
   onBack: () => void;
-  onScoreUpdate: (points: number) => void;
+  onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
 }
 
 const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
@@ -23,10 +25,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [round, setRound] = useState(1);
-  const [score, setScore] = useState(0);
-  const [streak, setStreak] = useState(0);
   const [roundPoints, setRoundPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
     setIsLoading(true);
@@ -69,22 +70,23 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
 
       const isCorrect = index === nextOddIndex;
       const points = Number(response?.score?.delta || 0);
+      const nextStats = applyProfileStats(response?.profile, {
+        score: score + Math.max(0, points),
+        streak: isCorrect ? streak + 1 : 0,
+        bestStreak: isCorrect ? Math.max(bestStreak, streak + 1) : bestStreak,
+      });
       setRoundPoints(points);
       setShowResult(true);
+      onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
+      refreshProfile().catch(() => {});
 
       if (isCorrect) {
-        setScore((prev) => prev + points);
-        setStreak((prev) => prev + 1);
-        onScoreUpdate(points);
-
         confetti({
           particleCount: 70,
           spread: 55,
           origin: { y: 0.6 },
           colors: ["#00FFFF", "#FF00FF", "#8B5CF6"],
         });
-      } else {
-        setStreak(0);
       }
     } catch {
       setShowResult(false);
@@ -103,14 +105,11 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   return (
     <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
       <div className="max-w-lg mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <div className="flex items-center gap-4">
-            <span className="text-orange font-bold">🔥 {streak}</span>
-            <div className="glass px-4 py-2 rounded-full font-bold text-primary">Score: {score}</div>
+        <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
+
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
+          <div className="glass px-4 py-2 rounded-full text-sm text-muted-foreground">
+            Round {round}
           </div>
         </motion.div>
 
