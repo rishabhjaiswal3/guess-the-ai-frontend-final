@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Brain, LogOut, UserCircle2, Volume2, VolumeX } from "lucide-react";
+import { LogOut, UserCircle2, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import { setSoundEnabled } from "@/lib/sound";
 import { Button } from "@/components/ui/button";
@@ -37,7 +37,11 @@ const Header = ({ onLogoClick }: HeaderProps) => {
             className="relative"
           >
             <div className="w-12 h-12 rounded-xl glass-strong flex items-center justify-center">
-              <Brain className="w-7 h-7 text-primary drop-shadow-[0_0_8px_rgba(0,255,255,0.6)]" />
+              <img
+                src="/logo.png"
+                alt="Guess The AI logo"
+                className="w-9 h-9 object-contain drop-shadow-[0_0_10px_rgba(0,255,255,0.55)]"
+              />
             </div>
             <motion.div
               animate={{ rotate: 360 }}
