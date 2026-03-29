@@ -273,6 +273,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!ready || token || !authenticated) return;
     if (loginAttemptedRef.current) return;
     if (loggingOutRef.current) return; // Don't auto-login during logout
+    // Skip Privy auto-login on /auto-login route — AutoLogin.tsx handles it
+    if (window.location.pathname.includes("/auto-login")) return;
     loginAttemptedRef.current = true;
     loginWithPrivy();
   }, [ready, authenticated, token, loginWithPrivy]);

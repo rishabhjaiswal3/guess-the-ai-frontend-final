@@ -13,6 +13,10 @@ export const getStoredUsername = () => {
   return window.localStorage.getItem(USERNAME_KEY) ?? "";
 };
 
+export const setIsIframe = (isIframe: boolean) => {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("isIframe", isIframe ? "1" : "0");
+}
 export const setStoredToken = (token: string) => {
   if (typeof window === "undefined") return;
   if (token) {
@@ -84,7 +88,6 @@ export const clearJwtFromUrl = () => {
   }
 };
 
-/** Read ?walletAddress= from URL (used by the /auto-login iframe entry point). */
 export const getWalletFromUrl = () => {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("walletAddress") ?? "";
