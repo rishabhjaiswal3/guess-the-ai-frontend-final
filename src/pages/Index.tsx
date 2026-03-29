@@ -57,8 +57,6 @@ const Index = () => {
     }
   };
 
-  console.log("hello RJ")
-
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <Suspense fallback={<LoadingBackground />}>
