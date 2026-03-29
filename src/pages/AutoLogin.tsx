@@ -17,6 +17,7 @@ export default function AutoLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("HELLO auto login page");
     const walletAddress = getWalletFromUrl();
     const jwt = getJwtFromUrl();
     const inIframe = (() => {
