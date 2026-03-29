@@ -83,3 +83,18 @@ export const clearJwtFromUrl = () => {
     }
   }
 };
+
+/** Read ?walletAddress= from URL (used by the /auto-login iframe entry point). */
+export const getWalletFromUrl = () => {
+  if (typeof window === "undefined") return "";
+  return new URLSearchParams(window.location.search).get("walletAddress") ?? "";
+};
+
+export const clearWalletFromUrl = () => {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("walletAddress")) {
+    url.searchParams.delete("walletAddress");
+    window.history.replaceState({}, "", url.toString());
+  }
+};
