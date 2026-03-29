@@ -11,6 +11,8 @@ import {
   setStoredUsername,
 } from "@/lib/session";
 
+const DEPLOY_MARKER = "AUTO_LOGIN_DEPLOY_CHECK_V1";
+
 export default function AutoLogin() {
   const navigate = useNavigate();
 
@@ -25,9 +27,19 @@ export default function AutoLogin() {
       }
     })();
 
+    console.log("[AutoLogin] page mounted", {
+      marker: DEPLOY_MARKER,
+      href: window.location.href,
+      walletAddress,
+      hasJwt: Boolean(jwt),
+      inIframe,
+      timestamp: new Date().toISOString(),
+    });
+
     const complete = async () => {
       if (jwt) {
         try {
+          console.log("[AutoLogin] jwt login start", { marker: DEPLOY_MARKER });
           const response = await loginV2({ jwt, source: "browser" });
           const token = response?.data?.token ?? "";
           if (!token) navigate("/",{replace:true});
@@ -43,6 +55,10 @@ export default function AutoLogin() {
 
       if (walletAddress) {
         try {
+          console.log("[AutoLogin] wallet login start", {
+            marker: DEPLOY_MARKER,
+            walletAddress,
+          });
           const response = await loginV2({
             walletAddress,
             source: "browser"
@@ -71,8 +87,10 @@ export default function AutoLogin() {
       style={{
         minHeight: "100vh",
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 12,
         background: "#0a0a0a",
       }}
     >
@@ -86,6 +104,15 @@ export default function AutoLogin() {
           animation: "spin 0.8s linear infinite",
         }}
       />
+      <div
+        style={{
+          color: "#7ec8ff",
+          fontFamily: "monospace",
+          fontSize: 12,
+        }}
+      >
+        {DEPLOY_MARKER}
+      </div>
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
