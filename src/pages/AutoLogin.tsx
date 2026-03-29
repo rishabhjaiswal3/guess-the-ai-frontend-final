@@ -112,7 +112,7 @@ export default function AutoLogin() {
           fontSize: 12,
         }}
       >
-        {DEPLOY_MARKER}
+        Logging you in...
       </div>
       <style>{`
         @keyframes spin {
