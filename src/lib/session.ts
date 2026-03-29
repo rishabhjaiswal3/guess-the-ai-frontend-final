@@ -67,7 +67,7 @@ export const getJwtFromUrl = () => {
   if (typeof window === "undefined") return "";
   const queryParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ""));
-  return queryParams.get("jwt") || hashParams.get("jwt") || "";
+  return queryParams.get("token") || hashParams.get("token") || "";
 };
 
 export const clearJwtFromUrl = () => {
