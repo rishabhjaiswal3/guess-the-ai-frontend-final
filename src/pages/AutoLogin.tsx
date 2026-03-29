@@ -16,6 +16,14 @@ const DEPLOY_MARKER = "AUTO_LOGIN_DEPLOY_CHECK_V1";
 export default function AutoLogin() {
   const navigate = useNavigate();
 
+  const goBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
+
   useEffect(() => {
     console.log("HELLO auto login page");
     const walletAddress = getWalletFromUrl();
@@ -37,7 +45,18 @@ export default function AutoLogin() {
       timestamp: new Date().toISOString(),
     });
 
+    const timeoutId = window.setTimeout(() => {
+      console.warn("[AutoLogin] fallback timeout reached, going back");
+      goBack();
+    }, 7000);
+
     const complete = async () => {
+      if (!jwt && !walletAddress) {
+        console.warn("[AutoLogin] no auth params found, returning to previous page");
+        goBack();
+        return;
+      }
+
       if (jwt) {
         try {
           console.log("[AutoLogin] jwt login start", { marker: DEPLOY_MARKER });
@@ -80,7 +99,8 @@ export default function AutoLogin() {
       }
     };
 
-    complete();
+    complete().finally(() => window.clearTimeout(timeoutId));
+    return () => window.clearTimeout(timeoutId);
   }, [navigate]);
 
   return (
@@ -114,6 +134,22 @@ export default function AutoLogin() {
       >
         Logging you in...
       </div>
+      <button
+        onClick={goBack}
+        style={{
+          marginTop: 16,
+          padding: "10px 16px",
+          borderRadius: 999,
+          border: "1px solid rgba(126, 200, 255, 0.5)",
+          background: "transparent",
+          color: "#7ec8ff",
+          fontFamily: "monospace",
+          fontSize: 12,
+          cursor: "pointer",
+        }}
+      >
+        Go Back
+      </button>
       <style>{`
         @keyframes spin {
           to { transform: rotate(360deg); }
