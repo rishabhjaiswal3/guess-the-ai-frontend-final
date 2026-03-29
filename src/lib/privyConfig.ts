@@ -9,6 +9,9 @@ export const walletConnectProjectId =
     ? rawWalletConnectProjectId
     : "";
 
+const canUseEmbeddedWallets =
+  typeof window === "undefined" ? true : window.isSecureContext;
+
 export const privyConfig: PrivyClientConfig = {
   appearance: {
     theme: "dark",
@@ -29,9 +32,13 @@ export const privyConfig: PrivyClientConfig = {
       "universal_profile",
     ],
   },
-  embeddedWallets: {
-    createOnLogin: "users-without-wallets",
-  },
+  ...(canUseEmbeddedWallets
+    ? {
+        embeddedWallets: {
+          createOnLogin: "users-without-wallets" as const,
+        },
+      }
+    : {}),
   // Wallet + email OTP only
   loginMethods: ["wallet", "email"],
   supportedChains: [networkConfig],
