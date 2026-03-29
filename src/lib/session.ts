@@ -73,14 +73,14 @@ export const getJwtFromUrl = () => {
 export const clearJwtFromUrl = () => {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
-  if (url.searchParams.has("jwt")) {
-    url.searchParams.delete("jwt");
+  if (url.searchParams.has("token")) {
+    url.searchParams.delete("token");
     window.history.replaceState({}, "", url.toString());
   }
-  if (url.hash.includes("jwt=")) {
+  if (url.hash.includes("token=")) {
     const hashParams = new URLSearchParams(url.hash.replace(/^#\/?/, ""));
-    if (hashParams.has("jwt")) {
-      hashParams.delete("jwt");
+    if (hashParams.has("token")) {
+      hashParams.delete("token");
       const cleaned = hashParams.toString();
       url.hash = cleaned ? `#/${cleaned}` : "";
       window.history.replaceState({}, "", url.toString());
