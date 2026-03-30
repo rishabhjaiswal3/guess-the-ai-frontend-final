@@ -10,6 +10,7 @@ export type ModeQuestionImage = {
 
 export type ModeQuestionResponse = {
   mode: string;
+  roundId?: string | null;
   templateKey?: string | null;
   questionText?: string | null;
   questionSubtext?: string | null;
@@ -159,4 +160,13 @@ export const submitRapidFireAnswer = async (payload: {
     method: "POST",
     body: payload,
   });
+};
+
+export type HintResponse = {
+  ready: boolean;
+  hint?: string;
+};
+
+export const pollHint = async (roundId: string): Promise<HintResponse> => {
+  return unwrap<HintResponse>(`/game/hint/${roundId}`);
 };

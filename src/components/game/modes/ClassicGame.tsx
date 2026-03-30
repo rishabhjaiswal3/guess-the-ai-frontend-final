@@ -8,7 +8,9 @@ import { preloadImages } from "@/lib/imageUrl";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import FloatingScorePopup from "@/components/effects/FloatingScorePopup";
 import ScreenShake from "@/components/effects/ScreenShake";
+import HintBadge from "@/components/game/HintBadge";
 import { useFeedbackSound } from "@/hooks/useFeedbackSound";
+import { useHint } from "@/hooks/useHint";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
 import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
 import networkConfig from "@/lib/networkConfig";
@@ -56,6 +58,10 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const sessionIdRef = useRef<string | null>(null);
   const preloadedHashesRef = useRef<Set<string>>(new Set());
   const { playClick, playBack, playSuccess, playFail } = useFeedbackSound();
+
+  // Use the current image hash as the hint key
+  // Backend fires batch hint gen for all 10 images when /next10 is called
+  const { hint, loading: hintLoading } = useHint(currentImage?.hash || null);
 
   // Preload images from the queue
   const preloadQueueImages = useCallback(async (images: GameImageWithUrl[]) => {
@@ -517,6 +523,10 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 >
                   Submitting answer... please wait
                 </motion.div>
+              )}
+
+              {!showResult && (
+                <HintBadge hint={hint} loading={hintLoading} />
               )}
 
               <ClassicGuessButtons
