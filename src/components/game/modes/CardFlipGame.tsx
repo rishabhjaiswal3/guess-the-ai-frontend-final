@@ -233,6 +233,11 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
 
                 <div className="absolute inset-0 rounded-xl overflow-hidden border-2 border-border" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                   <img src={card.image.imageUrl || card.image.url} alt="Guess" className="w-full h-full object-cover" loading="lazy" />
+                  {card.image.percentage !== undefined && (
+                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                      <span>{card.image.percentage}%</span>
+                    </div>
+                  )}
                   {card.isAnswered && (
                     <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className={`absolute inset-0 flex items-center justify-center ${card.guessedCorrectly ? "bg-green-500/60" : "bg-destructive/60"}`}>
                       {card.guessedCorrectly ? <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-white" /> : <XCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />}

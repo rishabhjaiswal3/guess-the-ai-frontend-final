@@ -146,7 +146,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <>
+                    <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                    {images[index].percentage !== undefined && (
+                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                        <span>{images[index].percentage}%</span>
+                      </div>
+                    )}
+                  </>
                 ) : null}
 
                 <AnimatePresence>
@@ -189,7 +196,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <>
+                    <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                    {images[index].percentage !== undefined && (
+                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                        <span>{images[index].percentage}%</span>
+                      </div>
+                    )}
+                  </>
                 ) : null}
 
                 <AnimatePresence>

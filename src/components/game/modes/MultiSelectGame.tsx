@@ -156,6 +156,12 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                     }`}
                 >
                   <img src={img.imageUrl || img.url} alt="Game image" className="w-full h-full object-cover" />
+                  
+                  {img.percentage !== undefined && (
+                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                      <span>{img.percentage}%</span>
+                    </div>
+                  )}
 
                   <AnimatePresence>
                     {isSelected && !showResult && (
