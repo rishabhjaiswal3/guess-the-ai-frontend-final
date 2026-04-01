@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ScreenShake from "@/components/effects/ScreenShake";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
-import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
-import { useHint } from "@/hooks/useHint";
 import confetti from "canvas-confetti";
 import {
   getCardFlipDeck,
@@ -36,9 +34,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
   const [isShuffling, setIsShuffling] = useState(true);
   const [showFinalScore, setShowFinalScore] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
-  const [roundId, setRoundId] = useState<string | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
-  const { hint, loading: hintLoading } = useHint(roundId);
 
   const initGame = useCallback(async () => {
     setIsShuffling(true);
@@ -46,7 +42,6 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
     setActiveCard(null);
     setAnsweredCount(0);
     setCorrectCount(0);
-    setRoundId(null);
 
     try {
       const question = await getCardFlipDeck();
@@ -59,7 +54,6 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
         guessedCorrectly: null,
       }));
       setCards(newCards);
-      setRoundId(question.roundId || null);
     } catch {
       setCards([]);
     } finally {
@@ -212,7 +206,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
         </div>
 
         <div className="w-full max-w-2xl">
-          <HintBadge hint={hint} loading={hintLoading} />
+
         </div>
 
         <div className="grid grid-cols-4 md:grid-cols-5 gap-2 w-full max-w-[90vw] lg:max-w-2xl mb-4">

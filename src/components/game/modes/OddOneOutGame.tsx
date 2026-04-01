@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
-import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
-import { useHint } from "@/hooks/useHint";
 import confetti from "canvas-confetti";
 import {
   getOddOneOutQuestion,
@@ -29,23 +27,19 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [round, setRound] = useState(1);
   const [roundPoints, setRoundPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [roundId, setRoundId] = useState<string | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
-  const { hint, loading: hintLoading } = useHint(roundId);
 
   const loadNewRound = async () => {
     setIsLoading(true);
     setSelectedIndex(null);
     setShowResult(false);
     setRoundPoints(0);
-    setRoundId(null);
 
     try {
       const question = await getOddOneOutQuestion();
       setImages(question.images || []);
       setAskingFor((question.askingFor || "human") as "ai" | "human");
       setOddIndex(0);
-      setRoundId(question.roundId || null);
     } catch {
       setImages([]);
     } finally {
@@ -129,7 +123,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
           </div>
         </GlowingBorder>
 
-        {!showResult && <HintBadge hint={hint} loading={hintLoading} />}
+
 
         <div className="relative mb-6">
           <div className="grid grid-cols-3 gap-2 mb-2">

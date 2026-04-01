@@ -5,9 +5,7 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
-import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
-import { useHint } from "@/hooks/useHint";
 import confetti from "canvas-confetti";
 import {
   getMultiSelectQuestion,
@@ -30,22 +28,18 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   const [round, setRound] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [roundId, setRoundId] = useState<string | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
-  const { hint, loading: hintLoading } = useHint(roundId);
 
   const loadNewRound = async () => {
     setIsLoading(true);
     setSelectedIds(new Set());
     setShowResult(false);
     setResultMap({});
-    setRoundId(null);
 
     try {
       const question = await getMultiSelectQuestion();
       setImages(question.images || []);
       setAskingFor((question.askingFor || "ai") as "ai" | "human");
-      setRoundId(question.roundId || null);
     } catch {
       setImages([]);
     } finally {
@@ -137,7 +131,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
           </div>
         </GlowingBorder>
 
-        {!showResult && <HintBadge hint={hint} loading={hintLoading} />}
+
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
           {isLoading ? (
