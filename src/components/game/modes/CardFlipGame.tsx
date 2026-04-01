@@ -94,7 +94,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
         bestStreak: isCorrect ? Math.max(bestStreak, streak + 1) : bestStreak,
       });
       onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
-      refreshProfile().catch(() => {});
+      refreshProfile().catch(() => { });
     } catch {
       isCorrect = false;
       awardedPoints = 0;

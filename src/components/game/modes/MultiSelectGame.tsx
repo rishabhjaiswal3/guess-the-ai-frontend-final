@@ -88,7 +88,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
       setRoundScore(points);
       onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
       setShowResult(true);
-      refreshProfile().catch(() => {});
+      refreshProfile().catch(() => { });
 
       if (points > 50) {
         confetti({
@@ -152,9 +152,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => toggleSelect(img.hash)}
-                  className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                    isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
-                  }`}
+                  className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
+                    }`}
                 >
                   <img src={img.imageUrl || img.url} alt="Game image" className="w-full h-full object-cover" />
 
@@ -178,9 +177,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className={`absolute inset-0 flex items-center justify-center ${
-                          shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
-                        }`}
+                        className={`absolute inset-0 flex items-center justify-center ${shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
+                          }`}
                       >
                         {shouldSelect && (
                           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
@@ -204,9 +202,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
 
                   {showResult && (
                     <div
-                      className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${
-                        truth === "ai" ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"
-                      }`}
+                      className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${truth === "ai" ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"
+                        }`}
                     >
                       {(truth || "?").toUpperCase()}
                     </div>

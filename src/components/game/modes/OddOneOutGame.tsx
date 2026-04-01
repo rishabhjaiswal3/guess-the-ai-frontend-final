@@ -78,7 +78,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
       setRoundPoints(points);
       setShowResult(true);
       onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
-      refreshProfile().catch(() => {});
+      refreshProfile().catch(() => { });
 
       if (isCorrect) {
         confetti({
@@ -134,15 +134,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleSelect(index)}
-                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                  selectedIndex === index
+                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${selectedIndex === index
                     ? "ring-4 ring-secondary scale-95"
                     : showResult && index === oddIndex
                       ? "ring-4 ring-primary"
                       : showResult
                         ? "opacity-50"
                         : "hover:scale-[1.03]"
-                }`}
+                  }`}
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
@@ -178,15 +177,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleSelect(index)}
-                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                  selectedIndex === index
+                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${selectedIndex === index
                     ? "ring-4 ring-secondary scale-95"
                     : showResult && index === oddIndex
                       ? "ring-4 ring-primary"
                       : showResult
                         ? "opacity-50"
                         : "hover:scale-[1.03]"
-                } ${i === 1 ? "col-start-3" : "col-start-2"}`}
+                  } ${i === 1 ? "col-start-3" : "col-start-2"}`}
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />

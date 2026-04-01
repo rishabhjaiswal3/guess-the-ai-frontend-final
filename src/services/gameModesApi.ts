@@ -10,7 +10,6 @@ export type ModeQuestionImage = {
 
 export type ModeQuestionResponse = {
   mode: string;
-  roundId?: string | null;
   templateKey?: string | null;
   questionText?: string | null;
   questionSubtext?: string | null;
