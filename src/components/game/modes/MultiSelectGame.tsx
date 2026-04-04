@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, Send, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, Send, RotateCcw, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
@@ -28,6 +28,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   const [round, setRound] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
+  const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -35,6 +37,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
     setSelectedIds(new Set());
     setShowResult(false);
     setResultMap({});
+    setAiReviewRevealed(false);
+    setShowAIReviewLoader(false);
 
     try {
       const question = await getMultiSelectQuestion();
@@ -60,6 +64,14 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
+  };
+
+  const handleTakeAiReview = () => {
+    setShowAIReviewLoader(true);
+    setTimeout(() => {
+      setShowAIReviewLoader(false);
+      setAiReviewRevealed(true);
+    }, 1500);
   };
 
   const handleSubmit = async () => {
@@ -157,7 +169,20 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                 >
                   <img src={img.imageUrl || img.url} alt="Game image" className="w-full h-full object-cover" />
                   
-                  {img.percentage !== undefined && (
+                  <AnimatePresence>
+                     {showAIReviewLoader && (
+                       <motion.div
+                         initial={{ opacity: 0 }}
+                         animate={{ opacity: 1 }}
+                         exit={{ opacity: 0 }}
+                         className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-20"
+                       >
+                         <div className="w-8 h-8 border-3 border-primary/30 border-t-primary rounded-full animate-spin" />
+                       </motion.div>
+                     )}
+                  </AnimatePresence>
+
+                  {img.percentage !== undefined && aiReviewRevealed && (
                     <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                       <span>{img.percentage}%</span>
                     </div>
@@ -219,6 +244,31 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
             })
           )}
         </div>
+
+        {!isLoading && images.length > 0 && !showResult && (
+          <div className="flex justify-end mb-3">
+            {!aiReviewRevealed && (
+              <Button 
+                onClick={handleTakeAiReview}
+                disabled={showAIReviewLoader}
+                variant="outline"
+                className="h-9 glass text-cyan-400 border-cyan-500/30 font-semibold"
+              >
+                {showAIReviewLoader ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    Analyzing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Bot className="w-4 h-4" />
+                    Take AI Review
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-4">
           {!showResult ? (

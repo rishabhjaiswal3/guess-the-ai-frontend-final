@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Eye, CheckCircle, XCircle, RotateCcw, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
@@ -27,6 +27,8 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [round, setRound] = useState(1);
   const [roundPoints, setRoundPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
+  const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -34,6 +36,8 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
     setSelectedIndex(null);
     setShowResult(false);
     setRoundPoints(0);
+    setAiReviewRevealed(false);
+    setShowAIReviewLoader(false);
 
     try {
       const question = await getOddOneOutQuestion();
@@ -50,6 +54,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   useEffect(() => {
     loadNewRound();
   }, []);
+
+  const handleTakeAiReview = () => {
+    setShowAIReviewLoader(true);
+    setTimeout(() => {
+      setShowAIReviewLoader(false);
+      setAiReviewRevealed(true);
+    }, 1500);
+  };
 
   const handleSelect = async (index: number) => {
     if (showResult || !images[index]) return;
@@ -255,7 +267,30 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
         </AnimatePresence>
 
         {!showResult && !isLoading && (
-          <p className="text-center text-muted-foreground text-sm">Find the {oddLabel} among the {majorityLabel} images</p>
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-center text-muted-foreground text-sm">Find the {oddLabel} among the {majorityLabel} images</p>
+            
+            {!aiReviewRevealed && (
+              <Button 
+                onClick={handleTakeAiReview}
+                disabled={showAIReviewLoader}
+                variant="outline"
+                className="h-9 glass text-cyan-400 border-cyan-500/30 font-semibold"
+              >
+                {showAIReviewLoader ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    Analyzing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Bot className="w-4 h-4" />
+                    Take AI Review
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

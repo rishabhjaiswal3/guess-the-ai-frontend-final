@@ -34,6 +34,8 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
   const [isShuffling, setIsShuffling] = useState(true);
   const [showFinalScore, setShowFinalScore] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
+  const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
+  const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const initGame = useCallback(async () => {
@@ -42,6 +44,8 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
     setActiveCard(null);
     setAnsweredCount(0);
     setCorrectCount(0);
+    setAiReviewRevealed(false);
+    setShowAIReviewLoader(false);
 
     try {
       const question = await getCardFlipDeck();
@@ -72,6 +76,14 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
 
     setCards((prev) => prev.map((c) => (c.id === cardId ? { ...c, isFlipped: true } : c)));
     setActiveCard(cardId);
+  };
+
+  const handleTakeAiReview = () => {
+    setShowAIReviewLoader(true);
+    setTimeout(() => {
+      setShowAIReviewLoader(false);
+      setAiReviewRevealed(true);
+    }, 1500);
   };
 
   const handleGuess = async (guessedAI: boolean) => {
@@ -198,15 +210,33 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
           <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
         </div>
 
-        <div className="flex justify-end w-full max-w-2xl mb-3">
+        <div className="flex justify-between items-center w-full max-w-2xl mb-3">
+          {cards.length > 0 && !showFinalScore && !aiReviewRevealed ? (
+            <Button 
+              onClick={handleTakeAiReview}
+              disabled={showAIReviewLoader || isShuffling}
+              variant="outline"
+              className="h-8 glass text-cyan-400 border-cyan-500/30 font-semibold"
+            >
+              {showAIReviewLoader ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                  Analyzing...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Bot className="w-4 h-4" />
+                  Take AI Review
+                </span>
+              )}
+            </Button>
+          ) : (
+            <div />
+          )}
           <div className="glass px-3 py-1.5 rounded-full text-sm">
             <span className="text-muted-foreground">{answeredCount}</span>
             <span className="text-muted-foreground">/{cards.length || 20}</span>
           </div>
-        </div>
-
-        <div className="w-full max-w-2xl">
-
         </div>
 
         <div className="grid grid-cols-4 md:grid-cols-5 gap-2 w-full max-w-[90vw] lg:max-w-2xl mb-4">
@@ -233,7 +263,21 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
 
                 <div className="absolute inset-0 rounded-xl overflow-hidden border-2 border-border" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
                   <img src={card.image.imageUrl || card.image.url} alt="Guess" className="w-full h-full object-cover" loading="lazy" />
-                  {card.image.percentage !== undefined && (
+                  
+                  <AnimatePresence>
+                    {showAIReviewLoader && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none"
+                      >
+                        <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {card.image.percentage !== undefined && aiReviewRevealed && (
                     <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                       <span>{card.image.percentage}%</span>
                     </div>
