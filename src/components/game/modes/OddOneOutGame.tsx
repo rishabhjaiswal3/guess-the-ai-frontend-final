@@ -29,6 +29,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
   const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
+  const [loadedImagesCount, setLoadedImagesCount] = useState(0);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -38,6 +39,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
     setRoundPoints(0);
     setAiReviewRevealed(false);
     setShowAIReviewLoader(false);
+    setLoadedImagesCount(0);
 
     try {
       const question = await getOddOneOutQuestion();
@@ -155,12 +157,15 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                         : "hover:scale-[1.03]"
                   }`}
               >
-                {isLoading ? (
-                  <ImageSkeleton className="absolute inset-0 rounded-none" />
-                ) : images[index] ? (
+                {images[index] ? (
                   <>
-                    <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
-                    {images[index].percentage !== undefined && (
+                    <img 
+                      src={images[index].imageUrl || images[index].url} 
+                      alt={`Image ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                      onLoad={() => setLoadedImagesCount(prev => prev + 1)}
+                    />
+                    {images[index].percentage !== undefined && aiReviewRevealed && (
                       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                         <span>{images[index].percentage}%</span>
                       </div>
@@ -236,6 +241,20 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
               </motion.div>
             ))}
           </div>
+
+          <AnimatePresence>
+            {showAIReviewLoader && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+              >
+                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                <span className="font-bold text-cyan-400 animate-pulse tracking-wider">AI IS ANALYZING...</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AnimatePresence>
@@ -266,7 +285,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
           )}
         </AnimatePresence>
 
-        {!showResult && !isLoading && (
+        {(!isLoading && images.length > 0 && loadedImagesCount >= images.length) && !showResult && (
           <div className="flex flex-col items-center gap-4">
             <p className="text-center text-muted-foreground text-sm">Find the {oddLabel} among the {majorityLabel} images</p>
             

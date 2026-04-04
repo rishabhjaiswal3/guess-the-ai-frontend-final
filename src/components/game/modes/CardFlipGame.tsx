@@ -36,6 +36,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
   const [shakeScreen, setShakeScreen] = useState(false);
   const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
   const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
+  const [loadedImagesCount, setLoadedImagesCount] = useState(0);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const initGame = useCallback(async () => {
@@ -46,6 +47,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
     setCorrectCount(0);
     setAiReviewRevealed(false);
     setShowAIReviewLoader(false);
+    setLoadedImagesCount(0);
 
     try {
       const question = await getCardFlipDeck();
@@ -211,7 +213,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
         </div>
 
         <div className="flex justify-between items-center w-full max-w-2xl mb-3">
-          {cards.length > 0 && !showFinalScore && !aiReviewRevealed ? (
+          {(cards.length > 0 && loadedImagesCount >= cards.length && !showFinalScore && !aiReviewRevealed) ? (
             <Button 
               onClick={handleTakeAiReview}
               disabled={showAIReviewLoader || isShuffling}
@@ -239,7 +241,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 md:grid-cols-5 gap-2 w-full max-w-[90vw] lg:max-w-2xl mb-4">
+        <div className="relative grid grid-cols-4 md:grid-cols-5 gap-2 w-full max-w-[90vw] lg:max-w-2xl mb-4">
           {cards.map((card, index) => (
             <motion.div
               key={card.id}
@@ -262,21 +264,13 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
                 </div>
 
                 <div className="absolute inset-0 rounded-xl overflow-hidden border-2 border-border" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                  <img src={card.image.imageUrl || card.image.url} alt="Guess" className="w-full h-full object-cover" loading="lazy" />
+                  <img 
+                    src={card.image.imageUrl || card.image.url} 
+                    alt="Guess" 
+                    className="w-full h-full object-cover" 
+                    onLoad={() => setLoadedImagesCount(prev => prev + 1)}
+                  />
                   
-                  <AnimatePresence>
-                    {showAIReviewLoader && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none"
-                      >
-                        <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-
                   {card.image.percentage !== undefined && aiReviewRevealed && (
                     <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                       <span>{card.image.percentage}%</span>
@@ -291,6 +285,20 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
               </motion.div>
             </motion.div>
           ))}
+
+          <AnimatePresence>
+            {showAIReviewLoader && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl pointer-events-none"
+              >
+                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                <span className="font-bold text-cyan-400 animate-pulse tracking-wider">AI IS ANALYZING...</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AnimatePresence>
