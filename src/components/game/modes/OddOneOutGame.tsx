@@ -210,12 +210,15 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                         : "hover:scale-[1.03]"
                   } ${i === 1 ? "col-start-3" : "col-start-2"}`}
               >
-                {isLoading ? (
-                  <ImageSkeleton className="absolute inset-0 rounded-none" />
-                ) : images[index] ? (
+                {images[index] ? (
                   <>
-                    <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
-                    {images[index].percentage !== undefined && (
+                    <img 
+                      src={images[index].imageUrl || images[index].url} 
+                      alt={`Image ${index + 1}`} 
+                      className="w-full h-full object-cover" 
+                      onLoad={() => setLoadedImagesCount(prev => prev + 1)}
+                    />
+                    {images[index].percentage !== undefined && aiReviewRevealed && (
                       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                         <span>{images[index].percentage}%</span>
                       </div>
