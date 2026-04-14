@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { LogOut, UserCircle2, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import { setSoundEnabled } from "@/lib/sound";
+import { getStoredSource } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -12,6 +13,7 @@ interface HeaderProps {
 const Header = ({ onLogoClick }: HeaderProps) => {
   const [soundOn, setSoundOn] = useState(true);
   const { token, username, logout } = useAuth();
+  const shouldHideLogout = getStoredSource() === "browser";
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 px-4 py-3 bg-background/60 backdrop-blur-xl border-b border-border/30">
@@ -80,7 +82,7 @@ const Header = ({ onLogoClick }: HeaderProps) => {
             </div>
           ) : null}
 
-          {token ? (
+          {token && !shouldHideLogout ? (
             <Button
               variant="outline"
               size="sm"

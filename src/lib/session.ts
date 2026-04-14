@@ -1,5 +1,6 @@
 const TOKEN_KEY = "token";
 const USERNAME_KEY = "username";
+const SOURCE_KEY = "source";
 const TOKEN_EVENT = "auth:token-change";
 const USERNAME_EVENT = "auth:username-change";
 
@@ -11,6 +12,11 @@ export const getStoredToken = () => {
 export const getStoredUsername = () => {
   if (typeof window === "undefined") return "";
   return window.localStorage.getItem(USERNAME_KEY) ?? "";
+};
+
+export const getStoredSource = () => {
+  if (typeof window === "undefined") return "";
+  return window.localStorage.getItem(SOURCE_KEY) ?? "";
 };
 
 export const setIsIframe = (isIframe: boolean) => {
@@ -37,10 +43,20 @@ export const setStoredUsername = (username: string) => {
   window.dispatchEvent(new CustomEvent(USERNAME_EVENT, { detail: username }));
 };
 
+export const setStoredSource = (source: string) => {
+  if (typeof window === "undefined") return;
+  if (source) {
+    window.localStorage.setItem(SOURCE_KEY, source);
+  } else {
+    window.localStorage.removeItem(SOURCE_KEY);
+  }
+};
+
 export const clearStoredSession = () => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(TOKEN_KEY);
   window.localStorage.removeItem(USERNAME_KEY);
+  window.localStorage.removeItem(SOURCE_KEY);
   window.dispatchEvent(new CustomEvent(TOKEN_EVENT, { detail: "" }));
   window.dispatchEvent(new CustomEvent(USERNAME_EVENT, { detail: "" }));
 };
@@ -67,25 +83,32 @@ export const getJwtFromUrl = () => {
   if (typeof window === "undefined") return "";
   const queryParams = new URLSearchParams(window.location.search);
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ""));
-  return queryParams.get("token") || hashParams.get("token") || "";
+  return queryParams.get("jwt") || hashParams.get("jwt") || "";
 };
 
 export const clearJwtFromUrl = () => {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
-  if (url.searchParams.has("token")) {
-    url.searchParams.delete("token");
+  if (url.searchParams.has("jwt")) {
+    url.searchParams.delete("jwt");
     window.history.replaceState({}, "", url.toString());
   }
-  if (url.hash.includes("token=")) {
+  if (url.hash.includes("jwt=")) {
     const hashParams = new URLSearchParams(url.hash.replace(/^#\/?/, ""));
-    if (hashParams.has("token")) {
-      hashParams.delete("token");
+    if (hashParams.has("jwt")) {
+      hashParams.delete("jwt");
       const cleaned = hashParams.toString();
       url.hash = cleaned ? `#/${cleaned}` : "";
       window.history.replaceState({}, "", url.toString());
     }
   }
+};
+
+export const getSourceFromUrl = () => {
+  if (typeof window === "undefined") return "";
+  const queryParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#\/?/, ""));
+  return queryParams.get("source") || hashParams.get("source") || "";
 };
 
 export const getWalletFromUrl = () => {
