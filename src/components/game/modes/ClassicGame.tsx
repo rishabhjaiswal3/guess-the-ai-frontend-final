@@ -385,7 +385,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
             </div>
           ) : null}
 
-          <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="rounded-3xl">
+          <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="rounded-3xl w-full max-w-lg">
             <motion.div
               ref={gameCardRef}
               initial={{ opacity: 0, scale: 0.9 }}
@@ -417,8 +417,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 )}
               </div>
 
-              <div className="relative rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border min-w-[340px] min-h-[300px]">
-                <div className="w-full" style={{ paddingBottom: '75%' }} />
+              <div className="relative rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border w-full" style={{ aspectRatio: '4/3', maxHeight: '55vh' }}>
 
                 <AnimatePresence mode="wait">
                   {currentImage && !isLoading && (

@@ -48,12 +48,13 @@ const HintBadge = ({ hint, loading }: HintBadgeProps) => {
         ) : hint && revealed ? (
           /* Hint revealed */
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/20"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="w-full flex items-start gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/20 overflow-hidden"
           >
             <Lightbulb className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-200/90 leading-snug">{hint}</p>
+            <p className="text-sm text-amber-200/90 leading-snug min-w-0">{hint}</p>
           </motion.div>
         ) : null}
       </motion.div>
