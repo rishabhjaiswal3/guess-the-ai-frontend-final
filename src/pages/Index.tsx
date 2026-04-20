@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense, lazy, useEffect, useRef } from "react";
+import { useState, useCallback, Suspense, lazy, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav, { TabType } from "@/components/BottomNav";
@@ -8,9 +8,6 @@ import ProfileScreen from "@/components/game/ProfileScreen";
 import WalletScreen from "@/components/game/WalletScreen";
 import AuthGate from "@/components/auth/AuthGate";
 import { useAuth } from "@/context/AuthContext";
-import { useGameRecorder } from "@/hooks/useGameRecorder";
-import RecordingWidget from "@/components/game/RecordingWidget";
-import ReplayModal from "@/components/game/ReplayModal";
 
 // Lazy load the 3D background for better performance
 const Background3D = lazy(() => import("@/components/Background3D"));
@@ -27,15 +24,6 @@ const Index = () => {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const { token } = useAuth();
-  
-  const { 
-    startRecording, 
-    stopRecording, 
-    isRecording, 
-    videoBlob, 
-    stats, 
-    clearRecording 
-  } = useGameRecorder();
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -53,15 +41,6 @@ const Index = () => {
     setStreak(newStreak);
     setBestStreak(newBestStreak);
   }, []);
-
-  const handleStartRec = () => {
-    const canvas = document.querySelector("canvas");
-    if (canvas) {
-      startRecording(canvas);
-    } else {
-      console.warn("[Recorder] No canvas found to record");
-    }
-  };
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -85,20 +64,6 @@ const Index = () => {
       </Suspense>
       
       <Header onLogoClick={() => setActiveTab("game")} />
-
-      {token && (
-        <RecordingWidget 
-          isRecording={isRecording} 
-          onStart={handleStartRec} 
-          onStop={stopRecording} 
-          stats={stats}
-        />
-      )}
-
-      <ReplayModal 
-        blob={videoBlob} 
-        onClose={clearRecording} 
-      />
       
       <main className="relative z-10">
         <AuthGate>
