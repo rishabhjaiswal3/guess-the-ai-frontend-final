@@ -5,9 +5,11 @@ import {
   clearJwtFromUrl,
   clearWalletFromUrl,
   getJwtFromUrl,
+  getSourceFromUrl,
   getWalletFromUrl,
   setStoredToken,
   setIsIframe, 
+  setStoredSource,
   setStoredUsername,
 } from "@/lib/session";
 
@@ -28,6 +30,7 @@ export default function AutoLogin() {
     console.log("HELLO auto login page");
     const walletAddress = getWalletFromUrl();
     const jwt = getJwtFromUrl();
+    const source = getSourceFromUrl();
     const inIframe = (() => {
       try {
         return window.self !== window.top;
@@ -41,6 +44,7 @@ export default function AutoLogin() {
       href: window.location.href,
       walletAddress,
       hasJwt: Boolean(jwt),
+      source,
       inIframe,
       timestamp: new Date().toISOString(),
     });
@@ -60,10 +64,12 @@ export default function AutoLogin() {
       if (jwt) {
         try {
           console.log("[AutoLogin] jwt login start", { marker: DEPLOY_MARKER });
-          const response = await loginV2({ jwt, source: "browser" });
+          const requestSource = source || "browser";
+          const response = await loginV2({ jwt, source: requestSource });
           const token = response?.data?.token ?? "";
           if (!token) navigate("/",{replace:true});
           setStoredToken(token);
+          setStoredSource(requestSource);
           if (response?.data?.username) setStoredUsername(response.data.username);
           clearJwtFromUrl();
           navigate("/", { replace: true });

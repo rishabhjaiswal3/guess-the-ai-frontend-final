@@ -6,11 +6,13 @@ import GlowingBorder from "@/components/effects/GlowingBorder";
 import { useAuth } from "@/context/AuthContext";
 import networkConfig from "@/lib/networkConfig";
 import { getGameTransactions, type GameTransactionRecord } from "@/lib/gameTransactions";
+import { getStoredSource } from "@/lib/session";
 
 const WalletScreen = () => {
   const { openLogin, token, profile, logout } = useAuth();
   const [showTransactions, setShowTransactions] = useState(false);
   const [gameTransactions, setGameTransactions] = useState<GameTransactionRecord[]>([]);
+  const shouldHideLogout = getStoredSource() === "browser";
 
   useEffect(() => {
     if (!showTransactions) return;
@@ -103,7 +105,7 @@ const WalletScreen = () => {
                 </Button>
               </motion.div>
 
-              {token && (
+              {token && !shouldHideLogout && (
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     variant="outline"
