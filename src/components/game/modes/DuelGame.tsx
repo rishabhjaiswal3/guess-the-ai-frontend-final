@@ -5,13 +5,16 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
+import { useHint } from "@/hooks/useHint";
 import confetti from "canvas-confetti";
 import {
   getDuelQuestion,
   submitDuelAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import { buildFallbackImageUrl } from "@/lib/imageUrl";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface DuelGameProps {
@@ -35,14 +38,17 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   const [lives, setLives] = useState(3);
   const [gameOver, setGameOver] = useState(false);
   const [lastRoundPoints, setLastRoundPoints] = useState(0);
+  const [roundId, setRoundId] = useState<string | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
+  const { hint, loading: hintLoading } = useHint(roundId);
 
   const loadNewRound = async () => {
     setIsLoading(true);
     setSelectedPosition(null);
     setShowResult(false);
     setLastRoundPoints(0);
+    setRoundId(null);
     if (gameMode === "speed") setTimeLeft(3);
 
     try {
@@ -51,6 +57,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
       setImages([nextImages[0] || null, nextImages[1] || null]);
       setTargetLabel((question.askingFor || "ai") as "ai" | "human");
       setPromptText(question.questionText || "Choose the correct image");
+      setRoundId(question.roundId || null);
     } catch {
       setImages([null, null]);
     } finally {
@@ -231,6 +238,8 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
           </div>
         </GlowingBorder>
 
+        {!showResult && <HintBadge hint={hint} loading={hintLoading} />}
+
         <div className="relative mb-6">
           <div className="grid grid-cols-2 gap-4">
             {[0, 1].map((position) => (
@@ -256,7 +265,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
                     alt={`Image ${position + 1}`}
                     className="w-full h-full object-cover"
                     onError={(event) => {
-                      const fallbackUrl = images[position]!.fallbackImageUrl;
+                      const fallbackUrl = buildFallbackImageUrl(images[position]!.hash);
                       if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                         event.currentTarget.src = fallbackUrl;
                       }

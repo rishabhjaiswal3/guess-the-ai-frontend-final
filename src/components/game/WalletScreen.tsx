@@ -29,7 +29,7 @@ const WalletScreen = () => {
   ];
 
   return (
-    <div className="min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-20 pb-24 lg:pb-16">
+    <div className="min-h-screen px-4 pt-20 pb-28 lg:pb-20">
       <div className="max-w-lg mx-auto space-y-6">
         {/* Main Wallet Card */}
         <GlowingBorder glowColor="rainbow" intensity="high" className="rounded-3xl">
@@ -280,54 +280,7 @@ const WalletScreen = () => {
           ))}
         </div>
 
-      
-        {/* Rewards Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9 }}
-          className="glass-strong rounded-3xl p-6"
-        >
-          <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-            <Gift className="w-5 h-5 text-secondary" />
-            Available Rewards
-          </h2>
-          
-          <div className="space-y-3">
-            {[
-              { name: "GALXE 0g CHALLENGE", reward: "Play Classic", icon: "🌌", available: true },
-              { name: "GATE WALLET CHALLENGE", reward: "Play Classic", icon: "🛡️", available: true },
-              { name: "STREAK MASTER NFT", reward: "Rare NFT", icon: "🔥", available: false },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ x: 5 }}
-                className={`flex items-center justify-between p-3 rounded-xl ${item.available ? "glass" : "bg-muted/30 opacity-50"}`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{item.icon}</span>
-                  <div>
-                    <p className="font-medium text-foreground">{item.name}</p>
-                    <p className="text-xs text-primary font-semibold">{item.reward}</p>
-                  </div>
-                </div>
-                {item.available ? (
-                  <Button
-                    size="sm"
-                    className="btn-gradient text-primary-foreground"
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent("gta:set-tab", { detail: "game" }));
-                    }}
-                  >
-                    Claim
-                  </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground">🔒 Locked</span>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+
       </div>
     </div>
   );

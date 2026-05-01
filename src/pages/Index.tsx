@@ -65,7 +65,7 @@ const Index = () => {
       
       <Header onLogoClick={() => setActiveTab("game")} />
       
-      <main className="relative z-10">
+      <main className="relative z-10 pb-28 lg:pb-0">
         <AuthGate>
           <AnimatePresence mode="wait">
             <motion.div

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { Eye, CheckCircle, XCircle, RotateCcw, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
@@ -12,6 +12,7 @@ import {
   submitOddOneOutAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import { buildFallbackImageUrl } from "@/lib/imageUrl";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface OddOneOutGameProps {
@@ -28,6 +29,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [round, setRound] = useState(1);
   const [roundPoints, setRoundPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
+  const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
+  const [loadedImagesCount, setLoadedImagesCount] = useState(0);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -35,6 +39,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
     setSelectedIndex(null);
     setShowResult(false);
     setRoundPoints(0);
+    setAiReviewRevealed(false);
+    setShowAIReviewLoader(false);
+    setLoadedImagesCount(0);
 
     try {
       const question = await getOddOneOutQuestion();
@@ -51,6 +58,14 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   useEffect(() => {
     loadNewRound();
   }, []);
+
+  const handleTakeAiReview = () => {
+    setShowAIReviewLoader(true);
+    setTimeout(() => {
+      setShowAIReviewLoader(false);
+      setAiReviewRevealed(true);
+    }, 1500);
+  };
 
   const handleSelect = async (index: number) => {
     if (showResult || !images[index]) return;
@@ -79,7 +94,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
       setRoundPoints(points);
       setShowResult(true);
       onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
-      refreshProfile().catch(() => {});
+      refreshProfile().catch(() => { });
 
       if (isCorrect) {
         confetti({
@@ -124,6 +139,8 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
           </div>
         </GlowingBorder>
 
+
+
         <div className="relative mb-6">
           <div className="grid grid-cols-3 gap-2 mb-2">
             {[0, 1, 2].map((index) => (
@@ -133,30 +150,37 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleSelect(index)}
-                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                  selectedIndex === index
+                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${selectedIndex === index
                     ? "ring-4 ring-secondary scale-95"
                     : showResult && index === oddIndex
                       ? "ring-4 ring-primary"
                       : showResult
                         ? "opacity-50"
                         : "hover:scale-[1.03]"
-                }`}
+                  }`}
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img
-                    src={images[index].imageUrl || images[index].url}
-                    alt={`Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(event) => {
-                      const fallbackUrl = images[index].fallbackImageUrl;
-                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
-                        event.currentTarget.src = fallbackUrl;
-                      }
-                    }}
-                  />
+                  <>
+                    <img
+                      src={images[index].imageUrl || images[index].url}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
+                      onError={(event) => {
+                        const fallbackUrl = buildFallbackImageUrl(images[index].hash);
+                        if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                          event.currentTarget.src = fallbackUrl;
+                        }
+                      }}
+                    />
+                    {images[index].percentage !== undefined && aiReviewRevealed && (
+                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                        <span>{images[index].percentage}%</span>
+                      </div>
+                    )}
+                  </>
                 ) : null}
 
                 <AnimatePresence>
@@ -190,30 +214,37 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 }}
                 onClick={() => handleSelect(index)}
-                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                  selectedIndex === index
+                className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${selectedIndex === index
                     ? "ring-4 ring-secondary scale-95"
                     : showResult && index === oddIndex
                       ? "ring-4 ring-primary"
                       : showResult
                         ? "opacity-50"
                         : "hover:scale-[1.03]"
-                } ${i === 1 ? "col-start-3" : "col-start-2"}`}
+                  } ${i === 1 ? "col-start-3" : "col-start-2"}`}
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img
-                    src={images[index].imageUrl || images[index].url}
-                    alt={`Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(event) => {
-                      const fallbackUrl = images[index].fallbackImageUrl;
-                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
-                        event.currentTarget.src = fallbackUrl;
-                      }
-                    }}
-                  />
+                  <>
+                    <img
+                      src={images[index].imageUrl || images[index].url}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
+                      onError={(event) => {
+                        const fallbackUrl = buildFallbackImageUrl(images[index].hash);
+                        if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                          event.currentTarget.src = fallbackUrl;
+                        }
+                      }}
+                    />
+                    {images[index].percentage !== undefined && aiReviewRevealed && (
+                      <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                        <span>{images[index].percentage}%</span>
+                      </div>
+                    )}
+                  </>
                 ) : null}
 
                 <AnimatePresence>
@@ -237,6 +268,20 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
               </motion.div>
             ))}
           </div>
+
+          <AnimatePresence>
+            {showAIReviewLoader && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+              >
+                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                <span className="font-bold text-cyan-400 animate-pulse tracking-wider">AI IS ANALYZING...</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AnimatePresence>
@@ -267,8 +312,31 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
           )}
         </AnimatePresence>
 
-        {!showResult && !isLoading && (
-          <p className="text-center text-muted-foreground text-sm">Find the {oddLabel} among the {majorityLabel} images</p>
+        {(!isLoading && images.length > 0 && loadedImagesCount >= images.length) && !showResult && (
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-center text-muted-foreground text-sm">Find the {oddLabel} among the {majorityLabel} images</p>
+            
+            {!aiReviewRevealed && (
+              <Button 
+                onClick={handleTakeAiReview}
+                disabled={showAIReviewLoader}
+                variant="outline"
+                className="h-9 glass text-cyan-400 border-cyan-500/30 font-semibold"
+              >
+                {showAIReviewLoader ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    Analyzing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Bot className="w-4 h-4" />
+                    Take AI Review
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>

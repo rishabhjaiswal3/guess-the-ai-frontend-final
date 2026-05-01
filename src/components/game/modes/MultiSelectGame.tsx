@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, Send, RotateCcw } from "lucide-react";
+import { CheckCircle, XCircle, Send, RotateCcw, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
@@ -13,6 +13,7 @@ import {
   type ModeQuestionImage,
   type ModeAnswerResult,
 } from "@/services/gameModesApi";
+import { buildFallbackImageUrl } from "@/lib/imageUrl";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface MultiSelectGameProps {
@@ -29,6 +30,9 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   const [round, setRound] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
+  const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
+  const [loadedImagesCount, setLoadedImagesCount] = useState(0);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -36,6 +40,9 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
     setSelectedIds(new Set());
     setShowResult(false);
     setResultMap({});
+    setAiReviewRevealed(false);
+    setShowAIReviewLoader(false);
+    setLoadedImagesCount(0);
 
     try {
       const question = await getMultiSelectQuestion();
@@ -61,6 +68,14 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
       newSelected.add(id);
     }
     setSelectedIds(newSelected);
+  };
+
+  const handleTakeAiReview = () => {
+    setShowAIReviewLoader(true);
+    setTimeout(() => {
+      setShowAIReviewLoader(false);
+      setAiReviewRevealed(true);
+    }, 1500);
   };
 
   const handleSubmit = async () => {
@@ -89,7 +104,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
       setRoundScore(points);
       onScoreUpdate(nextStats.score, nextStats.streak, nextStats.bestStreak);
       setShowResult(true);
-      refreshProfile().catch(() => {});
+      refreshProfile().catch(() => { });
 
       if (points > 50) {
         confetti({
@@ -132,8 +147,11 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
           </div>
         </GlowingBorder>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          {isLoading ? (
+
+
+        <div className="relative mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {isLoading ? (
             Array(6)
               .fill(0)
               .map((_, i) => <ImageSkeleton key={i} aspectRatio="square" />)
@@ -151,21 +169,27 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => toggleSelect(img.hash)}
-                  className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${
-                    isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
-                  }`}
+                  className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
+                    }`}
                 >
                   <img
                     src={img.imageUrl || img.url}
                     alt="Game image"
                     className="w-full h-full object-cover"
+                    onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
                     onError={(event) => {
-                      const fallbackUrl = img.fallbackImageUrl;
+                      const fallbackUrl = buildFallbackImageUrl(img.hash);
                       if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                         event.currentTarget.src = fallbackUrl;
                       }
                     }}
                   />
+
+                  {img.percentage !== undefined && aiReviewRevealed && (
+                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
+                      <span>{img.percentage}%</span>
+                    </div>
+                  )}
 
                   <AnimatePresence>
                     {isSelected && !showResult && (
@@ -187,9 +211,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className={`absolute inset-0 flex items-center justify-center ${
-                          shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
-                        }`}
+                        className={`absolute inset-0 flex items-center justify-center ${shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
+                          }`}
                       >
                         {shouldSelect && (
                           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="text-center">
@@ -213,9 +236,8 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
 
                   {showResult && (
                     <div
-                      className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${
-                        truth === "ai" ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"
-                      }`}
+                      className={`absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold ${truth === "ai" ? "bg-secondary text-secondary-foreground" : "bg-primary text-primary-foreground"
+                        }`}
                     >
                       {(truth || "?").toUpperCase()}
                     </div>
@@ -225,7 +247,47 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
               );
             })
           )}
+          </div>
+
+          <AnimatePresence>
+            {showAIReviewLoader && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+              >
+                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
+                <span className="font-bold text-cyan-400 animate-pulse tracking-wider">AI IS ANALYZING...</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {(!isLoading && images.length > 0 && loadedImagesCount >= images.length) && !showResult && (
+          <div className="flex justify-end mb-3">
+            {!aiReviewRevealed && (
+              <Button 
+                onClick={handleTakeAiReview}
+                disabled={showAIReviewLoader}
+                variant="outline"
+                className="h-9 glass text-cyan-400 border-cyan-500/30 font-semibold"
+              >
+                {showAIReviewLoader ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-3.5 h-3.5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+                    Analyzing...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Bot className="w-4 h-4" />
+                    Take AI Review
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
 
         <div className="flex gap-4">
           {!showResult ? (

@@ -6,10 +6,13 @@ export type ModeQuestionImage = {
   hash: string;
   url: string;
   imageUrl: string;
+  percentage?: number;
+  percentageLabel?: string;
 };
 
 export type ModeQuestionResponse = {
   mode: string;
+  roundId?: string | null;
   templateKey?: string | null;
   questionText?: string | null;
   questionSubtext?: string | null;
@@ -57,7 +60,7 @@ export type ModeAnswerResponse = {
   comboUsed?: number;
 };
 
-const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?: Array<{ id?: string; hash?: string; url?: string }> }): ModeQuestionResponse => {
+const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?: Array<{ id?: string; hash?: string; url?: string; percentage?: number; percentageLabel?: string }> }): ModeQuestionResponse => {
   const images = (question.images || [])
     .filter((item) => item && typeof item.hash === "string")
     .map((item) => {
@@ -67,6 +70,8 @@ const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?
         hash,
         url: item.url || buildImageUrl(hash),
         imageUrl: buildImageUrl(hash) || item.url || "",
+        ...(item.percentage !== undefined ? { percentage: item.percentage } : {}),
+        ...(item.percentageLabel ? { percentageLabel: item.percentageLabel } : {})
       };
     });
 
@@ -159,4 +164,13 @@ export const submitRapidFireAnswer = async (payload: {
     method: "POST",
     body: payload,
   });
+};
+
+export type HintResponse = {
+  ready: boolean;
+  hint?: string;
+};
+
+export const pollHint = async (roundId: string): Promise<HintResponse> => {
+  return unwrap<HintResponse>(`/game/hint/${roundId}`);
 };

@@ -7,7 +7,9 @@ import AnimatedCounter from "@/components/effects/AnimatedCounter";
 import ScreenShake from "@/components/effects/ScreenShake";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
+import { useHint } from "@/hooks/useHint";
 import confetti from "canvas-confetti";
 import {
   getRapidFireQuestion,
@@ -33,14 +35,18 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   const [gameOver, setGameOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
+  const [roundId, setRoundId] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
+  const { hint, loading: hintLoading } = useHint(roundId);
 
   const loadNextImage = useCallback(async () => {
     setIsLoading(true);
+    setRoundId(null);
     try {
       const question = await getRapidFireQuestion();
       setCurrentImage(question.images?.[0] || null);
+      setRoundId(question.roundId || null);
     } catch {
       setCurrentImage(null);
     } finally {
@@ -300,6 +306,8 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
               )}
             </AnimatePresence>
           </div>
+
+          <HintBadge hint={hint} loading={hintLoading} />
 
           <div className="grid grid-cols-2 gap-3">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
