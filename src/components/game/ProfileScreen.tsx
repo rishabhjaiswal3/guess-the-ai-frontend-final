@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Flame, Star, User, LogOut, Edit, X, Trophy, Target, Award, Sparkles } from "lucide-react";
+import { Zap, Flame, Star, Trophy, Target, Award, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RANK_COLORS } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import AnimatedCounter from "@/components/effects/AnimatedCounter";
 import { useAuth } from "@/context/AuthContext";
-
 interface ProfileScreenProps {
   score: number;
   streak: number;

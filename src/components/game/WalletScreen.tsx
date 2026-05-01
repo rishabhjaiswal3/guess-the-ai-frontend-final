@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import networkConfig from "@/lib/networkConfig";
 import { getGameTransactions, type GameTransactionRecord } from "@/lib/gameTransactions";
 import { getStoredSource } from "@/lib/session";
+import VerifyManifest0gSection from "@/components/game/VerifyManifest0gSection";
 
 const WalletScreen = () => {
   const { openLogin, token, profile, logout } = useAuth();
@@ -256,6 +257,8 @@ const WalletScreen = () => {
             )}
           </motion.div>
         </GlowingBorder>
+
+        <VerifyManifest0gSection />
 
         {/* Features Grid */}
         <div className="grid grid-cols-2 gap-4">

@@ -14,6 +14,7 @@ import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
 import networkConfig from "@/lib/networkConfig";
 import { addGameTransaction } from "@/lib/gameTransactions";
 import { toast } from "@/components/ui/sonner";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface ScorePopup {
   id: string;
@@ -30,7 +31,6 @@ interface ClassicGameProps {
 
 const RESULT_DELAY_MS = 1400;
 const PREFETCH_THRESHOLD = Number(import.meta.env.VITE_PREFETCH_THRESHOLD || 6);
-const PREFETCH_AHEAD = 4;
 
 const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [imageQueue, setImageQueue] = useState<GameImageWithUrl[]>([]);
@@ -57,19 +57,12 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const preloadedHashesRef = useRef<Set<string>>(new Set());
   const { playClick, playBack, playSuccess, playFail } = useFeedbackSound();
 
-  // Preload images from the queue
-  const preloadQueueImages = useCallback(async (images: GameImageWithUrl[]) => {
-    const urlsToPreload = images
-      .slice(0, PREFETCH_AHEAD)
-      .filter((img) => !preloadedHashesRef.current.has(img.hash))
-      .map((img) => {
-        preloadedHashesRef.current.add(img.hash);
-        return img.imageUrl;
-      });
-
-    if (urlsToPreload.length > 0) {
-      await preloadImages(urlsToPreload);
-    }
+  // Preload only a single next image to avoid parallel double-loading.
+  const preloadNextImage = useCallback(async (nextImage: GameImageWithUrl | null | undefined) => {
+    if (!nextImage) return;
+    if (preloadedHashesRef.current.has(nextImage.hash)) return;
+    preloadedHashesRef.current.add(nextImage.hash);
+    await preloadImages([nextImage.imageUrl]);
   }, []);
 
   // Fetch batch of images
@@ -94,14 +87,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
         const [first, ...rest] = batch;
         setCurrentImage(first);
         setImageQueue(rest);
-        // Preload upcoming images in background
-        preloadQueueImages(rest);
       } else {
-        setImageQueue((prev) => {
-          const newQueue = [...prev, ...batch];
-          preloadQueueImages(newQueue);
-          return newQueue;
-        });
+        setImageQueue((prev) => [...prev, ...batch]);
       }
     } catch (err) {
       console.error("Error fetching images:", err);
@@ -111,7 +98,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     } finally {
       setPrefetching(false);
     }
-  }, [prefetching, currentImage, preloadQueueImages]);
+  }, [prefetching, currentImage]);
 
   // Initial load
   const loadInitialImages = useCallback(async () => {
@@ -128,9 +115,9 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
         return;
       }
 
-      // Preload first few images BEFORE setting current image
-      await preloadImages(batch.slice(0, PREFETCH_AHEAD).map((img) => img.imageUrl));
-      batch.slice(0, PREFETCH_AHEAD).forEach((img) => preloadedHashesRef.current.add(img.hash));
+      // Preload only the first image before showing it.
+      await preloadImages([batch[0].imageUrl]);
+      preloadedHashesRef.current.add(batch[0].hash);
 
       // Now set the current image (already preloaded)
       const [first, ...rest] = batch;
@@ -167,10 +154,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       fetchImageBatch();
     }
 
-    // Preload upcoming images
-    preloadQueueImages(rest);
-
-  }, [imageQueue, fetchImageBatch, preloadQueueImages]);
+  }, [imageQueue, fetchImageBatch]);
 
   useEffect(() => {
     loadInitialImages();
@@ -286,6 +270,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     }
 
     setTruthLabel(truth);
+    // Start loading only one next image right after submission for fast transition.
+    void preloadNextImage(imageQueue[0]);
 
     if (isCorrect) {
       setShowResult("correct");
@@ -429,7 +415,14 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                           src={currentImage.imageUrl}
                           alt="Guess if this is AI or Human made"
                           className="w-full h-full object-cover"
-                          onError={() => setImageError(true)}
+                          onError={(event) => {
+                            const fallbackUrl = currentImage.fallbackImageUrl;
+                            if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                              event.currentTarget.src = fallbackUrl;
+                              return;
+                            }
+                            setImageError(true);
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center text-muted-foreground/80 text-lg font-semibold">
@@ -437,6 +430,9 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-br from-cyan/10 via-transparent to-magenta/10 mix-blend-overlay" />
+                      {currentImage && !!showResult ? (
+                        <VerifyHashEyeButton hash={currentImage.hash} visible className="top-3 right-3" />
+                      ) : null}
                     </motion.div>
                   )}
                 </AnimatePresence>

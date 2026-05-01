@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/apiClient";
-import { buildImageUrl } from "@/lib/imageUrl";
+import { buildFallbackImageUrl, buildImageUrl } from "@/lib/imageUrl";
 
 export type GameImageResponse = {
   hash: string;
@@ -9,6 +9,7 @@ export type GameImageResponse = {
 
 export type GameImageWithUrl = GameImageResponse & {
   imageUrl: string;
+  fallbackImageUrl: string;
 };
 
 export type GameBatchResponse = {
@@ -20,7 +21,10 @@ export type GameBatchResponse = {
  */
 export const withImageUrl = (image: GameImageResponse): GameImageWithUrl => ({
   ...image,
+  // Direct mode: 0G first.
   imageUrl: buildImageUrl(image.hash),
+  // Secondary fallback: DigitalOcean.
+  fallbackImageUrl: buildFallbackImageUrl(image.hash),
 });
 
 export type SubmitAnswerResponse = {

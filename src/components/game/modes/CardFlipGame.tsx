@@ -12,6 +12,7 @@ import {
   submitCardFlipAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface CardState {
   id: string;
@@ -228,12 +229,24 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
                 </div>
 
                 <div className="absolute inset-0 rounded-xl overflow-hidden border-2 border-border" style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}>
-                  <img src={card.image.imageUrl || card.image.url} alt="Guess" className="w-full h-full object-cover" loading="lazy" />
+                  <img
+                    src={card.image.imageUrl || card.image.url}
+                    alt="Guess"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    onError={(event) => {
+                      const fallbackUrl = card.image.fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
                   {card.isAnswered && (
                     <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className={`absolute inset-0 flex items-center justify-center ${card.guessedCorrectly ? "bg-green-500/60" : "bg-destructive/60"}`}>
                       {card.guessedCorrectly ? <CheckCircle className="w-8 h-8 md:w-10 md:h-10 text-white" /> : <XCircle className="w-8 h-8 md:w-10 md:h-10 text-white" />}
                     </motion.div>
                   )}
+                  <VerifyHashEyeButton hash={card.image.hash} visible={card.isAnswered} className="top-1 right-1 h-8 w-8 min-w-8 [&_svg]:h-3.5 [&_svg]:w-3.5" />
                 </div>
               </motion.div>
             </motion.div>

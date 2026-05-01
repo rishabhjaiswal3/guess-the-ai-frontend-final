@@ -12,6 +12,7 @@ import {
   submitDuelAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface DuelGameProps {
   onBack: () => void;
@@ -250,12 +251,26 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" aspectRatio="portrait" />
                 ) : images[position] ? (
-                  <img src={images[position]!.imageUrl || images[position]!.url} alt={`Image ${position + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={images[position]!.imageUrl || images[position]!.url}
+                    alt={`Image ${position + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      const fallbackUrl = images[position]!.fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
                 ) : null}
 
                 <div className="absolute top-3 left-3 w-10 h-10 rounded-full glass flex items-center justify-center font-black text-lg text-foreground">
                   {position === 0 ? "A" : "B"}
                 </div>
+
+                {showResult && images[position] ? (
+                  <VerifyHashEyeButton hash={images[position]!.hash} visible className="top-14 right-3" />
+                ) : null}
 
                 <AnimatePresence>
                   {showResult && (

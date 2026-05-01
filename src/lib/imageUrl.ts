@@ -1,18 +1,10 @@
 /**
  * Image URL builder utility
- * Builds image URLs based on VITE_USE_INDEXER_IMAGE environment variable
+ * Uses direct 0G fetch first, with DigitalOcean as fallback.
  */
 
-const USE_INDEXER = import.meta.env.VITE_USE_INDEXER_IMAGE === "true";
 const INDEXER_BASE_URL = import.meta.env.VITE_INDEXER_BASE_URL ?? "";
 const DIGITAL_OCEAN_BASE_URL = import.meta.env.VITE_DIGITAL_OCEAN_BASE_URL ?? "";
-
-/**
- * Get the base URL for image fetching based on environment config
- */
-export const getImageBaseUrl = (): string => {
-  return USE_INDEXER ? INDEXER_BASE_URL : DIGITAL_OCEAN_BASE_URL;
-};
 
 /**
  * Build a full image URL from a hash
@@ -21,13 +13,26 @@ export const getImageBaseUrl = (): string => {
  */
 export const buildImageUrl = (hash: string): string => {
   if (!hash) return "";
-  const baseUrl = getImageBaseUrl();
-  if (!baseUrl) {
-    console.warn("[imageUrl] No base URL configured for images");
+  if (!INDEXER_BASE_URL) {
+    console.warn("[imageUrl] No 0G indexer base URL configured");
     return "";
   }
-  // For indexer: hash.jpg, for digital ocean/0g: hash.jpg
-  return `${baseUrl}${encodeURIComponent(hash)}.jpg`;
+  // 0G indexer root lookup uses hash directly (without .jpg suffix).
+  return `${INDEXER_BASE_URL}${encodeURIComponent(hash)}`;
+};
+
+/**
+ * Build DigitalOcean fallback URL from hash
+ * @param hash - The image hash from API
+ * @returns Full fallback image URL
+ */
+export const buildFallbackImageUrl = (hash: string): string => {
+  if (!hash) return "";
+  if (!DIGITAL_OCEAN_BASE_URL) {
+    console.warn("[imageUrl] No DigitalOcean fallback base URL configured");
+    return "";
+  }
+  return `${DIGITAL_OCEAN_BASE_URL}${encodeURIComponent(hash)}.jpg`;
 };
 
 /**
@@ -72,7 +77,6 @@ export const preloadImages = async (
 };
 
 export const IMAGE_CONFIG = {
-  useIndexer: USE_INDEXER,
   indexerBaseUrl: INDEXER_BASE_URL,
   digitalOceanBaseUrl: DIGITAL_OCEAN_BASE_URL,
 } as const;

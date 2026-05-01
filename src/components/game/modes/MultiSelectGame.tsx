@@ -13,6 +13,7 @@ import {
   type ModeQuestionImage,
   type ModeAnswerResult,
 } from "@/services/gameModesApi";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface MultiSelectGameProps {
   onBack: () => void;
@@ -154,7 +155,17 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                     isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
                   }`}
                 >
-                  <img src={img.imageUrl || img.url} alt="Game image" className="w-full h-full object-cover" />
+                  <img
+                    src={img.imageUrl || img.url}
+                    alt="Game image"
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      const fallbackUrl = img.fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
 
                   <AnimatePresence>
                     {isSelected && !showResult && (
@@ -209,6 +220,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                       {(truth || "?").toUpperCase()}
                     </div>
                   )}
+                  <VerifyHashEyeButton hash={img.hash} visible={showResult} className="bottom-2 left-2 h-8 w-8 min-w-8" />
                 </motion.div>
               );
             })

@@ -14,6 +14,7 @@ import {
   submitRapidFireAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface RapidFireGameProps {
   onBack: () => void;
@@ -270,8 +271,21 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border">
             <AnimatePresence mode="wait">
               {currentImage && !isLoading && (
-                <motion.div key={currentImage.hash} initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -80 }} transition={{ duration: 0.2 }} className="w-full h-full">
-                  <img src={currentImage.imageUrl || currentImage.url} alt="Guess" className="w-full h-full object-cover" />
+                <motion.div key={currentImage.hash} initial={{ opacity: 0, x: 80 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -80 }} transition={{ duration: 0.2 }} className="relative w-full h-full">
+                  <img
+                    src={currentImage.imageUrl || currentImage.url}
+                    alt="Guess"
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      const fallbackUrl = currentImage.fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
+                  {currentImage && !!showResult ? (
+                    <VerifyHashEyeButton hash={currentImage.hash} visible className="top-3 right-3" />
+                  ) : null}
                 </motion.div>
               )}
             </AnimatePresence>

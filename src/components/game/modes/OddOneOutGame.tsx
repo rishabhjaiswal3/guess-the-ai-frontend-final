@@ -12,6 +12,7 @@ import {
   submitOddOneOutAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
+import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface OddOneOutGameProps {
   onBack: () => void;
@@ -145,7 +146,17 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={images[index].imageUrl || images[index].url}
+                    alt={`Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      const fallbackUrl = images[index].fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
                 ) : null}
 
                 <AnimatePresence>
@@ -163,6 +174,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {images[index] ? (
+                  <VerifyHashEyeButton hash={images[index].hash} visible={showResult} className="bottom-2 right-2 z-[55] h-8 w-8 min-w-8" />
+                ) : null}
               </motion.div>
             ))}
           </div>
@@ -189,7 +203,17 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
                 ) : images[index] ? (
-                  <img src={images[index].imageUrl || images[index].url} alt={`Image ${index + 1}`} className="w-full h-full object-cover" />
+                  <img
+                    src={images[index].imageUrl || images[index].url}
+                    alt={`Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onError={(event) => {
+                      const fallbackUrl = images[index].fallbackImageUrl;
+                      if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                        event.currentTarget.src = fallbackUrl;
+                      }
+                    }}
+                  />
                 ) : null}
 
                 <AnimatePresence>
@@ -207,6 +231,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {images[index] ? (
+                  <VerifyHashEyeButton hash={images[index].hash} visible={showResult} className="bottom-2 right-2 z-[55] h-8 w-8 min-w-8" />
+                ) : null}
               </motion.div>
             ))}
           </div>
