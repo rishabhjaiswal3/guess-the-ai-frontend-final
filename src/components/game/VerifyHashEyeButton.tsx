@@ -55,7 +55,12 @@ const VerifyHashEyeButton = ({ hash, visible, txHash, timestamp, className }: Ve
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+        <DialogContent
+          className="sm:max-w-md"
+          onClick={(e) => e.stopPropagation()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base">
               <Shield className="w-4 h-4 text-cyan-400" />
