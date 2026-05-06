@@ -26,7 +26,6 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [askingFor, setAskingFor] = useState<"ai" | "human">("human");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
-  const [round, setRound] = useState(1);
   const [roundPoints, setRoundPoints] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
@@ -110,7 +109,6 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   };
 
   const handleNextRound = () => {
-    setRound((prev) => prev + 1);
     loadNewRound();
   };
 
@@ -122,12 +120,6 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
     <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-lg mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
-
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
-          <div className="glass px-4 py-2 rounded-full text-sm text-muted-foreground">
-            Round {round}
-          </div>
-        </motion.div>
 
         <GlowingBorder glowColor="purple" intensity="medium" className="rounded-3xl mb-6">
           <div className="glass-strong rounded-3xl p-6 text-center">

@@ -208,19 +208,15 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
       <div className="max-w-lg mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
 
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
-          {gameMode === "speed" ? (
+        {gameMode === "speed" && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
             <div className="flex gap-1">
               {[...Array(3)].map((_, i) => (
                 <span key={i} className={`text-lg ${i < lives ? "" : "opacity-30"}`}>❤️</span>
               ))}
             </div>
-          ) : (
-            <div className="glass px-4 py-2 rounded-full text-sm text-muted-foreground">
-              Round {round}
-            </div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
 
         <GlowingBorder glowColor={gameMode === "speed" ? "rainbow" : "cyan"} intensity="medium" className="rounded-3xl mb-6">
           <div className="glass-strong rounded-3xl p-6 text-center">

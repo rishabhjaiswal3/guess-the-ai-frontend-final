@@ -27,7 +27,6 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [resultMap, setResultMap] = useState<Record<string, ModeAnswerResult>>({});
   const [showResult, setShowResult] = useState(false);
-  const [round, setRound] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
@@ -120,7 +119,6 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   };
 
   const handleNextRound = () => {
-    setRound((prev) => prev + 1);
     loadNewRound();
   };
 
@@ -130,12 +128,6 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
     <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-2xl mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
-
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
-          <div className="glass px-4 py-2 rounded-full text-sm text-muted-foreground">
-            Round {round}
-          </div>
-        </motion.div>
 
         <GlowingBorder glowColor="purple" intensity="medium" className="rounded-3xl mb-6">
           <div className="glass-strong rounded-3xl p-6 text-center">
