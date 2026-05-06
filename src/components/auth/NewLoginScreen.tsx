@@ -30,6 +30,28 @@ const allowedChain = {
   chainName: "0G Mainnet",
 };
 
+function countInjectedProviders(): number {
+  if (typeof window === "undefined") return 0;
+  const ethereum = (window as { ethereum?: { providers?: unknown[] } }).ethereum;
+  if (!ethereum) return 0;
+  if (Array.isArray(ethereum.providers) && ethereum.providers.length > 0) {
+    return ethereum.providers.length;
+  }
+  return 1;
+}
+
+async function connectInjectedWalletDirectly(): Promise<string> {
+  const ethereum = (window as { ethereum?: any }).ethereum;
+  if (!ethereum?.request) {
+    throw new Error("No injected wallet provider found.");
+  }
+  const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+  if (!Array.isArray(accounts) || !accounts[0]) {
+    throw new Error("Wallet did not return an account.");
+  }
+  return String(accounts[0]);
+}
+
 const buildChainParams = () => ({
   chainId: `0x${networkConfig.id.toString(16)}`,
   chainName: networkConfig.name,
@@ -53,6 +75,36 @@ function getNetworkLabel(network: NetworkInfo | null | undefined) {
   return network.name || network.chainId;
 }
 
+function getWalletErrorMessage(err: unknown, fallback: string): string {
+  const raw = String(
+    (err as { message?: unknown })?.message ||
+      (err as { reason?: unknown })?.reason ||
+      (err as { shortMessage?: unknown })?.shortMessage ||
+      err ||
+      ""
+  );
+  const lower = raw.toLowerCase();
+  const code = (err as { code?: number })?.code;
+  const eipCode = (err as { details?: { eipCode?: number } })?.details?.eipCode;
+
+  if (code === -32002 || eipCode === -32002 || lower.includes("already pending")) {
+    return "Wallet request already pending. Open your wallet extension/app and complete or reject it first.";
+  }
+  if (lower.includes("selectextension") || lower.includes("evmask") || lower.includes("unexpected error")) {
+    return "Wallet extension selection failed. Disable extra wallet extensions and retry with one unlocked wallet.";
+  }
+  if (lower.includes("user rejected") || lower.includes("rejected the request") || code === 4001) {
+    return "Wallet request was rejected. Please approve it in your wallet to continue.";
+  }
+  if (lower.includes("wallet not detected") || lower.includes("provider not found")) {
+    return "No compatible wallet extension detected. Install MetaMask or Gate Wallet and reload.";
+  }
+  if (lower.includes("locked")) {
+    return "Wallet is locked. Unlock your wallet extension and try again.";
+  }
+  return raw.trim() || fallback;
+}
+
 const NewLoginScreen = () => {
   const { user, ready, authenticated } = usePrivy();
   const { login: openPrivyLogin } = useLogin({
@@ -66,7 +118,7 @@ const NewLoginScreen = () => {
       const errorCode = err?.code;
       const eipCode = err?.details?.eipCode;
       if (errorCode === -32002 || eipCode === -32002) {
-        setError("Wallet connection already pending. Check your wallet app or other browser tabs.");
+        setError(getWalletErrorMessage(error, "Wallet connection already pending."));
       }
       console.error("[Privy] login modal error", error);
     },
@@ -82,6 +134,7 @@ const NewLoginScreen = () => {
   const missingWalletConnectId = !walletConnectProjectId;
   const hasInjectedWallet =
     typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
+  const injectedProviderCount = countInjectedProviders();
 
   const ensureInjectedChain = async () => {
     const ethereum = (window as { ethereum?: any }).ethereum;
@@ -326,7 +379,27 @@ const NewLoginScreen = () => {
       await persistLogin(payload);
       localStorage.setItem("sessionWallet", "VERIFIED");
     } catch (err: any) {
-      setError(err?.message || "Failed to connect Gate Wallet.");
+      try {
+        if (hasInjectedWallet) {
+          const switched = await ensureInjectedChain();
+          if (!switched) {
+            setError("Please switch MetaMask to the 0G network and try again.");
+            return;
+          }
+          const address = await connectInjectedWalletDirectly();
+          await persistLogin({
+            walletAddress: address,
+            sessionWallet: "VERIFIED",
+            privyMetaData: { type: "injected_wallet_gate_fallback" },
+          });
+          localStorage.setItem("sessionWallet", "VERIFIED");
+          setError("");
+          return;
+        }
+      } catch (fallbackErr) {
+        console.error("[GateWallet] injected fallback failed", fallbackErr);
+      }
+      setError(getWalletErrorMessage(err, "Failed to connect Gate Wallet."));
     } finally {
       setGateConnecting(false);
     }
@@ -474,15 +547,49 @@ const NewLoginScreen = () => {
                   }
                   if (privyOpening) return;
                   setPrivyOpening(true);
-                  if (hasInjectedWallet) {
-                    const switched = await ensureInjectedChain();
-                    if (!switched) {
-                      setError("Please switch MetaMask to the 0G network and try again.");
-                      setPrivyOpening(false);
-                      return;
+                  try {
+                    // Always try Privy flow first so Privy session/user state stays consistent.
+                    // Direct injected wallet path is only a fallback when Privy fails to open.
+                    if (hasInjectedWallet && injectedProviderCount > 1) {
+                      console.warn(
+                        "[Privy] multiple injected providers detected; letting Privy handle provider selection."
+                      );
                     }
+                    openPrivyLogin({ loginMethods: ["wallet"] });
+                  } catch (err) {
+                    console.error("[Privy] open wallet modal failed", err);
+                    // Fallback path: connect via injected wallet directly and finish backend login.
+                    if (hasInjectedWallet) {
+                      try {
+                        const switched = await ensureInjectedChain();
+                        if (!switched) {
+                          setError("Please switch MetaMask to the 0G network and try again.");
+                          return;
+                        }
+                        const address = await connectInjectedWalletDirectly();
+                        await persistLogin({
+                          walletAddress: address,
+                          privyMetaData: { type: "injected_wallet_fallback" },
+                        });
+                        setError("");
+                        return;
+                      } catch (fallbackErr) {
+                        console.error("[WalletFallback] direct connect failed", fallbackErr);
+                        setError(
+                          getWalletErrorMessage(
+                            fallbackErr,
+                            "Failed to open wallet connection."
+                          )
+                        );
+                        return;
+                      }
+                    }
+                    setError(getWalletErrorMessage(err, "Failed to open wallet connection."));
+                  } finally {
+                    // If modal opens successfully, useModalStatus effect keeps this in sync.
+                    // If it fails before opening, this unblocks retries.
+                    if (!isOpen) setPrivyOpening(false);
                   }
-                  openPrivyLogin({ loginMethods: ["wallet"] });
                 }}
                 disabled={privyOpening}
               >
