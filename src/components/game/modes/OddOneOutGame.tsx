@@ -119,7 +119,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const oddLabel = askingFor === "ai" ? "AI" : "Human";
 
   return (
-    <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
+    <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-lg mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
 

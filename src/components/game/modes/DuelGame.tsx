@@ -172,7 +172,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
 
   if (gameOver) {
     return (
-      <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
+      <div className="min-h-screen px-4 pt-4 pb-6">
         <div className="max-w-lg mx-auto">
           <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl">
             <div className="glass-strong rounded-3xl p-8 text-center">
@@ -204,7 +204,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
+    <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-lg mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
 

@@ -162,7 +162,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
     const totalCards = cards.length || 20;
     const accuracy = Math.round((correctCount / totalCards) * 100);
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
         <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl w-full max-w-md">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="glass-strong rounded-3xl p-8 text-center">
             <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }} className="text-6xl mb-4">
@@ -209,7 +209,7 @@ const CardFlipGame = ({ onBack, onScoreUpdate }: CardFlipGameProps) => {
 
   return (
     <ScreenShake trigger={shakeScreen} intensity={10}>
-      <div className="flex flex-col items-center px-3 pt-[4.5rem] pb-24">
+      <div className="flex flex-col items-center px-3 pt-4 pb-6">
         <div className="w-full max-w-2xl">
           <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
         </div>

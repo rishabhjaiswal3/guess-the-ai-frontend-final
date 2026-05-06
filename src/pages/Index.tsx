@@ -9,7 +9,6 @@ import WalletScreen from "@/components/game/WalletScreen";
 import AuthGate from "@/components/auth/AuthGate";
 import { useAuth } from "@/context/AuthContext";
 
-// Lazy load the 3D background for better performance
 const Background3D = lazy(() => import("@/components/Background3D"));
 
 const LoadingBackground = () => (
@@ -23,14 +22,13 @@ const Index = () => {
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
+  const [isGameActive, setIsGameActive] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
     const handler = (event: Event) => {
       const custom = event as CustomEvent<TabType>;
-      if (custom.detail) {
-        setActiveTab(custom.detail);
-      }
+      if (custom.detail) setActiveTab(custom.detail);
     };
     window.addEventListener("gta:set-tab", handler as EventListener);
     return () => window.removeEventListener("gta:set-tab", handler as EventListener);
@@ -45,7 +43,13 @@ const Index = () => {
   const renderScreen = () => {
     switch (activeTab) {
       case "game":
-        return <GameScreen key="game" onScoreUpdate={handleScoreUpdate} />;
+        return (
+          <GameScreen
+            key="game"
+            onScoreUpdate={handleScoreUpdate}
+            onGameActiveChange={setIsGameActive}
+          />
+        );
       case "leaderboard":
         return <LeaderboardScreen key="leaderboard" />;
       case "profile":
@@ -53,7 +57,13 @@ const Index = () => {
       case "wallet":
         return <WalletScreen key="wallet" />;
       default:
-        return <GameScreen key="game-default" onScoreUpdate={handleScoreUpdate} />;
+        return (
+          <GameScreen
+            key="game-default"
+            onScoreUpdate={handleScoreUpdate}
+            onGameActiveChange={setIsGameActive}
+          />
+        );
     }
   };
 
@@ -62,10 +72,12 @@ const Index = () => {
       <Suspense fallback={<LoadingBackground />}>
         <Background3D />
       </Suspense>
-      
-      <Header onLogoClick={() => setActiveTab("game")} />
-      
-      <main className="relative z-10 pb-28 lg:pb-0">
+
+      {!isGameActive && (
+        <Header onLogoClick={() => setActiveTab("game")} />
+      )}
+
+      <main className={`relative z-10 ${isGameActive ? "" : "pt-0 pb-28 lg:pb-0"}`}>
         <AuthGate>
           <AnimatePresence mode="wait">
             <motion.div
@@ -80,10 +92,10 @@ const Index = () => {
           </AnimatePresence>
         </AuthGate>
       </main>
-      
-      {token ? (
+
+      {token && !isGameActive && (
         <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-      ) : null}
+      )}
     </div>
   );
 };

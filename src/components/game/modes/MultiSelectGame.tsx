@@ -127,7 +127,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
   const targetCount = Object.values(resultMap).filter((item) => item.shouldSelect).length;
 
   return (
-    <div className="min-h-[calc(100vh-200px)] px-4 pt-16 pb-28">
+    <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-2xl mx-auto">
         <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
 

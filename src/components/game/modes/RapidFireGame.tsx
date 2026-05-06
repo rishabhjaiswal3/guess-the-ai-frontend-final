@@ -154,7 +154,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
 
   if (!isGameActive && !gameOver) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
         <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground self-start max-w-md w-full mb-4">
           <ArrowLeft className="w-4 h-4 mr-1" />
           Modes
@@ -202,7 +202,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   if (gameOver) {
     const accuracy = totalAnswered > 0 ? Math.round((correctAnswers / totalAnswered) * 100) : 0;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
         <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl w-full max-w-md">
           <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="glass-strong rounded-3xl p-8 text-center">
             <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 200 }} className="text-6xl mb-4">
@@ -249,7 +249,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
 
   return (
     <ScreenShake trigger={shakeScreen} intensity={15}>
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
         <ClassicStatsBar streak={streak} score={score} onBack={handleGameOver} />
 
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-end gap-3 w-full max-w-md mb-4">

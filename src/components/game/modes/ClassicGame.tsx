@@ -372,7 +372,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       <FloatingScorePopup popups={scorePopups} onComplete={removeScorePopup} />
 
       <ScreenShake trigger={shakeScreen} intensity={15}>
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-[4.5rem] pb-20 lg:pb-16">
+        <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
           <ClassicStatsBar
             streak={streak}
             score={score}
