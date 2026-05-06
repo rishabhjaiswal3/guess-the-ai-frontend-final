@@ -21,6 +21,16 @@ const WalletScreen = () => {
   }, [showTransactions, token]);
 
   const explorer = networkConfig.blockExplorers?.default?.url || "https://chainscan.0g.ai";
+  const allowedModeLabels: Record<string, string> = {
+    classic: "Classic Mode",
+    multiselect: "Multi Select",
+    duel: "Dual Mode",
+    oddoneout: "Odd One Out",
+  };
+  const filteredGameTransactions = gameTransactions.filter((tx) => {
+    const normalizedMode = String(tx.mode || "").toLowerCase().replace(/[\s_-]/g, "");
+    return Boolean(allowedModeLabels[normalizedMode]);
+  });
   const features = [
     { icon: "🏆", lucideIcon: Shield, title: "Compete Globally", desc: "Join the leaderboard and compete with players worldwide", color: "text-primary" },
     { icon: "🎁", lucideIcon: Gift, title: "Earn Rewards", desc: "Win tokens and NFTs for your achievements", color: "text-secondary" },
@@ -144,18 +154,20 @@ const WalletScreen = () => {
                     <div className="space-y-3">
                       <div className="text-left">
                         <p className="text-sm font-semibold text-foreground mb-2">Recent Game Transactions</p>
-                        {gameTransactions.length === 0 ? (
+                        {filteredGameTransactions.length === 0 ? (
                           <p className="text-xs text-muted-foreground">
-                            No game transactions yet. Play a round to generate on-chain activity.
+                            No transactions yet for Classic Mode, Multi Select, Dual Mode, or Odd One Out.
                           </p>
                         ) : (
                           <div className="space-y-2">
-                            {gameTransactions.map((tx) => {
+                            {filteredGameTransactions.map((tx) => {
+                              const normalizedMode = String(tx.mode || "").toLowerCase().replace(/[\s_-]/g, "");
+                              const modeLabel = allowedModeLabels[normalizedMode] || tx.mode;
                               const shortHash = `${tx.hash.slice(0, 8)}...${tx.hash.slice(-6)}`;
                               return (
                                 <div key={tx.hash} className="flex items-center justify-between p-3 rounded-xl glass">
                                   <div style={{ textAlign: "left" }}>
-                                    <p className="font-medium text-foreground">{tx.mode} Game</p>
+                                    <p className="font-medium text-foreground">{modeLabel}</p>
                                     <p className="text-xs text-muted-foreground font-mono">{shortHash}</p>
                                   </div>
                                   <div className="flex items-center gap-2">
