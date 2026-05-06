@@ -105,28 +105,12 @@ function getWalletErrorMessage(err: unknown, fallback: string): string {
   return raw.trim() || fallback;
 }
 
+const isProd = import.meta.env.PROD;
+const suppressWalletErrors = true;
+
 const NewLoginScreen = () => {
   const { user, ready, authenticated } = usePrivy();
-  const { login: openPrivyLogin } = useLogin({
-    onError: (error) => {
-      // Ignore user-initiated exit (closing the modal)
-      if (error === "exited_auth_flow" || (error as unknown as { type?: string })?.type === "exited_auth_flow") {
-        console.log("[Privy] user exited auth flow");
-        return;
-      }
-      const err = error as unknown as { code?: number; details?: { eipCode?: number } };
-      const errorCode = err?.code;
-      const eipCode = err?.details?.eipCode;
-      if (errorCode === -32002 || eipCode === -32002) {
-        setError(getWalletErrorMessage(error, "Wallet connection already pending."));
-      }
-      console.error("[Privy] login modal error", error);
-    },
-  });
-  const { isOpen } = useModalStatus();
-  const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const walletFallbackInFlightRef = useRef(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [gateConnecting, setGateConnecting] = useState(false);
@@ -169,13 +153,113 @@ const NewLoginScreen = () => {
   };
 
   const persistLogin = async (payload: Record<string, unknown>) => {
+    console.log("[Auth][persistLogin] request", {
+      isProd,
+      hasWalletAddress: Boolean(payload.walletAddress),
+      walletAddressPreview:
+        typeof payload.walletAddress === "string"
+          ? `${payload.walletAddress.slice(0, 8)}...${payload.walletAddress.slice(-6)}`
+          : undefined,
+      privyMetaType: (payload.privyMetaData as { type?: string } | undefined)?.type,
+      hasPrivyUserId: Boolean(payload.privyUserId),
+      hasEmail: Boolean(payload.email),
+    });
     const response = await loginV2(payload);
+    console.log("[Auth][persistLogin] response", {
+      success: response?.success,
+      hasToken: Boolean(response?.data?.token),
+      message: response?.message,
+      code: response?.code,
+    });
     if (!response?.success || !response?.data?.token) {
       throw new Error(response?.message || "Login failed");
     }
     setStoredToken(response.data.token);
     if (response.data.username) setStoredUsername(response.data.username);
   };
+
+  const tryInjectedWalletFallback = async (metaType: string, errorSource?: unknown) => {
+    console.log("[Privy][Fallback] start", {
+      isProd,
+      metaType,
+      hasInjectedWallet,
+      inFlight: walletFallbackInFlightRef.current,
+      errorSource,
+    });
+    if (!hasInjectedWallet || walletFallbackInFlightRef.current) return false;
+    walletFallbackInFlightRef.current = true;
+    try {
+      const switched = await ensureInjectedChain();
+      if (!switched) {
+        console.warn("[Privy][Fallback] chain switch failed");
+        if (!suppressWalletErrors) {
+          setError("Please switch MetaMask to the 0G network and try again.");
+        }
+        return false;
+      }
+      const address = await connectInjectedWalletDirectly();
+      console.log("[Privy][Fallback] got injected address", {
+        addressPreview: `${address.slice(0, 8)}...${address.slice(-6)}`,
+      });
+      await persistLogin({
+        walletAddress: address,
+        privyMetaData: { type: metaType },
+      });
+      console.log("[Privy][Fallback] backend login success", { metaType });
+      setError("");
+      return true;
+    } catch (fallbackErr) {
+      console.error("[WalletFallback] direct connect failed", fallbackErr, errorSource);
+      if (!suppressWalletErrors) {
+        setError(getWalletErrorMessage(fallbackErr, "Failed to connect wallet."));
+      }
+      return false;
+    } finally {
+      console.log("[Privy][Fallback] done");
+      walletFallbackInFlightRef.current = false;
+    }
+  };
+
+  const { login: openPrivyLogin } = useLogin({
+    onError: async (error) => {
+      // Ignore user-initiated exit (closing the modal)
+      if (error === "exited_auth_flow" || (error as unknown as { type?: string })?.type === "exited_auth_flow") {
+        console.log("[Privy] user exited auth flow");
+        return;
+      }
+      const lower = String(error || "").toLowerCase();
+      const err = error as unknown as { code?: number; details?: { eipCode?: number } };
+      const errorCode = err?.code;
+      const eipCode = err?.details?.eipCode;
+      if (errorCode === -32002 || eipCode === -32002) {
+        if (!suppressWalletErrors) {
+          setError(getWalletErrorMessage(error, "Wallet connection already pending."));
+        }
+        return;
+      }
+      if (
+        hasInjectedWallet &&
+        (lower.includes("selectextension") || lower.includes("evmask") || lower.includes("unexpected error"))
+      ) {
+        console.warn("[Privy][onError] extension bridge issue detected", {
+          isProd,
+          lower,
+          code: errorCode,
+          eipCode,
+        });
+        const handledByFallback = await tryInjectedWalletFallback("injected_wallet_onerror_fallback", error);
+        if (handledByFallback) return;
+      }
+      if (!suppressWalletErrors) {
+        setError(getWalletErrorMessage(error, "Failed to open wallet connection."));
+      }
+      console.error("[Privy] login modal error", error);
+    },
+  });
+  const { isOpen } = useModalStatus();
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
 
   const { sendCode, loginWithCode, state: emailState } = useLoginWithEmail({
     onError: (err) => {
@@ -229,54 +313,8 @@ const NewLoginScreen = () => {
     }
   }, [isOpen]);
 
-  // Handle wallet login when user becomes authenticated with a wallet
-  const [walletLoginHandled, setWalletLoginHandled] = useState(false);
-  const mountedWithAuthRef = useRef(authenticated);
-
-  // Reset walletLoginHandled when user logs out
-  useEffect(() => {
-    if (!authenticated) {
-      setWalletLoginHandled(false);
-      // Reset the mount ref so next login works
-      mountedWithAuthRef.current = false;
-    }
-  }, [authenticated]);
-
-  useEffect(() => {
-    // Skip if not authenticated or already handled
-    if (!authenticated || !user || walletLoginHandled) return;
-
-    // Skip if component mounted with authenticated=true (logout in progress)
-    // This prevents auto-login when NewLoginScreen appears during logout
-    if (mountedWithAuthRef.current) {
-      console.log("[Privy] Skipping auto-login - component mounted with auth (likely logout in progress)");
-      return;
-    }
-
-    // Find wallet address from linked accounts
-    const walletAccount = user.linkedAccounts?.find(
-      (account: { type: string; address?: string }) => account.type === "wallet" && account.address
-    ) as { type: string; address: string; walletClientType?: string } | undefined;
-
-    if (walletAccount?.address) {
-      console.log("[Privy] Found wallet in user linkedAccounts:", walletAccount);
-      setWalletLoginHandled(true);
-
-      const payload: Record<string, unknown> = {
-        walletAddress: walletAccount.address,
-        privyMetaData: { type: walletAccount.walletClientType || "wallet" },
-      };
-
-      persistLogin(payload)
-        .then(() => {
-          console.log("[Privy] Backend login successful via user wallet");
-        })
-        .catch((err) => {
-          console.error("[Privy] Backend login failed via user wallet", err);
-          setError("Wallet login failed. Please try again.");
-        });
-    }
-  }, [authenticated, user, walletLoginHandled]);
+  // Note: Privy-authenticated login submission is centralized in AuthContext.
+  // Avoid calling /v2/login from this screen after Privy state changes.
 
   useEffect(() => {
     setError("");
@@ -307,10 +345,6 @@ const NewLoginScreen = () => {
     setLoading(true);
     try {
       await loginWithCode({ code: otp.trim() });
-      const payload: any = { email: email.trim() };
-      if (user?.id) payload.privyUserId = user.id;
-      payload.privyMetaData = { ...(payload.privyMetaData ?? {}), type: "email" };
-      await persistLogin(payload);
     } catch (err) {
       setError(getErrorMessage(err, "Invalid OTP"));
     } finally {
@@ -536,13 +570,25 @@ const NewLoginScreen = () => {
                 type="button"
                 className="w-full btn-gradient text-primary-foreground"
                 onClick={async () => {
-                  console.log("[Privy] wallet connect clicked", { ready, isOpen, privyOpening });
+                  console.log("[Privy] wallet connect clicked", {
+                    isProd,
+                    ready,
+                    isOpen,
+                    privyOpening,
+                    hasInjectedWallet,
+                    injectedProviderCount,
+                    missingWalletConnectId,
+                  });
                   if (!ready) {
-                    setError("Privy is still loading. Please wait a moment.");
+                    if (!suppressWalletErrors) {
+                      setError("Privy is still loading. Please wait a moment.");
+                    }
                     return;
                   }
                   if (missingWalletConnectId && !hasInjectedWallet) {
-                    setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
+                    if (!suppressWalletErrors) {
+                      setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
+                    }
                     return;
                   }
                   if (privyOpening) return;
@@ -556,35 +602,17 @@ const NewLoginScreen = () => {
                       );
                     }
                     openPrivyLogin({ loginMethods: ["wallet"] });
+                    console.log("[Privy] openPrivyLogin invoked");
                   } catch (err) {
                     console.error("[Privy] open wallet modal failed", err);
                     // Fallback path: connect via injected wallet directly and finish backend login.
                     if (hasInjectedWallet) {
-                      try {
-                        const switched = await ensureInjectedChain();
-                        if (!switched) {
-                          setError("Please switch MetaMask to the 0G network and try again.");
-                          return;
-                        }
-                        const address = await connectInjectedWalletDirectly();
-                        await persistLogin({
-                          walletAddress: address,
-                          privyMetaData: { type: "injected_wallet_fallback" },
-                        });
-                        setError("");
-                        return;
-                      } catch (fallbackErr) {
-                        console.error("[WalletFallback] direct connect failed", fallbackErr);
-                        setError(
-                          getWalletErrorMessage(
-                            fallbackErr,
-                            "Failed to open wallet connection."
-                          )
-                        );
-                        return;
-                      }
+                      const handledByFallback = await tryInjectedWalletFallback("injected_wallet_fallback", err);
+                      if (handledByFallback) return;
                     }
-                    setError(getWalletErrorMessage(err, "Failed to open wallet connection."));
+                    if (!suppressWalletErrors) {
+                      setError(getWalletErrorMessage(err, "Failed to open wallet connection."));
+                    }
                   } finally {
                     // If modal opens successfully, useModalStatus effect keeps this in sync.
                     // If it fails before opening, this unblocks retries.

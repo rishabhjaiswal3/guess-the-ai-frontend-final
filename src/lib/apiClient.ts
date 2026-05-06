@@ -33,9 +33,13 @@ const shouldRetry = (status?: number) => {
   return status >= 500 && status < 600;
 };
 
+const isLoginPath = (path: string) => /\/v?\d*\/?login(?:\/|$)/i.test(path);
+
 export const apiRequest = async <T>(path: string, options: ApiRequestOptions = {}): Promise<T> => {
   const { method = "GET", body, headers = {}, auth = true, retry = 3 } = options;
-  const token = auth ? getStoredToken() : "";
+  // Safety: never attach Authorization header to login endpoints.
+  const authEnabled = isLoginPath(path) ? false : auth;
+  const token = authEnabled ? getStoredToken() : "";
 
   let attempt = 0;
   let lastError: unknown = null;
@@ -67,7 +71,7 @@ export const apiRequest = async <T>(path: string, options: ApiRequestOptions = {
 
       if (!response.ok) {
         if (
-          response.status === 401 ||
+          (!isLoginPath(path) && response.status === 401) ||
           (payload && typeof payload === "object" && (payload as any).message === "Invalid token or token expired. Please log in again.")
         ) {
           clearStoredSession();
