@@ -51,9 +51,9 @@ const Header = ({ onLogoClick }: HeaderProps) => {
               className="absolute -inset-0.5 rounded-xl border border-dashed border-primary/30"
             />
           </motion.div>
-          
+
           <div className="hidden sm:block">
-            <motion.span 
+            <motion.span
               className="text-lg font-black"
               style={{
                 background: "linear-gradient(90deg, #00ffff, #ff00ff)",

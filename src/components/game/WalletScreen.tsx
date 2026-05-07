@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, Link2, CreditCard, ArrowUpRight, Shield, Coins, Gift, Zap } from "lucide-react";
+import { Wallet, Link2, CreditCard, ArrowUpRight, Shield, Coins, Gift, Zap, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +13,15 @@ const WalletScreen = () => {
   const { openLogin, token, profile, logout } = useAuth();
   const [showTransactions, setShowTransactions] = useState(false);
   const [gameTransactions, setGameTransactions] = useState<GameTransactionRecord[]>([]);
+  const [walletCopied, setWalletCopied] = useState(false);
+
+  const handleCopyWallet = () => {
+    if (!profile?.walletAddress) return;
+    navigator.clipboard.writeText(profile.walletAddress).then(() => {
+      setWalletCopied(true);
+      setTimeout(() => setWalletCopied(false), 2000);
+    });
+  };
   const shouldHideLogout = getStoredSource() === "browser";
 
   useEffect(() => {
@@ -90,11 +99,25 @@ const WalletScreen = () => {
               {token ? "Wallet Connected" : "Connect Wallet"}
             </motion.h1>
             
-            <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-              {token
-                ? `Connected as ${profile?.walletAddress.slice(0,6)}...${profile?.walletAddress.slice(-4)}`
-                : "Link your wallet to save progress, compete on leaderboards, and earn crypto rewards!"}
-            </p>
+            <div className="text-muted-foreground mb-8 max-w-sm mx-auto">
+              {token && profile?.walletAddress ? (
+                <span className="inline-flex items-center gap-2 flex-wrap justify-center">
+                  <span>Connected as</span>
+                  <span className="">
+                    {profile.walletAddress.slice(0, 6)}...{profile.walletAddress.slice(-4)}
+                  </span>
+                  <button
+                    onClick={handleCopyWallet}
+                    title={profile.walletAddress}
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {walletCopied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </span>
+              ) : (
+                "Link your wallet to save progress, compete on leaderboards, and earn crypto rewards!"
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="space-y-4 mb-8">
