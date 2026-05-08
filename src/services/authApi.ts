@@ -66,6 +66,50 @@ export type UpdateUsernameResult = {
   data?: Record<string, unknown>;
 };
 
+export type WalletChallengeResponse = {
+  success: boolean;
+  data: {
+    walletAddress: string;
+    challengeMessage: string;
+    nonce: string;
+    issuedAt: string;
+    expiresAt: string;
+    expiresInSec: number;
+  };
+};
+
+export type SiweLoginResponse = {
+  success: boolean;
+  data: {
+    token: string;
+    username?: string;
+    walletAddress: string;
+    authMethod: string;
+  };
+  message?: string;
+};
+
+export const getWalletChallenge = async (
+  walletAddress: string
+): Promise<WalletChallengeResponse> => {
+  return apiRequest<WalletChallengeResponse>("/auth/challenge", {
+    method: "POST",
+    body: { walletAddress },
+    auth: false,
+  });
+};
+
+export const siweWalletLogin = async (
+  message: string,
+  signature: string
+): Promise<SiweLoginResponse> => {
+  return apiRequest<SiweLoginResponse>("/auth/wallet-login", {
+    method: "POST",
+    body: { message, signature },
+    auth: false,
+  });
+};
+
 export const loginV2 = async (payload: LoginRequest): Promise<LoginResponse> => {
   return apiRequest<LoginResponse>("/v2/login", {
     method: "POST",

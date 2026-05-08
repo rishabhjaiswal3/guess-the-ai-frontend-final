@@ -6,6 +6,7 @@ import {
   useModalStatus,
   usePrivy,
 } from "@privy-io/react-auth";
+
 import { motion } from "framer-motion";
 import { Mail, KeyRound, Wallet, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -332,23 +333,6 @@ const NewLoginScreen = () => {
       setStep("otp");
     } catch (err) {
       setError(getErrorMessage(err, "Failed to send OTP"));
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    console.log("[Auth] verify OTP clicked", { email, otpLength: otp.length });
-    setError("");
-    if (!otp.trim()) {
-      setError("OTP is required.");
-      return;
-    }
-    setLoading(true);
-    try {
-      await loginWithCode({ code: otp.trim() });
-    } catch (err) {
-      setError(getErrorMessage(err, "Invalid OTP"));
-    } finally {
-      setLoading(false);
     }
   };
 

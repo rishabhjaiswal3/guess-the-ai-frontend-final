@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { usePrivy, useLogin, type User } from "@privy-io/react-auth";
-import { loginV2, type LoginRequest, type ProfilePayload, getProfile, updateUsername } from "@/services/authApi";
+import { usePrivy, useLogin, useWallets, type User } from "@privy-io/react-auth";
+import { SiweMessage } from "siwe";
+import { loginV2, getWalletChallenge, siweWalletLogin, type LoginRequest, type ProfilePayload, getProfile, updateUsername } from "@/services/authApi";
 import {
   clearJwtFromUrl,
   clearStoredSession,
@@ -151,6 +152,7 @@ const buildLoginPayloadFromPrivy = (user?: User | null): LoginRequest | null => 
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { ready, authenticated, logout: privyLogout, user } = usePrivy();
+  const { wallets } = useWallets();
   const { login: privyLogin } = useLogin({
     onError: (error) => {
       // Ignore user-initiated exit (closing the modal)
@@ -244,6 +246,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginWithPrivy = useCallback(async () => {
     if (!authenticated) return;
+
+    const externalWallet = wallets.find(
+      (w) => w.connectorType !== "embedded" && w.address
+    );
+
+    if (externalWallet) {
+      setLoading(true);
+      try {
+        const challengeRes = await getWalletChallenge(externalWallet.address);
+        const { challengeMessage } = challengeRes.data;
+
+        const provider = await externalWallet.getEthereumProvider();
+        const signature = await provider.request({
+          method: "personal_sign",
+          params: [challengeMessage, externalWallet.address],
+        });
+
+        const loginRes = await siweWalletLogin(challengeMessage, signature as string);
+        if (!loginRes?.data?.token) {
+          setError("SIWE login failed. Please try again.");
+          return;
+        }
+        handleLoginResponse({ data: { token: loginRes.data.token, username: loginRes.data.username } });
+        return;
+      } catch (err) {
+        console.error("[Auth] SIWE login failed, falling back to Privy flow", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     const payload = buildLoginPayloadFromPrivy(user);
     if (!payload) return;
     setLoading(true);
@@ -258,7 +291,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } finally {
       setLoading(false);
     }
-  }, [authenticated, user, handleLoginResponse]);
+  }, [authenticated, user, wallets, handleLoginResponse]);
 
   useEffect(() => {
     if (jwtAttemptedRef.current || token) return;
