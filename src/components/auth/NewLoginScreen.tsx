@@ -436,7 +436,7 @@ const NewLoginScreen = () => {
                 </div>
                 <img src={KultLogo} alt="Kult 0G" className="h-10 w-auto object-contain brightness-110" />
               </div>
-              <h1 className="text-4xl font-black gradient-text mb-3 leading-tight">Welcome to <br />Guess the AI</h1>
+              <h1 className="text-4xl font-black gradient-text mb-3 leading-tight glitch-hover cursor-default">Welcome to <br />Guess the AI</h1>
               <p className="text-base text-foreground/80 mb-6 leading-relaxed font-medium">
                 The ultimate battle of intuition. <br />Connect your wallet to prove you can spot the machine.
               </p>
