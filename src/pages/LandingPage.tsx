@@ -94,9 +94,9 @@ function StepCard({ n, title, desc, icon: Icon }: { n: string; title: string; de
 
 function InfraCard({ title, desc, status, icon: Icon }: { title: string; desc: string; status: string; icon: any }) {
   return (
-    <div className="flex-1 bg-[#0a0a0c]/80 backdrop-blur-md border border-cyan/20 relative group/infra hover:border-cyan/40 transition-all duration-300" style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)' }}>
+    <div className="flex-1 bg-white/5 backdrop-blur-xl border border-cyan/20 relative group/infra hover:border-cyan/40 transition-all duration-300" style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%)' }}>
       <div className="p-2 flex items-center gap-2">
-        <div className="h-8 w-8 shrink-0 rounded-lg bg-magenta/5 border border-magenta/20 flex items-center justify-center text-magenta/80 shadow-[inset_0_0_10px_rgba(255,0,255,0.05)] group-hover/infra:scale-110 transition-transform">
+        <div className="h-8 w-8 shrink-0 rounded-lg bg-cyan/5 border border-cyan/20 flex items-center justify-center text-cyan/80 shadow-[inset_0_0_10px_rgba(0,255,255,0.05)] group-hover/infra:scale-110 transition-transform">
           <Icon size={14} />
         </div>
         <div className="flex-1 min-w-0">
