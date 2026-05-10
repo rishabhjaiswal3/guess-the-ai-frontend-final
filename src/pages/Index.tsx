@@ -75,7 +75,7 @@ const Index = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden">
       <Suspense fallback={<LoadingBackground />}>
         <Background3D />
       </Suspense>
@@ -94,7 +94,7 @@ const Index = () => {
         }} 
       />
 
-      <main className="relative z-10 pt-20 pb-32 lg:pb-8 min-h-screen">
+      <main className="relative z-10 pt-20 pb-32 lg:pb-8 " >
         <AuthGate>
           <AnimatePresence mode="wait">
             <motion.div

@@ -19,6 +19,7 @@ import networkConfig from "@/lib/networkConfig";
 import { addGameTransaction } from "@/lib/gameTransactions";
 import { toast } from "@/components/ui/sonner";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
+import GameImageBox from "@/components/game/GameImageBox";
 type ProofStatus = "idle" | "verifying" | "verified" | "stored";
 
 interface ScorePopup {
@@ -99,6 +100,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [proofStatus, setProofStatus] = useState<ProofStatus>("idle");
   const [answerTimestamp, setAnswerTimestamp] = useState<string | null>(null);
+  const [lastAnsweredImage, setLastAnsweredImage] = useState<{ hash: string; imageUrl: string; fallbackImageUrl: string } | null>(null);
   const [rulesOpen, setRulesOpen] = useState(false);
   const [scanMessage, setScanMessage] = useState("Analyzing response...");
 
@@ -127,11 +129,12 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
         return;
       }
       if (forceReplace || !currentImage) {
-        await preloadImages([batch[0].imageUrl]);
-        preloadedHashesRef.current.add(batch[0].hash);
         const [first, ...rest] = batch;
         setCurrentImage(first);
         setImageQueue(rest);
+        preloadImages([first.imageUrl]).then(() => {
+          preloadedHashesRef.current.add(first.hash);
+        }).catch(() => {});
       } else {
         setImageQueue((prev) => [...prev, ...batch]);
       }
@@ -155,17 +158,18 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
         setProgressMessage("No images available right now. Try again soon.");
         return;
       }
-      await preloadImages([batch[0].imageUrl]);
-      preloadedHashesRef.current.add(batch[0].hash);
       const [first, ...rest] = batch;
       setCurrentImage(first);
       setImageQueue(rest);
+      preloadImages([first.imageUrl]).then(() => {
+        preloadedHashesRef.current.add(first.hash);
+      }).catch(() => {});
     } catch (err) {
       console.error("Error loading initial images:", err);
       setCurrentImage(null);
       setProgressMessage("Unable to load images. Please retry.");
     } finally {
-      setTimeout(() => setIsLoading(false), 300);
+      setIsLoading(false);
     }
   }, []);
 
@@ -326,6 +330,11 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     }
 
     setTruthLabel(truth);
+    setLastAnsweredImage({
+      hash: currentImage.hash,
+      imageUrl: currentImage.imageUrl,
+      fallbackImageUrl: currentImage.fallbackImageUrl,
+    });
     void preloadNextImage(imageQueue[0]);
 
     if (isCorrect) {
@@ -396,13 +405,14 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       <FloatingScorePopup popups={scorePopups} onComplete={removeScorePopup} />
 
       <ScreenShake trigger={shakeScreen} intensity={15}>
-        <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
-          <ClassicStatsBar
-            streak={streak}
-            score={score}
-            onBack={() => { playBack(); onBack(); }}
-            onRules={() => setRulesOpen(true)}
-          />
+        <div className="min-h-screen px-4 pt-4 pb-6">
+          <div className="mx-auto w-full max-w-lg">
+            <ClassicStatsBar
+              streak={streak}
+              score={score}
+              onBack={() => { playBack(); onBack(); }}
+              onRules={() => setRulesOpen(true)}
+            />
 
           {/* Last tx pill */}
           {lastTxHash ? (
@@ -422,12 +432,12 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
             </div>
           ) : null}
 
-          <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="rounded-3xl w-full max-w-lg">
+          <GlowingBorder glowColor={getComboGlow()} intensity={combo >= 3 ? "high" : "medium"} className="w-full rounded-3xl">
             <motion.div
               ref={gameCardRef}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-strong rounded-3xl p-7 w-full max-w-4xl"
+              className="glass-strong w-full rounded-3xl p-7"
             >
               <div className="relative text-center mb-3">
                 <motion.h2
@@ -477,11 +487,11 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                           className="absolute inset-0"
                         >
                           {!imageError ? (
-                            <img
+                            <GameImageBox
                               src={currentImage.imageUrl}
                               alt="Guess if this is AI or Human made"
-                              className="w-full h-full object-cover"
-                              onError={(event) => {
+                              skeletonAspect="landscape"
+                              onImageError={(event) => {
                                 const fallbackUrl = currentImage.fallbackImageUrl;
                                 if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                                   event.currentTarget.src = fallbackUrl;
@@ -495,7 +505,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                               Image unavailable
                             </div>
                           )}
-                          <div className="absolute inset-0 bg-gradient-to-br from-cyan/10 via-transparent to-magenta/10 mix-blend-overlay" />
+                          <div className="pointer-events-none absolute inset-0 z-[5] bg-gradient-to-br from-cyan/10 via-transparent to-magenta/10 mix-blend-overlay" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -611,7 +621,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                     
                     {currentImage && (
                       <div className="absolute inset-0 opacity-30 mix-blend-overlay filter blur-sm">
-                         <img src={currentImage.imageUrl} className="w-full h-full object-cover" alt="" />
+                        <GameImageBox src={currentImage.imageUrl} alt="" skeletonAspect="landscape" />
                       </div>
                     )}
 
@@ -651,23 +661,6 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                   </div>
                 </motion.div>
                 
-                {/* 0G badge always stays on top of the container, irrespective of flip */}
-                <AnimatePresence>
-                  {currentImage && !!showResult && (
-                    <motion.div 
-                      initial={{ opacity: 0 }} 
-                      animate={{ opacity: 1 }} 
-                      className="absolute top-3 right-3 z-50"
-                    >
-                      <VerifyHashEyeButton
-                        hash={currentImage.hash}
-                        visible
-                        txHash={lastTxHash}
-                        timestamp={answerTimestamp}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
 
               {/* Proof status bar */}
@@ -710,15 +703,27 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 </div>
               </div>
 
-              {/* Trust Signal Badge */}
+              {/* Proof Record Row — persists after each submission */}
               <div className="mt-4 flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-cyan-900/10 border border-cyan-500/20 w-max mx-auto">
                 <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
                 <span className="text-[10px] text-cyan-200/80 font-semibold tracking-wide uppercase">
-                  Verified on 0G
+                  {lastAnsweredImage ? "Last answer proof" : "Verified on 0G"}
                 </span>
+                {lastAnsweredImage && (
+                  <VerifyHashEyeButton
+                    hash={lastAnsweredImage.hash}
+                    imageUrl={lastAnsweredImage.imageUrl}
+                    fallbackImageUrl={lastAnsweredImage.fallbackImageUrl}
+                    visible
+                    txHash={lastTxHash}
+                    timestamp={answerTimestamp}
+                    className="h-6 w-6 min-w-6 [&_svg]:h-3 [&_svg]:w-3"
+                  />
+                )}
               </div>
             </motion.div>
           </GlowingBorder>
+          </div>
         </div>
       </ScreenShake>
       <GameRulesDialog mode="classic" open={rulesOpen} onOpenChange={setRulesOpen} />

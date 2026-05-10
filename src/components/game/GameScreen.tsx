@@ -58,7 +58,8 @@ const GameScreen = ({ onScoreUpdate, onGameActiveChange }: GameScreenProps) => {
   return (
     <>
       <NeuralGridBackground />
-      <AnimatePresence mode="wait">
+              
+      <AnimatePresence mode="wait"  >
       {selectedMode ? (
         <motion.div
           key={selectedMode}

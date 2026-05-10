@@ -13,16 +13,39 @@ import { cn } from "@/lib/utils";
 import { normalizeImageHashInput } from "@/lib/imageHashInput";
 import networkConfig from "@/lib/networkConfig";
 
+const ProofImage = ({ primary, fallback, onFail }: { primary: string; fallback: string | null; onFail: () => void }) => {
+  const [src, setSrc] = useState(primary);
+  return (
+    <div className="rounded-xl overflow-hidden border border-border/60" style={{ aspectRatio: "4/3" }}>
+      <img
+        src={src}
+        alt="Submitted image"
+        className="w-full h-full object-cover"
+        onError={() => {
+          if (fallback && src !== fallback) {
+            setSrc(fallback);
+          } else {
+            onFail();
+          }
+        }}
+      />
+    </div>
+  );
+};
+
 interface VerifyHashEyeButtonProps {
   hash: string;
   visible: boolean;
   txHash?: string | null;
   timestamp?: string | null;
+  imageUrl?: string | null;
+  fallbackImageUrl?: string | null;
   className?: string;
 }
 
-const VerifyHashEyeButton = ({ hash, visible, txHash, timestamp, className }: VerifyHashEyeButtonProps) => {
+const VerifyHashEyeButton = ({ hash, visible, txHash, timestamp, imageUrl, fallbackImageUrl, className }: VerifyHashEyeButtonProps) => {
   const [open, setOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   if (!visible) return null;
 
@@ -45,7 +68,7 @@ const VerifyHashEyeButton = ({ hash, visible, txHash, timestamp, className }: Ve
         size="icon"
         variant="secondary"
         className={cn(
-          "absolute z-[60] h-9 w-9 min-w-9 rounded-full border border-border/60 bg-background/90 shadow-md backdrop-blur-sm hover:bg-background",
+          "relative z-[60] h-9 w-9 min-w-9 rounded-full border border-border/60 bg-background/90 shadow-md backdrop-blur-sm hover:bg-background",
           className
         )}
         onClick={(e: MouseEvent) => { e.stopPropagation(); e.preventDefault(); setOpen(true); }}
@@ -69,6 +92,15 @@ const VerifyHashEyeButton = ({ hash, visible, txHash, timestamp, className }: Ve
           </DialogHeader>
 
           <div className="space-y-3 mt-1">
+            {/* Image preview */}
+            {imageUrl && !imgError && (
+              <ProofImage
+                primary={imageUrl}
+                fallback={fallbackImageUrl ?? null}
+                onFail={() => setImgError(true)}
+              />
+            )}
+
             {/* Image hash */}
             <div className="rounded-xl bg-muted/40 border border-border/60 p-3">
               <p className="text-[10px] text-muted-foreground mb-1.5 font-semibold uppercase tracking-wider">Image Hash</p>

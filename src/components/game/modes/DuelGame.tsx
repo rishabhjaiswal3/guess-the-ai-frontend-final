@@ -15,7 +15,7 @@ import {
   submitDuelAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
-import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
+import GameImageBox from "@/components/game/GameImageBox";
 
 interface DuelGameProps {
   onBack: () => void;
@@ -249,73 +249,9 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
           </div>
         </GlowingBorder>
 
-        {isLoading && (
-          <div className="glass-strong rounded-3xl p-8 flex flex-col items-center justify-center mb-6">
-            <div className="relative w-16 h-16 mb-4">
-              <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
-              />
-              <motion.div
-                animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-4 bg-cyan-400/20 rounded-full blur-md"
-              />
-            </div>
-            <motion.div
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="text-sm font-mono text-cyan-300 tracking-wider uppercase font-bold"
-            >
-              Generating Challenge...
-            </motion.div>
-          </div>
-        )}
+        {!showResult && !isLoading && !isSubmittingAnswer && <HintBadge hint={hint} loading={hintLoading} />}
 
-        <AnimatePresence>
-          {isSubmittingAnswer && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="glass-strong rounded-3xl p-8 flex flex-col items-center justify-center mb-6 border border-cyan-400/30"
-            >
-              <div className="relative w-14 h-14 mb-4">
-                <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
-                />
-              </div>
-              <AnimatePresence mode="wait">
-                <motion.span 
-                  key={scanMessage}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -5 }}
-                  className="font-bold text-cyan-400 tracking-wider"
-                >
-                  {scanMessage}
-                </motion.span>
-              </AnimatePresence>
-              <div className="w-full max-w-[200px] h-1 bg-cyan-900/50 rounded-full overflow-hidden mt-3">
-                <motion.div 
-                  className="h-full bg-cyan-400"
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 1.5, ease: "linear" }}
-                />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {!showResult && <HintBadge hint={hint} loading={hintLoading} />}
-
-        <div className="relative mb-6">
+        <div className="relative mb-6 overflow-hidden rounded-2xl">
           <div className="grid grid-cols-2 gap-4">
             {[0, 1].map((position) => (
               <motion.div
@@ -323,7 +259,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
                 initial={{ opacity: 0, x: position === 0 ? -50 : 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: position * 0.2 }}
-                onClick={() => !showResult && handleSelect(position)}
+                onClick={() => !showResult && !isLoading && handleSelect(position)}
                 className={`relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 ${
                   selectedPosition === position
                     ? "ring-4 ring-secondary scale-[0.98]"
@@ -334,34 +270,31 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" aspectRatio="portrait" />
-                ) : images[position] ? (
-                  <img
-                    src={images[position]!.imageUrl || images[position]!.url}
+                ) : (
+                  <GameImageBox
+                    src={images[position]?.imageUrl || images[position]?.url}
                     alt={`Image ${position + 1}`}
-                    className="w-full h-full object-cover"
-                    onError={(event) => {
-                      const fallbackUrl = images[position]!.fallbackImageUrl;
+                    skeletonAspect="portrait"
+                    onImageError={(event) => {
+                      const fallbackUrl = images[position]?.fallbackImageUrl;
                       if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                         event.currentTarget.src = fallbackUrl;
                       }
                     }}
                   />
-                ) : null}
+                )}
 
                 <div className="absolute top-3 left-3 w-10 h-10 rounded-full glass flex items-center justify-center font-black text-lg text-foreground">
                   {position === 0 ? "A" : "B"}
                 </div>
 
-                {showResult && images[position] ? (
-                  <VerifyHashEyeButton hash={images[position]!.hash} visible className="top-14 right-3" />
-                ) : null}
 
                 <AnimatePresence>
                   {showResult && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className={`absolute inset-0 flex items-center justify-center ${
+                      className={`absolute inset-0 z-20 flex items-center justify-center ${
                         position === correctPosition ? "bg-secondary/80" : selectedPosition === position ? "bg-error-overlay" : ""
                       }`}
                     >
@@ -384,9 +317,85 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
             ))}
           </div>
 
-          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-secondary to-accent flex items-center justify-center font-black text-xl text-foreground shadow-lg">VS</div>
+          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }} className="pointer-events-none absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-secondary to-accent font-black text-xl text-foreground shadow-lg">VS</div>
           </motion.div>
+
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[48] flex flex-col items-center justify-center rounded-2xl bg-background/70 backdrop-blur-md"
+              >
+                <div className="relative mb-5 h-16 w-16">
+                  <motion.div className="absolute inset-0 rounded-full border-4 border-cyan-500/20" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-400"
+                  />
+                  <motion.div
+                    animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-4 rounded-full bg-cyan-400/20 blur-md"
+                  />
+                </div>
+                <motion.p
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-center font-mono text-sm font-bold uppercase tracking-wider text-cyan-300"
+                >
+                  Generating Challenge...
+                </motion.p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {isSubmittingAnswer && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[50] flex flex-col items-center justify-center rounded-2xl bg-background/65 backdrop-blur-md"
+              >
+                <div className="relative mb-4 h-14 w-14">
+                  <motion.div className="absolute inset-0 rounded-full border-4 border-cyan-500/20" />
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-400"
+                  />
+                  <motion.div
+                    animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-3 rounded-full bg-cyan-400/20 blur-md"
+                  />
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={scanMessage}
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -5 }}
+                    className="text-center font-bold tracking-wider text-cyan-400"
+                  >
+                    {scanMessage}
+                  </motion.span>
+                </AnimatePresence>
+                <div className="mt-3 h-1 w-32 overflow-hidden rounded-full bg-cyan-900/50">
+                  <motion.div
+                    className="h-full bg-cyan-400"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 1.5, ease: "linear" }}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <AnimatePresence>

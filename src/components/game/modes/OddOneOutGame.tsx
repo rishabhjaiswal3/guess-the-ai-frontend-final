@@ -13,7 +13,7 @@ import {
   submitOddOneOutAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
-import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
+import GameImageBox from "@/components/game/GameImageBox";
 
 interface OddOneOutGameProps {
   onBack: () => void;
@@ -180,31 +180,31 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
-                ) : images[index] ? (
+                ) : (
                   <>
-                    <img
-                      src={images[index].imageUrl || images[index].url}
+                    <GameImageBox
+                      src={images[index]?.imageUrl || images[index]?.url}
                       alt={`Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      skeletonAspect="square"
                       onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
-                      onError={(event) => {
-                        const fallbackUrl = images[index].fallbackImageUrl;
+                      onImageError={(event) => {
+                        const fallbackUrl = images[index]?.fallbackImageUrl;
                         if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                           event.currentTarget.src = fallbackUrl;
                         }
                       }}
                     />
-                    {images[index].percentage !== undefined && aiReviewRevealed && (
+                    {images[index]?.percentage !== undefined && aiReviewRevealed && (
                       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                         <span>{images[index].percentage}%</span>
                       </div>
                     )}
                   </>
-                ) : null}
+                )}
 
                 <AnimatePresence>
                   {showResult && index === oddIndex && (
-                    <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 bg-primary/80 flex items-center justify-center">
+                    <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 z-20 flex items-center justify-center bg-primary/80">
                       <div className="text-center">
                         <Eye className="w-8 h-8 text-primary-foreground mx-auto" />
                         <span className="text-xs font-bold text-primary-foreground">ODD!</span>
@@ -212,14 +212,11 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                     </motion.div>
                   )}
                   {showResult && selectedIndex === index && index !== oddIndex && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-error-overlay flex items-center justify-center">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-20 flex items-center justify-center bg-error-overlay">
                       <XCircle className="w-8 h-8 text-foreground" />
                     </motion.div>
                   )}
                 </AnimatePresence>
-                {images[index] ? (
-                  <VerifyHashEyeButton hash={images[index].hash} visible={showResult} className="bottom-2 right-2 z-[55] h-8 w-8 min-w-8" />
-                ) : null}
               </motion.div>
             ))}
           </div>
@@ -244,31 +241,31 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
               >
                 {isLoading ? (
                   <ImageSkeleton className="absolute inset-0 rounded-none" />
-                ) : images[index] ? (
+                ) : (
                   <>
-                    <img
-                      src={images[index].imageUrl || images[index].url}
+                    <GameImageBox
+                      src={images[index]?.imageUrl || images[index]?.url}
                       alt={`Image ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      skeletonAspect="square"
                       onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
-                      onError={(event) => {
-                        const fallbackUrl = images[index].fallbackImageUrl;
+                      onImageError={(event) => {
+                        const fallbackUrl = images[index]?.fallbackImageUrl;
                         if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                           event.currentTarget.src = fallbackUrl;
                         }
                       }}
                     />
-                    {images[index].percentage !== undefined && aiReviewRevealed && (
+                    {images[index]?.percentage !== undefined && aiReviewRevealed && (
                       <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white px-2 py-0.5 rounded-full text-[10px] md:text-xs font-mono font-bold flex items-center gap-1 z-10 border border-white/20">
                         <span>{images[index].percentage}%</span>
                       </div>
                     )}
                   </>
-                ) : null}
+                )}
 
                 <AnimatePresence>
                   {showResult && index === oddIndex && (
-                    <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 bg-primary/80 flex items-center justify-center">
+                    <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} className="absolute inset-0 z-20 flex items-center justify-center bg-primary/80">
                       <div className="text-center">
                         <Eye className="w-8 h-8 text-primary-foreground mx-auto" />
                         <span className="text-xs font-bold text-primary-foreground">ODD!</span>
@@ -276,14 +273,11 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                     </motion.div>
                   )}
                   {showResult && selectedIndex === index && index !== oddIndex && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-error-overlay flex items-center justify-center">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-20 flex items-center justify-center bg-error-overlay">
                       <XCircle className="w-8 h-8 text-foreground" />
                     </motion.div>
                   )}
                 </AnimatePresence>
-                {images[index] ? (
-                  <VerifyHashEyeButton hash={images[index].hash} visible={showResult} className="bottom-2 right-2 z-[55] h-8 w-8 min-w-8" />
-                ) : null}
               </motion.div>
             ))}
           </div>

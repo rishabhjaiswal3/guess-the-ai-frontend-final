@@ -14,7 +14,7 @@ import {
   type ModeQuestionImage,
   type ModeAnswerResult,
 } from "@/services/gameModesApi";
-import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
+import GameImageBox from "@/components/game/GameImageBox";
 
 interface MultiSelectGameProps {
   onBack: () => void;
@@ -194,12 +194,12 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                   className={`relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-300 ${isSelected ? "ring-4 ring-primary scale-95" : "hover:scale-[1.02]"
                     }`}
                 >
-                  <img
+                  <GameImageBox
                     src={img.imageUrl || img.url}
                     alt="Game image"
-                    className="w-full h-full object-cover"
+                    skeletonAspect="square"
                     onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
-                    onError={(event) => {
+                    onImageError={(event) => {
                       const fallbackUrl = img.fallbackImageUrl;
                       if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                         event.currentTarget.src = fallbackUrl;
@@ -219,7 +219,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-primary/30 flex items-center justify-center"
+                        className="absolute inset-0 z-10 flex items-center justify-center bg-primary/30"
                       >
                         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
                           <CheckCircle className="w-6 h-6 text-primary-foreground" />
@@ -233,7 +233,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className={`absolute inset-0 flex items-center justify-center ${shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
+                        className={`absolute inset-0 z-20 flex items-center justify-center ${shouldSelect ? (isSelected ? "bg-success-overlay" : "bg-error-overlay") : isSelected ? "bg-error-overlay" : ""
                           }`}
                       >
                         {shouldSelect && (
@@ -264,7 +264,6 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
                       {(truth || "?").toUpperCase()}
                     </div>
                   )}
-                  <VerifyHashEyeButton hash={img.hash} visible={showResult} className="bottom-2 left-2 h-8 w-8 min-w-8" />
                 </motion.div>
               );
             })
