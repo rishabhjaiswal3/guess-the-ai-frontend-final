@@ -13,8 +13,8 @@ export default function LabInitializationOverlay({ isOpen, onComplete, agentName
   
   const steps = useMemo(() => [
     "KULT: Establishing secure link...",
-    `KULT: Welcome, Agent ${agentName || "Detective"}`
-  ], [agentName]);
+    "KULT: Welcome, Agent"
+  ], []);
 
   useEffect(() => {
     if (isOpen) {
@@ -26,7 +26,7 @@ export default function LabInitializationOverlay({ isOpen, onComplete, agentName
             // Step 4: Voice Synthesis for welcome
             if ('speechSynthesis' in window && isSoundEnabled()) {
               try {
-                const msg = new SpeechSynthesisUtterance(`Welcome, Agent ${agentName || "Detective"}`);
+                const msg = new SpeechSynthesisUtterance("Welcome, Agent");
                 msg.rate = 0.9;
                 msg.pitch = 0.1;
                 window.speechSynthesis.speak(msg);
