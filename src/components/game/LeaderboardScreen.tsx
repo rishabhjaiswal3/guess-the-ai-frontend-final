@@ -3,10 +3,40 @@ import { Trophy, Crown, Medal, Flame, TrendingUp, Star, Shield, ChevronLeft, Che
 import { RANK_COLORS } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import GlowingBorder from "@/components/effects/GlowingBorder";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getLeaderboardAllTime, getLeaderboardGateUsers, type LeaderboardEntry, type PaginationInfo } from "@/services/leaderboardApi";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Canvas, useFrame } from "@react-three/fiber";
+import { Sparkles, Stars } from "@react-three/drei";
+import * as THREE from "three";
+
+const RotatingStars = () => {
+  const ref = useRef<THREE.Group>(null);
+  useFrame((state, delta) => {
+    if (ref.current) {
+      ref.current.rotation.y -= delta * 0.05;
+      ref.current.rotation.x -= delta * 0.02;
+    }
+  });
+  return (
+    <group ref={ref}>
+      <Stars radius={10} depth={50} count={1500} factor={4} saturation={0.5} fade speed={1.5} />
+      <Sparkles count={100} scale={10} size={3} speed={0.6} opacity={0.8} color="#ffd700" />
+      <Sparkles count={80} scale={10} size={2} speed={0.4} opacity={0.6} color="#c0c0c0" />
+      <Sparkles count={60} scale={10} size={4} speed={0.8} opacity={0.7} color="#cd7f32" />
+    </group>
+  );
+};
+
+const PodiumBackground = () => (
+  <div className="absolute inset-0 z-0 pointer-events-none opacity-80 mix-blend-screen mask-image-b">
+    <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+      <ambientLight intensity={0.5} />
+      <RotatingStars />
+    </Canvas>
+  </div>
+);
 
 const LeaderboardScreen = () => {
   const { profile } = useAuth();
@@ -90,7 +120,7 @@ const LeaderboardScreen = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-20 pb-32 lg:pb-28">
+    <div className="px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <motion.div
@@ -121,9 +151,10 @@ const LeaderboardScreen = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
+            whileHover={{ scale: 1.01 }}
+            className="mb-6 group"
           >
-            <div className="glass-strong rounded-xl p-4 flex items-center justify-between border border-primary/30">
+            <div className="glass-3d glass-3d-hover rounded-xl p-4 flex items-center justify-between border border-primary/30 relative overflow-hidden">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                   <User className="w-5 h-5 text-primary-foreground" />
@@ -151,9 +182,11 @@ const LeaderboardScreen = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="glass-strong rounded-3xl p-6 pb-0 overflow-hidden"
+              whileHover={{ scale: 1.005 }}
+              className="glass-3d glass-3d-hover rounded-3xl p-6 pb-0 overflow-hidden relative border border-white/10"
             >
-              <div className="flex items-end justify-center gap-4 h-64">
+              <PodiumBackground />
+              <div className="flex items-end justify-center gap-4 h-64 relative z-10">
                 {/* 2nd Place */}
                 <motion.div
                   initial={{ y: 100, opacity: 0 }}
@@ -295,7 +328,7 @@ const LeaderboardScreen = () => {
             className={cn(
               "px-6 py-2.5 rounded-full font-bold flex items-center gap-2 border transition-all",
               activeTab === "gate"
-                ? "bg-cyan/20 text-cyan-100 border-cyan/50 shadow-[0_0_15px_rgba(34,211,238,0.4)]"
+                ? "bg-cyan/20 text-cyan-100 border-cyan/50 shadow-[0_0_15px_rgba(107,140,255,0.35)]"
                 : "glass text-muted-foreground hover:text-foreground hover:border-cyan/30"
             )}
           >
@@ -309,7 +342,8 @@ const LeaderboardScreen = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="glass-strong rounded-2xl overflow-hidden"
+          whileHover={{ scale: 1.002 }}
+          className="glass-3d glass-3d-hover rounded-2xl overflow-hidden border border-white/10 relative"
         >
           {/* Table Header */}
           <div className="grid grid-cols-6 gap-4 px-6 py-4 text-sm font-bold text-muted-foreground border-b border-border bg-muted/30">
@@ -352,7 +386,7 @@ const LeaderboardScreen = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.1 + index * 0.03 }}
-              whileHover={{ backgroundColor: "rgba(0,255,255,0.08)", x: 4 }}
+              whileHover={{ backgroundColor: "rgba(107,140,255,0.08)", x: 4 }}
               className={cn(
                 "grid grid-cols-6 gap-4 px-6 py-4 items-center border-b border-border/30 transition-all cursor-pointer",
                 index % 2 === 0 ? "bg-muted/5" : "bg-transparent",
@@ -395,10 +429,10 @@ const LeaderboardScreen = () => {
 
               <div className="flex justify-center">
                 <motion.span
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ scale: 1.1, filter: "brightness(1.2)" }}
                   className={cn(
-                    "px-4 py-1.5 rounded-full text-sm font-black",
-                    RANK_COLORS[entry.rank] || "bg-muted text-muted-foreground"
+                    "px-4 py-1.5 rounded-full text-sm font-black transition-all",
+                    "bg-yellow-500/10 text-yellow-400 border border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
                   )}
                 >
                   {entry.rank}

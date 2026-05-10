@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import GameRulesDialog from "@/components/game/GameRulesDialog";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import confetti from "canvas-confetti";
 import {
@@ -12,7 +13,6 @@ import {
   submitOddOneOutAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
-import { buildFallbackImageUrl } from "@/lib/imageUrl";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface OddOneOutGameProps {
@@ -31,6 +31,9 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   const [aiReviewRevealed, setAiReviewRevealed] = useState(false);
   const [showAIReviewLoader, setShowAIReviewLoader] = useState(false);
   const [loadedImagesCount, setLoadedImagesCount] = useState(0);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [scanMessage, setScanMessage] = useState("Analyzing response...");
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
 
   const loadNewRound = async () => {
@@ -60,16 +63,35 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
 
   const handleTakeAiReview = () => {
     setShowAIReviewLoader(true);
+    setScanMessage("Analyzing response...");
+    const scanInterval = setInterval(() => {
+      setScanMessage(prev => {
+        if (prev === "Analyzing response...") return "Pattern detected...";
+        if (prev === "Pattern detected...") return `Confidence score: ${Math.floor(Math.random() * 20 + 80)}%`;
+        return prev;
+      });
+    }, 500);
+
     setTimeout(() => {
+      clearInterval(scanInterval);
       setShowAIReviewLoader(false);
       setAiReviewRevealed(true);
-    }, 1500);
+    }, 2000);
   };
 
   const handleSelect = async (index: number) => {
     if (showResult || !images[index]) return;
 
     setSelectedIndex(index);
+    setIsSubmittingAnswer(true);
+    setScanMessage("Analyzing response...");
+    const scanInterval = setInterval(() => {
+      setScanMessage(prev => {
+        if (prev === "Analyzing response...") return "Pattern detected...";
+        if (prev === "Pattern detected...") return `Confidence score: ${Math.floor(Math.random() * 20 + 80)}%`;
+        return prev;
+      });
+    }, 500);
 
     try {
       const response = await submitOddOneOutAnswer({
@@ -77,6 +99,11 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
         selectedHash: images[index].hash,
         askingFor,
       });
+
+      // Artificial delay for "juiciness"
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      clearInterval(scanInterval);
+      setIsSubmittingAnswer(false);
 
       const oddHash = response.oddHash;
       const resolvedOddIndex = images.findIndex((img) => img.hash === oddHash);
@@ -119,15 +146,15 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
   return (
     <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-lg mx-auto">
-        <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
+        <ClassicStatsBar streak={streak} score={score} onBack={onBack} onRules={() => setRulesOpen(true)} />
 
         <GlowingBorder glowColor="purple" intensity="medium" className="rounded-3xl mb-6">
-          <div className="glass-strong rounded-3xl p-6 text-center">
-            <motion.span className="text-4xl mb-2 block" animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>
-              🎭
-            </motion.span>
-            <h2 className="text-2xl font-black gradient-text-accent mb-2">Odd One Out</h2>
-            <p className="text-muted-foreground">4 are {majorityLabel}, find the 1 {oddLabel}!</p>
+          <div className="glass-strong rounded-3xl py-3 px-6 text-center">
+            <div className="flex items-center justify-center gap-3 mb-1">
+              <span className="text-2xl">🎭</span>
+              <h2 className="text-xl font-black gradient-text-accent">Odd One Out</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">{images.length - 1} are {majorityLabel}, find the 1 {oddLabel}!</p>
           </div>
         </GlowingBorder>
 
@@ -161,7 +188,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                       className="w-full h-full object-cover"
                       onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
                       onError={(event) => {
-                        const fallbackUrl = buildFallbackImageUrl(images[index].hash);
+                        const fallbackUrl = images[index].fallbackImageUrl;
                         if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                           event.currentTarget.src = fallbackUrl;
                         }
@@ -225,7 +252,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
                       className="w-full h-full object-cover"
                       onLoad={() => setLoadedImagesCount((prev) => prev + 1)}
                       onError={(event) => {
-                        const fallbackUrl = buildFallbackImageUrl(images[index].hash);
+                        const fallbackUrl = images[index].fallbackImageUrl;
                         if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                           event.currentTarget.src = fallbackUrl;
                         }
@@ -261,19 +288,76 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
             ))}
           </div>
 
-          <AnimatePresence>
-            {showAIReviewLoader && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
-              >
-                <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-400 rounded-full animate-spin mb-4 shadow-[0_0_15px_rgba(34,211,238,0.5)]" />
-                <span className="font-bold text-cyan-400 animate-pulse tracking-wider">AI IS ANALYZING...</span>
-              </motion.div>
-            )}
-          </AnimatePresence>
+            <AnimatePresence>
+              {(showAIReviewLoader || isSubmittingAnswer) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute -inset-3 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+                >
+                  <div className="relative w-14 h-14 mb-4">
+                    <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute inset-3 bg-cyan-400/20 rounded-full blur-md"
+                    />
+                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.span 
+                      key={scanMessage}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -5 }}
+                      className="font-bold text-cyan-400 tracking-wider"
+                    >
+                      {scanMessage}
+                    </motion.span>
+                  </AnimatePresence>
+                  <div className="w-32 h-1 bg-cyan-900/50 rounded-full overflow-hidden mt-3">
+                    <motion.div 
+                      className="h-full bg-cyan-400"
+                      initial={{ width: "0%" }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 1.8, ease: "linear" }}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {isLoading && (
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-[60] flex flex-col items-center justify-center rounded-2xl">
+                   <div className="relative w-16 h-16 mb-6">
+                      <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                      />
+                      <motion.div
+                        animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="absolute inset-4 bg-cyan-400/20 rounded-full blur-md"
+                      />
+                    </div>
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-sm font-mono text-cyan-300 tracking-wider uppercase font-bold"
+                    >
+                      Generating Challenge...
+                    </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
         </div>
 
         <AnimatePresence>
@@ -331,6 +415,7 @@ const OddOneOutGame = ({ onBack, onScoreUpdate }: OddOneOutGameProps) => {
           </div>
         )}
       </div>
+      <GameRulesDialog mode="oddoneout" open={rulesOpen} onOpenChange={setRulesOpen} />
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePrivy, useLogin, useWallets, type User } from "@privy-io/react-auth";
-import { SiweMessage } from "siwe";
 import { loginV2, getWalletChallenge, siweWalletLogin, type LoginRequest, type ProfilePayload, getProfile, updateUsername } from "@/services/authApi";
 import {
   clearJwtFromUrl,
@@ -13,6 +12,7 @@ import {
   setStoredToken,
   setStoredUsername,
 } from "@/lib/session";
+import LabInitializationOverlay from "@/components/auth/LabInitializationOverlay";
 
 const AuthContext = createContext<{
   token: string;
@@ -26,6 +26,10 @@ const AuthContext = createContext<{
   logout: () => void;
   refreshProfile: () => Promise<void>;
   updateProfileUsername: (name: string) => Promise<boolean>;
+  loginWithSiwe: (address: string, provider?: any) => Promise<boolean>;
+  user: User | null;
+  ready: boolean;
+  authenticated: boolean;
 }>({
   token: "",
   username: "",
@@ -38,6 +42,10 @@ const AuthContext = createContext<{
   logout: () => {},
   refreshProfile: async () => {},
   updateProfileUsername: async () => false,
+  loginWithSiwe: async () => false,
+  user: null,
+  ready: false,
+  authenticated: false,
 });
 
 /** Returns the external (non-embedded) wallet address, or empty string. */
@@ -171,6 +179,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginAttemptedRef = useRef(false);
   const jwtAttemptedRef = useRef(false);
   const loggingOutRef = useRef(false);
+  const [showLabInitialization, setShowLabInitialization] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -227,6 +236,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setStoredUsername(response.data.username);
     }
     setError(null);
+    
+    // Trigger initialization overlay if this was a manual login attempt
+    if (loginAttemptedRef.current) {
+      setShowLabInitialization(true);
+    }
+    
     return true;
   }, []);
 
@@ -246,36 +261,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const loginWithPrivy = useCallback(async () => {
     if (!authenticated) return;
-
-    const externalWallet = wallets.find(
-      (w) => w.connectorType !== "embedded" && w.address
-    );
-
-    if (externalWallet) {
-      setLoading(true);
-      try {
-        const challengeRes = await getWalletChallenge(externalWallet.address);
-        const { challengeMessage } = challengeRes.data;
-
-        const provider = await externalWallet.getEthereumProvider();
-        const signature = await provider.request({
-          method: "personal_sign",
-          params: [challengeMessage, externalWallet.address],
-        });
-
-        const loginRes = await siweWalletLogin(challengeMessage, signature as string);
-        if (!loginRes?.data?.token) {
-          setError("SIWE login failed. Please try again.");
-          return;
-        }
-        handleLoginResponse({ data: { token: loginRes.data.token, username: loginRes.data.username } });
-        return;
-      } catch (err) {
-        console.error("[Auth] SIWE login failed, falling back to Privy flow", err);
-      } finally {
-        setLoading(false);
-      }
-    }
 
     const payload = buildLoginPayloadFromPrivy(user);
     if (!payload) return;
@@ -332,6 +317,55 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, 500);
   }, [privyLogout]);
 
+  const loginWithSiwe = useCallback(async (address: string, provider?: any) => {
+    if (!address) return false;
+    const walletProvider = provider || (window as any).ethereum || (window as any).gatewallet;
+    if (!walletProvider) {
+      setError("No wallet provider found.");
+      return false;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      // 1. Get challenge from backend
+      const challengeResponse = await getWalletChallenge(address);
+      if (!challengeResponse.success) {
+        throw new Error(challengeResponse.data?.challengeMessage || "Failed to get auth challenge");
+      }
+      const { challengeMessage } = challengeResponse.data;
+
+      // 2. Sign message
+      let signature: string;
+      if (walletProvider.request) {
+        signature = await walletProvider.request({
+          method: "personal_sign",
+          params: [challengeMessage, address],
+        }) as string;
+      } else if (walletProvider.signMessage) {
+        signature = await walletProvider.signMessage(challengeMessage);
+      } else {
+        throw new Error("Wallet provider does not support signing.");
+      }
+
+      // 3. Login with signature
+      const loginResponse = await siweWalletLogin(challengeMessage, signature);
+      if (loginResponse.success && loginResponse.data.token) {
+        loginAttemptedRef.current = true;
+        handleLoginResponse(loginResponse);
+        return true;
+      } else {
+        throw new Error(loginResponse.message || "SIWE login failed");
+      }
+    } catch (err: any) {
+      console.error("[Auth] SIWE login error", err);
+      setError(err?.message || "Sign-in with wallet failed. Please try again.");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [handleLoginResponse]);
+
   const updateProfileUsername = useCallback(async (name: string) => {
     if (!name.trim()) return false;
     try {
@@ -368,9 +402,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     logout,
     refreshProfile,
     updateProfileUsername,
-  }), [token, username, profile, loading, error, ready, authenticated, privyLogin, logout, refreshProfile, updateProfileUsername]);
+    loginWithSiwe,
+    user,
+    ready,
+    authenticated,
+  }), [token, username, profile, loading, error, ready, authenticated, user, privyLogin, logout, refreshProfile, updateProfileUsername, loginWithSiwe]);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <LabInitializationOverlay 
+        isOpen={showLabInitialization} 
+        onComplete={() => setShowLabInitialization(false)} 
+        agentName={username || "Detective"}
+      />
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);

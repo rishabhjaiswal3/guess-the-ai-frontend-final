@@ -7,6 +7,7 @@ import AnimatedCounter from "@/components/effects/AnimatedCounter";
 import ScreenShake from "@/components/effects/ScreenShake";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import GameRulesDialog from "@/components/game/GameRulesDialog";
 import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import { useHint } from "@/hooks/useHint";
@@ -36,6 +37,9 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [shakeScreen, setShakeScreen] = useState(false);
   const [roundId, setRoundId] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [scanMessage, setScanMessage] = useState("Analyzing response...");
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
   const { hint, loading: hintLoading } = useHint(roundId);
@@ -98,12 +102,27 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
     let isCorrect = false;
     let points = 0;
 
+    setIsSubmittingAnswer(true);
+    setScanMessage("Analyzing response...");
+    const scanInterval = setInterval(() => {
+      setScanMessage(prev => {
+        if (prev === "Analyzing response...") return "Pattern detected...";
+        if (prev === "Pattern detected...") return `Confidence score: ${Math.floor(Math.random() * 20 + 80)}%`;
+        return prev;
+      });
+    }, 200); // Faster for Rapid Fire
+
     try {
       const response = await submitRapidFireAnswer({
         hash: currentImage.hash,
         guess: guessedAI ? "ai" : "human",
         combo,
       });
+
+      // Shorter artificial delay for "Rapid Fire"
+      await new Promise(resolve => setTimeout(resolve, 600));
+      clearInterval(scanInterval);
+      setIsSubmittingAnswer(false);
       isCorrect = Boolean(response?.results?.[0]?.isCorrect);
       points = Number(response?.score?.delta || 0);
       const nextStats = applyProfileStats(response?.profile, {
@@ -155,10 +174,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   if (!isGameActive && !gameOver) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
-        <Button variant="ghost" size="sm" onClick={onBack} className="text-muted-foreground self-start max-w-md w-full mb-4">
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Modes
-        </Button>
+
 
         <GlowingBorder glowColor="rainbow" intensity="high" className="rounded-3xl w-full max-w-md">
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-strong rounded-3xl p-8 text-center">
@@ -232,10 +248,7 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
             </div>
 
             <div className="flex gap-3">
-              <Button onClick={onBack} variant="outline" className="flex-1 glass text-foreground h-12">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Modes
-              </Button>
+
               <Button onClick={handleStart} className="flex-1 btn-gradient text-primary-foreground h-12">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Play Again
@@ -248,9 +261,10 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
   }
 
   return (
-    <ScreenShake trigger={shakeScreen} intensity={15}>
-      <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
-        <ClassicStatsBar streak={streak} score={score} onBack={handleGameOver} />
+    <>
+      <ScreenShake trigger={shakeScreen} intensity={15}>
+        <div className="flex flex-col items-center justify-center min-h-screen px-4 pt-4 pb-6">
+          <ClassicStatsBar streak={streak} score={score} onBack={handleGameOver} onRules={() => setRulesOpen(true)} />
 
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-end gap-3 w-full max-w-md mb-4">
           <div className={`glass px-3 py-1.5 rounded-full flex items-center gap-1.5 ${timeLeft <= 10 ? "text-destructive animate-pulse" : timeLeft <= 20 ? "text-yellow" : "text-primary"}`}>
@@ -296,7 +310,56 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
               )}
             </AnimatePresence>
 
-            {isLoading && <ImageSkeleton className="absolute inset-0 rounded-none" />}
+            {isLoading && (
+              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-[60] flex flex-col items-center justify-center rounded-2xl">
+                 <div className="relative w-12 h-12 mb-4">
+                    <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                    />
+                  </div>
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="text-[10px] font-mono text-cyan-300 tracking-wider uppercase font-bold"
+                  >
+                    Generating Challenge...
+                  </motion.div>
+              </div>
+            )}
+
+            <AnimatePresence>
+              {isSubmittingAnswer && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-background/60 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+                >
+                  <div className="relative w-12 h-12 mb-3">
+                    <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                    />
+                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.span 
+                      key={scanMessage}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      className="text-xs font-bold text-cyan-400 tracking-wider"
+                    >
+                      {scanMessage}
+                    </motion.span>
+                  </AnimatePresence>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <AnimatePresence>
               {showResult && (
@@ -311,14 +374,14 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
 
           <div className="grid grid-cols-2 gap-3">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => handleGuess(true)} disabled={!!showResult || isLoading} className="w-full h-16 text-xl font-black bg-muted hover:bg-muted/80 text-foreground border-2 border-border hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(0,255,255,0.2)] transition-all">
+              <Button onClick={() => handleGuess(true)} disabled={!!showResult || isLoading} className="w-full h-16 text-xl font-black bg-muted hover:bg-muted/80 text-foreground border-2 border-border hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(107,140,255,0.22)] transition-all">
                 <Bot className="w-6 h-6 mr-2" />
                 AI
               </Button>
             </motion.div>
 
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.95 }}>
-              <Button onClick={() => handleGuess(false)} disabled={!!showResult || isLoading} className="w-full h-16 text-xl font-black btn-gradient text-primary-foreground hover:shadow-[0_0_20px_rgba(255,0,255,0.3)]">
+              <Button onClick={() => handleGuess(false)} disabled={!!showResult || isLoading} className="w-full h-16 text-xl font-black btn-gradient text-primary-foreground hover:shadow-[0_0_20px_rgba(139,93,255,0.3)]">
                 <UserRound className="w-6 h-6 mr-2" />
                 HUMAN
               </Button>
@@ -327,8 +390,10 @@ const RapidFireGame = ({ onBack, onScoreUpdate }: RapidFireGameProps) => {
 
           <div className="mt-3 text-center text-xs text-muted-foreground">Answered: {totalAnswered} | Combo: {combo}x</div>
         </motion.div>
-      </div>
-    </ScreenShake>
+        </div>
+      </ScreenShake>
+      <GameRulesDialog mode="rapidfire" open={rulesOpen} onOpenChange={setRulesOpen} />
+    </>
   );
 };
 

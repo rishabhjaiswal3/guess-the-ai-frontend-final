@@ -8,6 +8,7 @@ import DuelGame from "./modes/DuelGame";
 import OddOneOutGame from "./modes/OddOneOutGame";
 import CardFlipGame from "./modes/CardFlipGame";
 import RapidFireGame from "./modes/RapidFireGame";
+import NeuralGridBackground from "@/components/effects/NeuralGridBackground";
 
 interface GameScreenProps {
   onScoreUpdate: (score: number, streak: number, bestStreak: number) => void;
@@ -22,6 +23,12 @@ const GameScreen = ({ onScoreUpdate, onGameActiveChange }: GameScreenProps) => {
   }, [selectedMode, onGameActiveChange]);
 
   const handleModeSelect = (mode: GameModeType) => setSelectedMode(mode);
+
+  useEffect(() => {
+    const handler = () => setSelectedMode(null);
+    window.addEventListener("gta:reset-game", handler);
+    return () => window.removeEventListener("gta:reset-game", handler);
+  }, []);
 
   const handleBack = () => setSelectedMode(null);
 
@@ -49,7 +56,9 @@ const GameScreen = ({ onScoreUpdate, onGameActiveChange }: GameScreenProps) => {
   };
 
   return (
-    <AnimatePresence mode="wait">
+    <>
+      <NeuralGridBackground />
+      <AnimatePresence mode="wait">
       {selectedMode ? (
         <motion.div
           key={selectedMode}
@@ -72,6 +81,7 @@ const GameScreen = ({ onScoreUpdate, onGameActiveChange }: GameScreenProps) => {
         </motion.div>
       )}
     </AnimatePresence>
+    </>
   );
 };
 

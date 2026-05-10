@@ -18,13 +18,13 @@ const tabs = [
 
 const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       <div className="max-w-lg mx-auto px-4 pb-4">
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-          className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around relative overflow-hidden shadow-[0_-4px_30px_rgba(0,255,255,0.1)]"
+          className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around relative overflow-hidden shadow-[0_-4px_30px_rgba(107,140,255,0.14)]"
         >
           {/* Animated background gradient */}
           <motion.div

@@ -1,140 +1,177 @@
 import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, MeshDistortMaterial, Sphere, Box, Torus, Icosahedron } from "@react-three/drei";
 import * as THREE from "three";
 
-const FloatingShape = ({ 
-  position, 
-  color, 
-  speed = 1, 
-  rotationSpeed = 0.5,
-  type = "sphere" 
-}: { 
-  position: [number, number, number]; 
-  color: string;
-  speed?: number;
-  rotationSpeed?: number;
-  type?: "sphere" | "box" | "torus" | "icosahedron";
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
+const starPalette = [
+  new THREE.Color("#f7fbff"),
+  new THREE.Color("#6bf0ff"),
+  new THREE.Color("#6b8cff"),
+  new THREE.Color("#f02cff"),
+];
 
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x += 0.003 * rotationSpeed;
-      meshRef.current.rotation.y += 0.005 * rotationSpeed;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * speed) * 0.3;
-    }
-  });
+const StarTunnel = () => {
+  const count = 1400;
+  const pointsRef = useRef<THREE.Points>(null);
+  const geometryRef = useRef<THREE.BufferGeometry>(null);
 
-  const ShapeComponent = () => {
-    switch (type) {
-      case "box":
-        return <Box args={[0.6, 0.6, 0.6]} ref={meshRef}><MeshDistortMaterial color={color} speed={2} distort={0.2} transparent opacity={0.7} /></Box>;
-      case "torus":
-        return <Torus args={[0.4, 0.15, 16, 32]} ref={meshRef}><MeshDistortMaterial color={color} speed={2} distort={0.1} transparent opacity={0.7} /></Torus>;
-      case "icosahedron":
-        return <Icosahedron args={[0.4]} ref={meshRef}><MeshDistortMaterial color={color} speed={2} distort={0.3} transparent opacity={0.7} /></Icosahedron>;
-      default:
-        return <Sphere args={[0.4, 32, 32]} ref={meshRef}><MeshDistortMaterial color={color} speed={3} distort={0.4} transparent opacity={0.6} /></Sphere>;
-    }
-  };
+  const { positions, colors, speeds } = useMemo(() => {
+    const nextPositions = new Float32Array(count * 3);
+    const nextColors = new Float32Array(count * 3);
+    const nextSpeeds = new Float32Array(count);
 
-  return (
-    <Float speed={speed * 2} rotationIntensity={0.5} floatIntensity={1}>
-      <mesh position={position}>
-        <ShapeComponent />
-      </mesh>
-    </Float>
-  );
-};
-
-const GridFloor = () => {
-  const gridRef = useRef<THREE.GridHelper>(null);
-  
-  useFrame((state) => {
-    if (gridRef.current) {
-      gridRef.current.position.z = (state.clock.elapsedTime * 0.5) % 1;
-    }
-  });
-
-  return (
-    <group position={[0, -3, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <gridHelper ref={gridRef} args={[50, 50, "#00ffff", "#ff00ff"]} />
-    </group>
-  );
-};
-
-const ParticleField = () => {
-  const count = 200;
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 4.8 + Math.random() * 18;
+      const depth = -90 + Math.random() * 105;
+      const verticalStretch = 0.72 + Math.random() * 0.42;
+      const color = starPalette[Math.floor(Math.random() * starPalette.length)];
+
+      nextPositions[i * 3] = Math.cos(angle) * radius;
+      nextPositions[i * 3 + 1] = Math.sin(angle) * radius * verticalStretch;
+      nextPositions[i * 3 + 2] = depth;
+      nextColors[i * 3] = color.r;
+      nextColors[i * 3 + 1] = color.g;
+      nextColors[i * 3 + 2] = color.b;
+      nextSpeeds[i] = 8 + Math.random() * 18;
     }
-    return pos;
+
+    return { positions: nextPositions, colors: nextColors, speeds: nextSpeeds };
   }, []);
 
-  const pointsRef = useRef<THREE.Points>(null);
+  useFrame((state, delta) => {
+    const elapsed = state.clock.elapsedTime;
 
-  useFrame((state) => {
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = state.clock.elapsedTime * 0.02;
-      pointsRef.current.rotation.x = state.clock.elapsedTime * 0.01;
+      pointsRef.current.rotation.z = Math.sin(elapsed * 0.12) * 0.04;
+      pointsRef.current.rotation.y = Math.sin(elapsed * 0.08) * 0.08;
     }
+
+    for (let i = 0; i < count; i++) {
+      const zIndex = i * 3 + 2;
+      positions[zIndex] += speeds[i] * delta;
+
+      if (positions[zIndex] > 16) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 4.8 + Math.random() * 18;
+        positions[i * 3] = Math.cos(angle) * radius;
+        positions[i * 3 + 1] = Math.sin(angle) * radius * (0.72 + Math.random() * 0.42);
+        positions[zIndex] = -90;
+      }
+    }
+
+    const positionAttribute = geometryRef.current?.getAttribute("position");
+    if (positionAttribute) positionAttribute.needsUpdate = true;
   });
 
   return (
     <points ref={pointsRef}>
-      <bufferGeometry>
+      <bufferGeometry ref={geometryRef}>
         <bufferAttribute
           attach="attributes-position"
           count={count}
           array={positions}
           itemSize={3}
         />
+        <bufferAttribute
+          attach="attributes-color"
+          count={count}
+          array={colors}
+          itemSize={3}
+        />
       </bufferGeometry>
-      <pointsMaterial size={0.05} color="#00ffff" transparent opacity={0.8} sizeAttenuation />
+      <pointsMaterial
+        size={0.075}
+        vertexColors
+        transparent
+        opacity={0.88}
+        sizeAttenuation
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+      />
     </points>
+  );
+};
+
+const SpaceRings = () => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    const elapsed = state.clock.elapsedTime;
+    if (groupRef.current) {
+      groupRef.current.rotation.z = elapsed * 0.035;
+      groupRef.current.rotation.x = Math.sin(elapsed * 0.16) * 0.08;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, -34]}>
+      {[-12, -3, 7].map((z, index) => (
+        <mesh key={z} position={[0, 0, z]} rotation={[Math.PI / 2, 0, index * 0.8]}>
+          <torusGeometry args={[7.2 + index * 3.1, 0.018, 8, 180]} />
+          <meshBasicMaterial
+            color={index % 2 === 0 ? "#6bf0ff" : "#f02cff"}
+            transparent
+            opacity={0.12}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+};
+
+const NebulaGlow = () => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.rotation.z = state.clock.elapsedTime * -0.02;
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, -42]}>
+      <mesh position={[-4.5, 2.5, 0]}>
+        <sphereGeometry args={[4.8, 32, 32]} />
+        <meshBasicMaterial color="#244cff" transparent opacity={0.08} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh position={[5, -1.6, -4]}>
+        <sphereGeometry args={[5.6, 32, 32]} />
+        <meshBasicMaterial color="#f02cff" transparent opacity={0.07} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+      <mesh position={[0.5, 0.2, -8]}>
+        <sphereGeometry args={[6.8, 32, 32]} />
+        <meshBasicMaterial color="#6bf0ff" transparent opacity={0.045} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </mesh>
+    </group>
   );
 };
 
 const Scene = () => {
   return (
     <>
-      {/* <ambientLight intensity={0.3} />
-      <pointLight position={[10, 10, 10]} color="#00ffff" intensity={1} />
-      <pointLight position={[-10, -10, -10]} color="#ff00ff" intensity={0.8} />
-      <spotLight position={[0, 10, 0]} angle={0.3} penumbra={1} color="#8b5cf6" intensity={0.5} /> */}
-
-      {/* Floating shapes */}
-      {/* <FloatingShape position={[-4, 2, -5]} color="#00ffff" type="sphere" speed={0.8} />
-      <FloatingShape position={[4, -1, -6]} color="#ff00ff" type="icosahedron" speed={1.2} />
-      <FloatingShape position={[-3, -2, -4]} color="#8b5cf6" type="torus" speed={1} /> */}
-      {/* <FloatingShape position={[3, 1.5, -5]} color="#00ffff" type="box" speed={0.9} /> */}
-      {/* <FloatingShape position={[0, 3, -7]} color="#ff00ff" type="sphere" speed={0.7} />
-      <FloatingShape position={[-5, 0, -8]} color="#8b5cf6" type="icosahedron" speed={1.1} />
-      <FloatingShape position={[5, -2, -6]} color="#00ffff" type="torus" speed={0.85} /> */}
-
-      <ParticleField />
-      <GridFloor />
+      <NebulaGlow />
+      <SpaceRings />
+      <StarTunnel />
     </>
   );
 };
 
 const Background3D = () => {
   return (
-    <div className="fixed inset-0 z-0">
+    <div className="fixed inset-0 z-0 pointer-events-none" aria-hidden="true">
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
-        gl={{ antialias: true, alpha: true }}
-        style={{ background: "transparent" }}
+        camera={{ position: [0, 0, 14], fov: 78, near: 0.1, far: 130 }}
+        dpr={[1, 1.5]}
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance", preserveDrawingBuffer: true }}
+        style={{ background: "transparent", pointerEvents: "none" }}
       >
         <Scene />
       </Canvas>
       
-      <div className="absolute inset-0 bg-gradient-to-b from-background/50 via-transparent to-background/80 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/45 via-background/10 to-background/78 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(5,2,25,0.12)_34%,rgba(5,2,25,0.58)_100%)] pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-cyan/5 via-transparent to-magenta/5 pointer-events-none" />
       
       <div 

@@ -1,5 +1,5 @@
 let audioCtx: AudioContext | null = null;
-let soundEnabled = true;
+let soundEnabled = typeof window !== "undefined" ? (localStorage.getItem("gta_sound_enabled") !== "false") : true;
 
 function getCtx() {
   if (typeof window === "undefined") return null;
@@ -13,6 +13,9 @@ function getCtx() {
 
 export function setSoundEnabled(enabled: boolean) {
   soundEnabled = enabled;
+  if (typeof window !== "undefined") {
+    localStorage.setItem("gta_sound_enabled", String(enabled));
+  }
 }
 
 export function isSoundEnabled() {

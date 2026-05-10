@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import ImageSkeleton from "@/components/ui/ImageSkeleton";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
+import GameRulesDialog from "@/components/game/GameRulesDialog";
 import HintBadge from "@/components/game/HintBadge";
 import { useGameProfileStats } from "@/hooks/useGameProfileStats";
 import { useHint } from "@/hooks/useHint";
@@ -14,7 +15,6 @@ import {
   submitDuelAnswer,
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
-import { buildFallbackImageUrl } from "@/lib/imageUrl";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 
 interface DuelGameProps {
@@ -25,7 +25,7 @@ interface DuelGameProps {
 type DuelMode = "normal" | "speed";
 
 const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
-  const gameMode: DuelMode = "normal";
+  const [gameMode] = useState<DuelMode>("normal");
   const [images, setImages] = useState<[ModeQuestionImage | null, ModeQuestionImage | null]>([null, null]);
   const [targetLabel, setTargetLabel] = useState<"ai" | "human">("ai");
   const [promptText, setPromptText] = useState<string>("Two images. Pick the right one!");
@@ -39,6 +39,9 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   const [gameOver, setGameOver] = useState(false);
   const [lastRoundPoints, setLastRoundPoints] = useState(0);
   const [roundId, setRoundId] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+  const [scanMessage, setScanMessage] = useState("Analyzing response...");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { score, streak, bestStreak, applyProfileStats, refreshProfile } = useGameProfileStats();
   const { hint, loading: hintLoading } = useHint(roundId);
@@ -81,7 +84,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
             if (timerRef.current) clearInterval(timerRef.current);
             setSelectedPosition(null);
             setShowResult(true);
-            setStreak(0);
+            applyProfileStats(undefined, { streak: 0 });
             const nextLives = lives - 1;
             setLives(nextLives);
             if (nextLives <= 0) setGameOver(true);
@@ -105,6 +108,16 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
     if (!selectedImage || !images[0] || !images[1]) return;
 
     setSelectedPosition(position);
+    setIsSubmittingAnswer(true);
+    setScanMessage("Analyzing response...");
+    
+    const scanInterval = setInterval(() => {
+      setScanMessage(prev => {
+        if (prev === "Analyzing response...") return "Pattern detected...";
+        if (prev === "Pattern detected...") return `Confidence score: ${Math.floor(Math.random() * 20 + 80)}%`;
+        return prev;
+      });
+    }, 500);
 
     try {
       const response = await submitDuelAnswer({
@@ -113,6 +126,11 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
         askingFor: targetLabel,
         variant: gameMode,
       });
+
+      // Artificial delay for "juiciness"
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      clearInterval(scanInterval);
+      setIsSubmittingAnswer(false);
 
       const results = response.results || [];
       const correctHash = results.find((item) => item.truth === targetLabel)?.hash;
@@ -187,10 +205,6 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={onBack} variant="outline" className="flex-1">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
                 <Button onClick={handleRestart} className="flex-1 btn-gradient text-primary-foreground">
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Try Again
@@ -206,7 +220,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
   return (
     <div className="min-h-screen px-4 pt-4 pb-6">
       <div className="max-w-lg mx-auto">
-        <ClassicStatsBar streak={streak} score={score} onBack={onBack} />
+        <ClassicStatsBar streak={streak} score={score} onBack={onBack} onRules={() => setRulesOpen(true)} />
 
         {gameMode === "speed" && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6 flex justify-end">
@@ -219,20 +233,85 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
         )}
 
         <GlowingBorder glowColor={gameMode === "speed" ? "rainbow" : "cyan"} intensity="medium" className="rounded-3xl mb-6">
-          <div className="glass-strong rounded-3xl p-6 text-center">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              {gameMode === "speed" ? <Zap className="w-8 h-8 text-yellow" /> : <Swords className="w-8 h-8 text-primary" />}
-              <h2 className="text-2xl font-black gradient-text">{gameMode === "speed" ? "SPEED BLITZ" : "DUEL MODE"}</h2>
-              {gameMode === "speed" ? <Zap className="w-8 h-8 text-yellow" /> : <Swords className="w-8 h-8 text-primary transform scale-x-[-1]" />}
+          <div className="glass-strong rounded-3xl py-3 px-6 text-center">
+            <div className="flex items-center justify-center gap-3 mb-1">
+              {gameMode === "speed" ? <Zap className="w-6 h-6 text-yellow" /> : <Swords className="w-6 h-6 text-primary" />}
+              <h2 className="text-xl font-black gradient-text">{gameMode === "speed" ? "SPEED BLITZ" : "DUEL MODE"}</h2>
+              {gameMode === "speed" ? <Zap className="w-6 h-6 text-yellow" /> : <Swords className="w-6 h-6 text-primary transform scale-x-[-1]" />}
             </div>
-            {gameMode === "speed" && !isLoading && !showResult && (
-              <motion.div key={timeLeft} initial={{ scale: 1.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={`text-4xl font-black ${timeLeft <= 1 ? "text-destructive" : "text-yellow"}`}>
+            {gameMode === "speed" && !isLoading && !showResult ? (
+              <motion.div key={timeLeft} initial={{ scale: 1.2, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className={`text-2xl font-black ${timeLeft <= 1 ? "text-destructive" : "text-yellow"}`}>
                 {timeLeft}
               </motion.div>
-            )}
-            {gameMode === "normal" && <p className="text-muted-foreground">{promptText}</p>}
+            ) : gameMode === "normal" ? (
+              <p className="text-sm text-muted-foreground">{promptText}</p>
+            ) : null}
           </div>
         </GlowingBorder>
+
+        {isLoading && (
+          <div className="glass-strong rounded-3xl p-8 flex flex-col items-center justify-center mb-6">
+            <div className="relative w-16 h-16 mb-4">
+              <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+              />
+              <motion.div
+                animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-4 bg-cyan-400/20 rounded-full blur-md"
+              />
+            </div>
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="text-sm font-mono text-cyan-300 tracking-wider uppercase font-bold"
+            >
+              Generating Challenge...
+            </motion.div>
+          </div>
+        )}
+
+        <AnimatePresence>
+          {isSubmittingAnswer && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="glass-strong rounded-3xl p-8 flex flex-col items-center justify-center mb-6 border border-cyan-400/30"
+            >
+              <div className="relative w-14 h-14 mb-4">
+                <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                />
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.span 
+                  key={scanMessage}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="font-bold text-cyan-400 tracking-wider"
+                >
+                  {scanMessage}
+                </motion.span>
+              </AnimatePresence>
+              <div className="w-full max-w-[200px] h-1 bg-cyan-900/50 rounded-full overflow-hidden mt-3">
+                <motion.div 
+                  className="h-full bg-cyan-400"
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 1.5, ease: "linear" }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {!showResult && <HintBadge hint={hint} loading={hintLoading} />}
 
@@ -261,7 +340,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
                     alt={`Image ${position + 1}`}
                     className="w-full h-full object-cover"
                     onError={(event) => {
-                      const fallbackUrl = buildFallbackImageUrl(images[position]!.hash);
+                      const fallbackUrl = images[position]!.fallbackImageUrl;
                       if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
                         event.currentTarget.src = fallbackUrl;
                       }
@@ -339,6 +418,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
           <p className="text-center text-muted-foreground text-sm">Tap the image you think is {targetLabel.toUpperCase()}</p>
         )}
       </div>
+      <GameRulesDialog mode="duel" open={rulesOpen} onOpenChange={setRulesOpen} />
     </div>
   );
 };

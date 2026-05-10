@@ -4,6 +4,7 @@ import { Crown, Zap } from "lucide-react";
 import confetti from "canvas-confetti";
 import { getNext10ImagesWithUrls, submitAnswer, startSession, endSession, type GameImageWithUrl } from "@/services/gameApi";
 import { getProfile } from "@/services/authApi";
+import { isSoundEnabled } from "@/lib/sound";
 import { preloadImages } from "@/lib/imageUrl";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import FloatingScorePopup from "@/components/effects/FloatingScorePopup";
@@ -13,11 +14,11 @@ import { useFeedbackSound } from "@/hooks/useFeedbackSound";
 import { useHint } from "@/hooks/useHint";
 import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
 import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
+import GameRulesDialog from "@/components/game/GameRulesDialog";
 import networkConfig from "@/lib/networkConfig";
 import { addGameTransaction } from "@/lib/gameTransactions";
 import { toast } from "@/components/ui/sonner";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
-
 type ProofStatus = "idle" | "verifying" | "verified" | "stored";
 
 interface ScorePopup {
@@ -98,6 +99,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
   const [proofStatus, setProofStatus] = useState<ProofStatus>("idle");
   const [answerTimestamp, setAnswerTimestamp] = useState<string | null>(null);
+  const [rulesOpen, setRulesOpen] = useState(false);
+  const [scanMessage, setScanMessage] = useState("Analyzing response...");
 
   const gameCardRef = useRef<HTMLDivElement>(null);
   const sessionIdRef = useRef<string | null>(null);
@@ -255,6 +258,26 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
     playClick();
     setTotalGames((prev) => prev + 1);
     setIsSubmittingAnswer(true);
+    setScanMessage("KULT: Analyzing response...");
+    
+    // Cycle messages during scan
+    const scanInterval = setInterval(() => {
+      setScanMessage(prev => {
+        if (prev === "KULT: Analyzing response...") return "KULT: Pattern detected...";
+        if (prev === "KULT: Pattern detected...") {
+          // Step 4: Voice Synthesis
+          if ('speechSynthesis' in window && isSoundEnabled()) {
+            const msg = new SpeechSynthesisUtterance("Pattern detected");
+            msg.rate = 1.1;
+            msg.pitch = 0.5;
+            window.speechSynthesis.speak(msg);
+          }
+          return `KULT: Confidence score: ${Math.floor(Math.random() * 20 + 80)}%`;
+        }
+        return prev;
+      });
+    }, 800);
+
     setLastTxHash(null);
     const ts = new Date().toISOString();
     setAnswerTimestamp(ts);
@@ -298,6 +321,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       isCorrect = false;
       advanceProofStatus("idle");
     } finally {
+      clearInterval(scanInterval);
       setIsSubmittingAnswer(false);
     }
 
@@ -377,6 +401,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
             streak={streak}
             score={score}
             onBack={() => { playBack(); onBack(); }}
+            onRules={() => setRulesOpen(true)}
           />
 
           {/* Last tx pill */}
@@ -408,9 +433,9 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 <motion.h2
                   animate={{
                     textShadow: [
-                      "0 0 20px rgba(0,255,255,0.5)",
-                      "0 0 40px rgba(255,0,255,0.5)",
-                      "0 0 20px rgba(0,255,255,0.5)",
+                      "0 0 20px rgba(107,140,255,0.48)",
+                      "0 0 40px rgba(139,93,255,0.48)",
+                      "0 0 20px rgba(107,140,255,0.48)",
                     ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
@@ -426,133 +451,220 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
               </div>
 
               <div
-                className="relative rounded-2xl overflow-hidden mb-4 bg-muted/30 border-2 border-border w-full"
-                style={{ aspectRatio: "4/3", maxHeight: "55vh" }}
+                className="relative rounded-2xl mb-4 w-full"
+                style={{ aspectRatio: "4/3", maxHeight: "55vh", perspective: "1000px" }}
               >
-                <AnimatePresence mode="wait">
-                  {currentImage && !isLoading && (
-                    <motion.div
-                      key={currentImage.hash}
-                      initial={{ opacity: 0, scale: 1.05 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.4 }}
-                      className="absolute inset-0"
-                    >
-                      {!imageError ? (
-                        <img
-                          src={currentImage.imageUrl}
-                          alt="Guess if this is AI or Human made"
-                          className="w-full h-full object-cover"
-                          onError={(event) => {
-                            const fallbackUrl = currentImage.fallbackImageUrl;
-                            if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
-                              event.currentTarget.src = fallbackUrl;
-                              return;
-                            }
-                            setImageError(true);
-                          }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center text-muted-foreground/80 text-lg font-semibold">
-                          Image unavailable
-                        </div>
+                <motion.div
+                  className="w-full h-full relative"
+                  initial={false}
+                  animate={{ rotateY: showResult ? 180 : 0 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  {/* FRONT OF CARD */}
+                  <div 
+                    className="absolute inset-0 w-full h-full bg-muted/30 border-2 border-border rounded-2xl overflow-hidden shadow-lg"
+                    style={{ backfaceVisibility: "hidden" }}
+                  >
+                    <AnimatePresence mode="wait">
+                      {currentImage && !isLoading && (
+                        <motion.div
+                          key={currentImage.hash}
+                          initial={{ opacity: 0, scale: 1.05 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ duration: 0.4 }}
+                          className="absolute inset-0"
+                        >
+                          {!imageError ? (
+                            <img
+                              src={currentImage.imageUrl}
+                              alt="Guess if this is AI or Human made"
+                              className="w-full h-full object-cover"
+                              onError={(event) => {
+                                const fallbackUrl = currentImage.fallbackImageUrl;
+                                if (fallbackUrl && event.currentTarget.src !== fallbackUrl) {
+                                  event.currentTarget.src = fallbackUrl;
+                                  return;
+                                }
+                                setImageError(true);
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900 flex items-center justify-center text-muted-foreground/80 text-lg font-semibold">
+                              Image unavailable
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-br from-cyan/10 via-transparent to-magenta/10 mix-blend-overlay" />
+                        </motion.div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan/10 via-transparent to-magenta/10 mix-blend-overlay" />
-                      {currentImage && !!showResult ? (
-                        <VerifyHashEyeButton
-                          hash={currentImage.hash}
-                          visible
-                          txHash={lastTxHash}
-                          timestamp={answerTimestamp}
-                          className="top-3 right-3"
+                    </AnimatePresence>
+
+                    {/* Initial loading spinner */}
+                    {isLoading && (
+                      <div className="absolute inset-0 bg-muted/30 flex flex-col items-center justify-center gap-4">
+                        <div className="relative w-16 h-16">
+                          <motion.div className="absolute inset-0 border-4 border-cyan-500/20 rounded-full" />
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
+                          />
+                          <motion.div
+                            animate={{ scale: [0.8, 1.2, 0.8], opacity: [0.3, 0.8, 0.3] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="absolute inset-4 bg-cyan-400/20 rounded-full blur-md"
+                          />
+                        </div>
+                        <motion.div
+                          animate={{ opacity: [0.5, 1, 0.5] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="text-sm font-mono text-cyan-300 tracking-wider uppercase"
+                        >
+                          Generating Challenge...
+                        </motion.div>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent pointer-events-none"
+                          animate={{ y: ["-100%", "100%"] }}
+                          transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
                         />
-                      ) : null}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Initial loading spinner */}
-                {isLoading && (
-                  <div className="absolute inset-0 bg-muted/30 flex items-center justify-center">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      className="w-10 h-10 border-3 border-primary/30 border-t-primary rounded-full"
-                    />
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-muted/20 to-transparent"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                    />
-                  </div>
-                )}
-
-                {/* Analyzing shimmer overlay */}
-                <AnimatePresence>
-                  {isSubmittingAnswer && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 z-10"
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/10 to-transparent"
-                        animate={{ x: ["-100%", "100%"] }}
-                        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-                      />
-                      <div className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-background/80 border border-cyan-400/30 shadow-lg">
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 0.8, repeat: Infinity }}
-                        >
-                          <Zap className="w-4 h-4 text-cyan-400" />
-                        </motion.div>
-                        <span className="text-sm font-semibold text-cyan-200">Analyzing...</span>
                       </div>
-                      <p className="text-[11px] text-muted-foreground/70">Checking authenticity</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                    )}
 
-                {/* Result overlay */}
-                <AnimatePresence>
-                  {showResult && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 1.5 }}
-                      className={`absolute inset-0 flex flex-col items-center justify-center backdrop-blur-sm ${
-                        showResult === "correct" ? "bg-success-overlay" : "bg-error-overlay"
-                      }`}
-                    >
+                    {/* Analyzing shimmer overlay */}
+                    <AnimatePresence>
+                      {isSubmittingAnswer && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-background/80 backdrop-blur-md flex flex-col items-center justify-center z-50 rounded-2xl"
+                          >
+                            {/* Step 1: Neural Eye Motif */}
+                            <div className="relative w-28 h-28 mb-6">
+                              {/* Outer rings */}
+                              <motion.div 
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                className="absolute inset-0 border-2 border-cyan-500/20 rounded-full border-t-cyan-500/50"
+                              />
+                              <motion.div 
+                                animate={{ rotate: -360 }}
+                                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                                className="absolute inset-2 border border-magenta/10 rounded-full border-b-magenta/30"
+                              />
+                              
+                              {/* Pulsating Eye Iris */}
+                              <motion.div 
+                                animate={{ 
+                                  scale: [0.95, 1.05, 0.95],
+                                  boxShadow: ["0 0 10px rgba(34,211,238,0.2)", "0 0 30px rgba(34,211,238,0.6)", "0 0 10px rgba(34,211,238,0.2)"]
+                                }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
+                                className="absolute inset-7 bg-cyan-950/50 rounded-full border-2 border-cyan-400 flex items-center justify-center overflow-hidden shadow-[inset_0_0_15px_rgba(34,211,238,0.5)]"
+                              >
+                                <div className="w-5 h-5 bg-cyan-400 rounded-full blur-[1px]" />
+                                <motion.div 
+                                  animate={{ height: ["10%", "70%", "10%"] }}
+                                  transition={{ duration: 0.25, repeat: Infinity, repeatDelay: 3 }}
+                                  className="absolute inset-0 bg-black/80 w-full"
+                                />
+                              </motion.div>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2">
+                              <AnimatePresence mode="wait">
+                                <motion.span 
+                                  key={scanMessage}
+                                  initial={{ opacity: 0, y: 5 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -5 }}
+                                  className="text-xs font-mono font-bold text-cyan-400 tracking-wider"
+                                >
+                                  {scanMessage}
+                                </motion.span>
+                              </AnimatePresence>
+                              <div className="w-32 h-1 bg-cyan-900/50 rounded-full overflow-hidden mt-1">
+                                <motion.div 
+                                  className="h-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)]"
+                                  initial={{ width: "0%" }}
+                                  animate={{ width: "100%" }}
+                                  transition={{ duration: 2, ease: "linear" }}
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* BACK OF CARD (RESULT) */}
+                  <div 
+                    className={`absolute inset-0 w-full h-full rounded-2xl overflow-hidden border-2 shadow-2xl flex flex-col items-center justify-center ${
+                      showResult === "correct" 
+                        ? "bg-emerald-950/80 border-emerald-500/50" 
+                        : "bg-rose-950/80 border-rose-500/50"
+                    }`}
+                    style={{ transform: "rotateY(180deg)", backfaceVisibility: "hidden" }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
+                    
+                    {currentImage && (
+                      <div className="absolute inset-0 opacity-30 mix-blend-overlay filter blur-sm">
+                         <img src={currentImage.imageUrl} className="w-full h-full object-cover" alt="" />
+                      </div>
+                    )}
+
+                    <div className="relative z-10 text-center">
                       {showResult === "correct" ? (
-                        <motion.div
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ type: "spring", stiffness: 200 }}
-                          className="text-center"
-                        >
-                          <span className="text-6xl block mb-2">✓</span>
-                          <span className="text-3xl font-black text-foreground drop-shadow-lg">CORRECT!</span>
-                        </motion.div>
+                        <>
+                          <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }} 
+                            transition={{ delay: 0.2, type: "spring" }}
+                            className="w-24 h-24 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center mb-4 border border-emerald-400/50 shadow-[0_0_30px_rgba(16,185,129,0.3)]"
+                          >
+                            <span className="text-5xl text-emerald-400 block">✓</span>
+                          </motion.div>
+                          <span className="text-4xl font-black text-emerald-400 drop-shadow-lg tracking-wider">CORRECT!</span>
+                          <p className="text-emerald-200/80 mt-2 font-medium">Pattern successfully identified</p>
+                        </>
                       ) : (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 300 }}
-                          className="text-center"
-                        >
-                          <span className="text-6xl block mb-2">✗</span>
-                          <span className="text-3xl font-black text-foreground drop-shadow-lg">WRONG!</span>
+                        <>
+                          <motion.div 
+                            initial={{ scale: 0 }} 
+                            animate={{ scale: 1 }} 
+                            transition={{ delay: 0.2, type: "spring" }}
+                            className="w-24 h-24 mx-auto bg-rose-500/20 rounded-full flex items-center justify-center mb-4 border border-rose-400/50 shadow-[0_0_30px_rgba(244,63,94,0.3)]"
+                          >
+                            <span className="text-5xl text-rose-400 block">✗</span>
+                          </motion.div>
+                          <span className="text-4xl font-black text-rose-400 drop-shadow-lg tracking-wider">WRONG!</span>
                           {truthLabel && (
-                            <span className="block text-lg text-foreground/80 mt-2">
-                              It was <span className="font-bold">{truthLabel === "ai" ? "AI" : "Human"}</span>
+                            <span className="block text-xl text-rose-100 mt-3 font-medium">
+                              It was actually <span className="font-bold text-white bg-rose-500/30 px-3 py-1 rounded-lg ml-1 border border-rose-400/30">{truthLabel === "ai" ? "AI" : "Human"}</span>
                             </span>
                           )}
-                        </motion.div>
+                        </>
                       )}
+                    </div>
+                  </div>
+                </motion.div>
+                
+                {/* 0G badge always stays on top of the container, irrespective of flip */}
+                <AnimatePresence>
+                  {currentImage && !!showResult && (
+                    <motion.div 
+                      initial={{ opacity: 0 }} 
+                      animate={{ opacity: 1 }} 
+                      className="absolute top-3 right-3 z-50"
+                    >
+                      <VerifyHashEyeButton
+                        hash={currentImage.hash}
+                        visible
+                        txHash={lastTxHash}
+                        timestamp={answerTimestamp}
+                      />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -583,24 +695,33 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
                 onGuess={(isAi) => handleGuess(isAi)}
               />
 
-              <div className="mt-3 flex justify-between text-xs text-muted-foreground">
-                <span>Games: {totalGames}</span>
-                <span>Best: {bestStreak} 🔥</span>
-                <span>Accuracy: {accuracy}%</span>
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="bg-background/40 border border-border/50 rounded-xl p-2 text-center backdrop-blur-sm">
+                  <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-0.5">Level</span>
+                  <span className="text-sm font-black text-cyan-300">Rank {Math.floor(score / 5) + 1}</span>
+                </div>
+                <div className="bg-background/40 border border-border/50 rounded-xl p-2 text-center backdrop-blur-sm">
+                  <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-0.5">Accuracy</span>
+                  <span className="text-sm font-black text-magenta">{accuracy}%</span>
+                </div>
+                <div className="bg-background/40 border border-border/50 rounded-xl p-2 text-center backdrop-blur-sm">
+                  <span className="block text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-0.5">Best Streak</span>
+                  <span className="text-sm font-black text-yellow-400">{bestStreak} 🔥</span>
+                </div>
               </div>
 
               {/* Trust Signal Badge */}
-              <div className="mt-3 flex items-center justify-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-[10px] text-muted-foreground/60 font-medium tracking-wide">
-                  Powered by 0G — Verifiable Gameplay
+              <div className="mt-4 flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-cyan-900/10 border border-cyan-500/20 w-max mx-auto">
+                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)]" />
+                <span className="text-[10px] text-cyan-200/80 font-semibold tracking-wide uppercase">
+                  Verified on 0G
                 </span>
-                <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
               </div>
             </motion.div>
           </GlowingBorder>
         </div>
       </ScreenShake>
+      <GameRulesDialog mode="classic" open={rulesOpen} onOpenChange={setRulesOpen} />
     </>
   );
 };

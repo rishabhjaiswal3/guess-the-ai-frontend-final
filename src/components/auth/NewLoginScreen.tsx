@@ -4,11 +4,11 @@ import {
   useLoginWithEmail,
   useLoginWithOAuth,
   useModalStatus,
-  usePrivy,
 } from "@privy-io/react-auth";
+import { useAuth } from "@/context/AuthContext";
 
 import { motion } from "framer-motion";
-import { Mail, KeyRound, Wallet, ShieldCheck } from "lucide-react";
+import { Mail, KeyRound, Wallet, ShieldCheck, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GlowingBorder from "@/components/effects/GlowingBorder";
@@ -18,6 +18,7 @@ import networkConfig from "@/lib/networkConfig";
 import {
   connectGateWallet,
   getGateWalletCurrentNetwork,
+  getGateWalletProvider,
   getPrimaryGateWalletAddress,
   isGateWalletAvailable,
   switchGateWalletNetwork,
@@ -109,13 +110,24 @@ function getWalletErrorMessage(err: unknown, fallback: string): string {
 const isProd = import.meta.env.PROD;
 const suppressWalletErrors = true;
 
+import KultLogo from "@/assets/kult-0G-logo.png";
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err && typeof err === "object" && "message" in err) {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === "string" && msg.trim()) return msg;
+  }
+  return fallback;
+}
+
 const NewLoginScreen = () => {
-  const { user, ready, authenticated } = usePrivy();
+  const { user, ready, authenticated, loginWithSiwe } = useAuth();
   const walletFallbackInFlightRef = useRef(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [gateConnecting, setGateConnecting] = useState(false);
   const [privyOpening, setPrivyOpening] = useState(false);
+  const [pendingAddress, setPendingAddress] = useState<string | null>(null);
+  const [pendingProvider, setPendingProvider] = useState<any | null>(null);
   const missingWalletConnectId = !walletConnectProjectId;
   const hasInjectedWallet =
     typeof window !== "undefined" && Boolean((window as { ethereum?: unknown }).ethereum);
@@ -336,90 +348,71 @@ const NewLoginScreen = () => {
     }
   };
 
-  const handleGateConnect = async () => {
-    console.log("[GateWallet] connect clicked");
-    if (gateConnecting) return;
+  const handleVerifyOtp = async () => {
+    console.log("[Auth] verify OTP clicked", { email, code: otp });
     setError("");
-    setGateConnecting(true);
-
+    if (!otp.trim()) {
+      setError("OTP is required.");
+      return;
+    }
     try {
-      const available = isGateWalletAvailable();
-      console.log("[GateWallet] available", { available });
-      if (!available) {
-        throw new Error("Gate Wallet not detected. Please install or enable it.");
+      await loginWithCode({ code: otp.trim() });
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to verify OTP"));
+    }
+  };
+
+
+  const handleWalletSelect = async (type: 'injected' | 'gate' | 'privy') => {
+    console.log("[Auth] Wallet selected", { type });
+    setError("");
+    
+    if (type === 'privy') {
+      if (!ready) {
+        setError("Authentication system is still loading...");
+        return;
       }
-
-      const accountInfo = await connectGateWallet();
-      console.log("[GateWallet] account info", accountInfo);
-      const address = getPrimaryGateWalletAddress(accountInfo);
-
-      if (!address) {
-        throw new Error("Gate Wallet did not return an address.");
-      }
-
-      let network = await getGateWalletCurrentNetwork().catch(() => undefined);
-      console.log("[GateWallet] current network", network);
-
-      const normalized = normalizeChainId(network?.chainId);
-      const allowed = String(allowedChain.decimalChainId);
-
-      if (network === null || (normalized && normalized !== allowed)) {
-        try {
-          console.log("[GateWallet] switching network", { target: allowedChain.hexChainId });
-          await switchGateWalletNetwork(allowedChain.hexChainId);
-          network = await getGateWalletCurrentNetwork().catch(() => undefined);
-          console.log("[GateWallet] network after switch", network);
-        } catch (switchError) {
-          console.warn("Failed to auto-switch network:", switchError);
-        }
-      }
-
-      const finalNormalized = normalizeChainId(network?.chainId);
-      if (network === null) {
-        throw new Error(
-          "Gate Wallet is set to All Networks. Please select 0G Mainnet manually."
-        );
-      }
-
-      if (!finalNormalized || finalNormalized !== allowed) {
-        throw new Error(
-          `Gate Wallet is on ${getNetworkLabel(network)}. Please switch to ${allowedChain.chainName}.`
-        );
-      }
-
-      const payload: any = {
-        walletAddress: address,
-        sessionWallet: "VERIFIED",
-        privyMetaData: { type: "gate_wallet" },
-      };
-
-      console.log("[Auth] loginV2 payload (gate)", payload);
-      await persistLogin(payload);
-      localStorage.setItem("sessionWallet", "VERIFIED");
-    } catch (err: any) {
+      setPrivyOpening(true);
       try {
-        if (hasInjectedWallet) {
-          const switched = await ensureInjectedChain();
-          if (!switched) {
-            setError("Please switch MetaMask to the 0G network and try again.");
-            return;
-          }
-          const address = await connectInjectedWalletDirectly();
-          await persistLogin({
-            walletAddress: address,
-            sessionWallet: "VERIFIED",
-            privyMetaData: { type: "injected_wallet_gate_fallback" },
-          });
-          localStorage.setItem("sessionWallet", "VERIFIED");
-          setError("");
-          return;
-        }
-      } catch (fallbackErr) {
-        console.error("[GateWallet] injected fallback failed", fallbackErr);
+        openPrivyLogin({ loginMethods: ["wallet"] });
+      } catch (err) {
+        setError(getWalletErrorMessage(err, "Failed to open wallet modal."));
+      } finally {
+        if (!isOpen) setPrivyOpening(false);
       }
-      setError(getWalletErrorMessage(err, "Failed to connect Gate Wallet."));
+      return;
+    }
+
+    setLoading(true);
+    try {
+      let address = "";
+      let provider = null;
+
+      if (type === 'gate') {
+        const available = isGateWalletAvailable();
+        if (!available) throw new Error("Gate Wallet not detected. Please install or enable it.");
+        const info = await connectGateWallet();
+        address = getPrimaryGateWalletAddress(info) || "";
+        provider = getGateWalletProvider();
+      } else {
+        await ensureInjectedChain();
+        address = await connectInjectedWalletDirectly();
+        provider = (window as any).ethereum;
+      }
+
+      if (!address) throw new Error("Wallet did not return an address.");
+
+      // Automatic Step 2: Signature Request
+      console.log("[Auth] Connection successful, requesting signature...", { address });
+      const success = await loginWithSiwe(address, provider);
+      if (success) {
+        localStorage.setItem("sessionWallet", "VERIFIED");
+      }
+    } catch (err: any) {
+      console.error(`[Auth] ${type} login failed`, err);
+      setError(getWalletErrorMessage(err, `Failed to connect ${type === 'gate' ? 'Gate Wallet' : 'wallet'}.`));
     } finally {
-      setGateConnecting(false);
+      setLoading(false);
     }
   };
 
@@ -427,49 +420,80 @@ const NewLoginScreen = () => {
   const isSubmittingCode = emailState?.status === "submitting-code" || loading;
 
   return (
-    <div className="min-h-[calc(100vh-140px)] lg:min-h-[calc(100vh-120px)] px-4 pt-24 pb-24 lg:pb-16">
+    <div className="px-4 pb-12 flex items-center justify-center">
       <div className="max-w-6xl mx-auto">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] items-stretch">
-          <div className="glass-strong rounded-3xl p-10 border border-secondary/25 h-full">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl glass glow-magenta mb-5">
-              <ShieldCheck className="w-8 h-8 text-secondary" />
-            </div>
-            <h1 className="text-4xl font-black gradient-text mb-3">Welcome to Guess the AI</h1>
-            <p className="text-base text-foreground/80 mb-8 leading-relaxed">
-              Connect your wallet or login with OTP/social to start playing. Use the 0G network for
-              best compatibility with signing.
-            </p>
-
-            <div className="rounded-2xl border border-secondary/30 bg-secondary/10 p-6 text-sm text-foreground/85">
-              <p className="font-semibold text-base text-secondary mb-2">0G Network Required</p>
-              <p className="mb-3 leading-relaxed">
-                Please make sure your wallet is on the 0G network. If you do not have the 0G network
-                added, add it using the details below. Signing may fail if you are on a different
-                network.
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.005 }}
+            className="glass-3d glass-3d-hover rounded-3xl p-8 border border-secondary/25 h-full relative overflow-hidden"
+          >
+            <div className="relative z-10">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl glass glow-magenta">
+                  <ShieldCheck className="w-7 h-7 text-secondary" />
+                </div>
+                <img src={KultLogo} alt="Kult 0G" className="h-10 w-auto object-contain brightness-110" />
+              </div>
+              <h1 className="text-4xl font-black gradient-text mb-3 leading-tight">Welcome to <br />Guess the AI</h1>
+              <p className="text-base text-foreground/80 mb-6 leading-relaxed font-medium">
+                The ultimate battle of intuition. <br />Connect your wallet to prove you can spot the machine.
               </p>
-              <div className="space-y-2 font-mono text-xs text-foreground/80">
-                <div>Network Name: 0G Mainnet</div>
-                <div>Chain ID: 16661</div>
-                <div>Token Symbol: 0G</div>
-                <div>RPC URL: https://evmrpc.0g.ai</div>
-                <div>Storage Indexer: https://indexer-storage-turbo.0g.ai</div>
-                <div>Block Explorer: https://chainscan.0g.ai</div>
+
+              <div className="rounded-2xl border border-secondary/30 bg-secondary/5 p-5 backdrop-blur-md">
+                <p className="font-black text-base text-secondary mb-2 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" />
+                  0G Network Required
+                </p>
+                <p className="mb-3 leading-relaxed text-xs text-foreground/70">
+                  Join the decentralized proving ground on 0G Mainnet. Configure your wallet with the details below.
+                </p>
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4 font-mono text-[9px] text-foreground/60">
+                  <div className="space-y-1">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Network Name</p>
+                    <p className="font-bold text-foreground">0G Mainnet</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Chain ID</p>
+                    <p className="font-bold text-foreground">16661</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Token Symbol</p>
+                    <p className="font-bold text-foreground">0G</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">RPC URL</p>
+                    <p className="font-bold text-foreground truncate">https://evmrpc.0g.ai</p>
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Storage Indexer</p>
+                    <p className="font-bold text-foreground truncate">https://indexer-storage-turbo.0g.ai</p>
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-bold">Block Explorer</p>
+                    <p className="font-bold text-foreground truncate">https://chainscan.0g.ai</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+            {/* Ambient light effects inside the card */}
+            <div className="absolute -top-20 -left-20 w-40 h-40 bg-primary/10 rounded-full blur-[80px]" />
+            <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-secondary/10 rounded-full blur-[80px]" />
+          </motion.div>
 
-          <GlowingBorder glowColor="magenta" intensity="high" className="rounded-3xl h-full">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-strong rounded-3xl p-10 h-full"
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-3xl font-black gradient-text mb-2">Sign In</h2>
-                <p className="text-base text-foreground/80">
-                  Login with OTP, wallet, or social accounts to start playing.
-                </p>
-              </div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            whileHover={{ scale: 1.005 }}
+            className="glass-3d glass-3d-hover rounded-3xl p-8 h-full relative overflow-hidden border border-magenta/40 shadow-[0_0_20px_rgba(139,93,255,0.15)]"
+          >
+            <div className="text-center mb-4">
+              <h2 className="text-2xl font-black gradient-text mb-1">Sign In</h2>
+              <p className="text-sm text-foreground/80">
+                Login with OTP, wallet, or social accounts to start playing.
+              </p>
+            </div>
 
               {error && (
                 <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -488,7 +512,7 @@ const NewLoginScreen = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="you@example.com"
-                        className="pl-9"
+                        className="pl-10 h-14 text-lg"
                       />
                     </div>
                   </div>
@@ -496,7 +520,7 @@ const NewLoginScreen = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-14 text-lg font-bold border-secondary/30 hover:bg-secondary/10"
                     onClick={handleSendOtp}
                     disabled={isSendingCode}
                   >
@@ -540,72 +564,25 @@ const NewLoginScreen = () => {
               )}
             </div>
 
-            <div className="mt-6 grid gap-3">
+            <div className="mt-6 space-y-3">
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-secondary/40 text-secondary hover:bg-secondary/10"
-                onClick={handleGateConnect}
-                disabled={gateConnecting}
+                className="w-full h-14 text-lg font-bold border-secondary/40 text-secondary hover:bg-secondary/10"
+                onClick={() => handleWalletSelect('gate')}
+                disabled={loading}
               >
-                {gateConnecting ? "Connecting Gate Wallet..." : "Connect Gate Wallet"}
+                <Bot className="w-5 h-5 mr-2" />
+                {loading ? "Connecting Gate..." : "Connect Gate Wallet"}
               </Button>
+              
               <Button
                 type="button"
-                className="w-full btn-gradient text-primary-foreground"
-                onClick={async () => {
-                  console.log("[Privy] wallet connect clicked", {
-                    isProd,
-                    ready,
-                    isOpen,
-                    privyOpening,
-                    hasInjectedWallet,
-                    injectedProviderCount,
-                    missingWalletConnectId,
-                  });
-                  if (!ready) {
-                    if (!suppressWalletErrors) {
-                      setError("Privy is still loading. Please wait a moment.");
-                    }
-                    return;
-                  }
-                  if (missingWalletConnectId && !hasInjectedWallet) {
-                    if (!suppressWalletErrors) {
-                      setError("WalletConnect Project ID is missing. Add VITE_WALLETCONNECT_PROJECT_ID in .env and reload.");
-                    }
-                    return;
-                  }
-                  if (privyOpening) return;
-                  setPrivyOpening(true);
-                  try {
-                    // Always try Privy flow first so Privy session/user state stays consistent.
-                    // Direct injected wallet path is only a fallback when Privy fails to open.
-                    if (hasInjectedWallet && injectedProviderCount > 1) {
-                      console.warn(
-                        "[Privy] multiple injected providers detected; letting Privy handle provider selection."
-                      );
-                    }
-                    openPrivyLogin({ loginMethods: ["wallet"] });
-                    console.log("[Privy] openPrivyLogin invoked");
-                  } catch (err) {
-                    console.error("[Privy] open wallet modal failed", err);
-                    // Fallback path: connect via injected wallet directly and finish backend login.
-                    if (hasInjectedWallet) {
-                      const handledByFallback = await tryInjectedWalletFallback("injected_wallet_fallback", err);
-                      if (handledByFallback) return;
-                    }
-                    if (!suppressWalletErrors) {
-                      setError(getWalletErrorMessage(err, "Failed to open wallet connection."));
-                    }
-                  } finally {
-                    // If modal opens successfully, useModalStatus effect keeps this in sync.
-                    // If it fails before opening, this unblocks retries.
-                    if (!isOpen) setPrivyOpening(false);
-                  }
-                }}
-                disabled={privyOpening}
+                className="w-full h-14 text-lg font-bold btn-gradient text-primary-foreground shadow-[0_0_20px_rgba(139,93,255,0.2)]"
+                onClick={() => handleWalletSelect('privy')}
+                disabled={loading || privyOpening}
               >
-                <Wallet className="w-4 h-4 mr-2" />
+                <Wallet className="w-5 h-5 mr-2" />
                 Connect Wallet
               </Button>
             </div>
@@ -616,11 +593,11 @@ const NewLoginScreen = () => {
                   Or continue with
                   <span className="flex-1 h-px bg-border" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-3">
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
                     onClick={() => initOAuth({ provider: "google" })}
                     disabled={oauthLoading}
                   >
@@ -629,7 +606,7 @@ const NewLoginScreen = () => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full"
+                    className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
                     onClick={() => initOAuth({ provider: "discord" })}
                     disabled={oauthLoading}
                   >
@@ -637,20 +614,12 @@ const NewLoginScreen = () => {
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </GlowingBorder>
+          </motion.div>
         </div>
       </div>
     </div>
   );
 };
 
-const getErrorMessage = (err: unknown, fallback: string): string => {
-  if (err && typeof err === "object" && "message" in err) {
-    const msg = (err as { message?: unknown }).message;
-    if (typeof msg === "string" && msg.trim()) return msg;
-  }
-  return fallback;
-};
 
 export default NewLoginScreen;

@@ -8,7 +8,7 @@ import { getDirect0gVerifyConfig, verifyLabelFromIndexer } from "@/lib/verifyMan
 import { verifyImageLabel, verifyErrorMessage, type VerifyManifestPayload } from "@/services/verifyApi";
 import { GTA_PENDING_VERIFY_HASH_KEY } from "@/lib/gtaWalletVerify";
 
-const VerifyManifest0gSection = () => {
+const VerifyManifest0gSection = ({ className }: { className?: string }) => {
   const [verifyHashInput, setVerifyHashInput] = useState("");
   const [verifyGuess, setVerifyGuess] = useState<"ai" | "human">("ai");
   const [verifyLoading, setVerifyLoading] = useState(false);
@@ -72,12 +72,10 @@ const VerifyManifest0gSection = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.15 }}
-      className="glass-strong rounded-3xl p-6 border border-primary/15"
+      whileHover={{ scale: 1.005 }}
+      className={cn("glass-3d glass-3d-hover rounded-3xl p-6 border border-primary/15 h-full flex flex-col justify-center text-center relative overflow-hidden", className)}
     >
-      <div className="flex items-center gap-2 mb-2">
+      <div className="flex items-center justify-center gap-2 mb-2">
         <ShieldCheck className="w-5 h-5 text-secondary" />
         <h2 className="text-lg font-bold text-foreground">Verify with 0G manifest</h2>
       </div>
@@ -87,7 +85,7 @@ const VerifyManifest0gSection = () => {
         Prefer <strong className="text-foreground font-semibold">Direct 0G</strong> below so your browser pulls the manifest from the indexer; otherwise the backend resolves it (same blob).
       </p>
       {direct0g.ready && (
-        <label className="flex items-center gap-2 mb-4 text-xs text-muted-foreground cursor-pointer select-none">
+        <label className="flex items-center justify-center gap-2 mb-4 text-xs text-muted-foreground cursor-pointer select-none">
           <input
             type="checkbox"
             checked={verifyPreferDirect}
@@ -105,7 +103,7 @@ const VerifyManifest0gSection = () => {
         autoComplete="off"
         spellCheck={false}
       />
-      <div className="flex flex-wrap items-center gap-2 mb-3">
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
         <span className="text-xs text-muted-foreground w-full sm:w-auto">Your guess:</span>
         <div className="flex gap-2">
           <Button

@@ -17,10 +17,10 @@ const GlowingBorder = ({
   animated = true,
 }: GlowingBorderProps) => {
   const borderColors = {
-    cyan: "rgba(0,255,255,VAR)",
-    magenta: "rgba(255,0,255,VAR)",
-    purple: "rgba(139,92,246,VAR)",
-    rainbow: "rgba(0,255,255,VAR)",
+    cyan: "rgba(107,140,255,VAR)",
+    magenta: "rgba(139,93,255,VAR)",
+    purple: "rgba(111,99,255,VAR)",
+    rainbow: "rgba(107,140,255,VAR)",
   };
 
   const intensityOpacity = {

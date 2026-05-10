@@ -14,7 +14,7 @@ const ClassicGuessButtons = ({ disabled, onGuess }: ClassicGuessButtonsProps) =>
         <Button
           onClick={() => onGuess(true)}
           disabled={disabled}
-          className="w-full h-14 text-xl font-black bg-muted hover:bg-muted/80 text-foreground border-2 border-border hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(0,255,255,0.2)] transition-all relative overflow-hidden group"
+          className="w-full h-14 text-xl font-black bg-muted hover:bg-muted/80 text-foreground border-2 border-border hover:border-cyan/50 hover:shadow-[0_0_20px_rgba(107,140,255,0.22)] transition-all relative overflow-hidden group"
         >
           <span className="relative z-10 flex items-center gap-2">
             <Bot className="w-6 h-6" />
@@ -32,7 +32,7 @@ const ClassicGuessButtons = ({ disabled, onGuess }: ClassicGuessButtonsProps) =>
         <Button
           onClick={() => onGuess(false)}
           disabled={disabled}
-          className="w-full h-14 text-xl font-black btn-gradient text-primary-foreground relative overflow-hidden hover:shadow-[0_0_20px_rgba(255,0,255,0.3)]"
+          className="w-full h-14 text-xl font-black btn-gradient text-primary-foreground relative overflow-hidden hover:shadow-[0_0_20px_rgba(139,93,255,0.3)]"
         >
           <span className="relative z-10 flex items-center gap-2">
             <UserRound className="w-6 h-6" />

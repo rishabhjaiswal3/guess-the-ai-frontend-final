@@ -18,7 +18,10 @@ const LoadingBackground = () => (
 );
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState<TabType>("game");
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const saved = localStorage.getItem("gta_active_tab");
+    return (saved as TabType) || "game";
+  });
   const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
@@ -33,6 +36,10 @@ const Index = () => {
     window.addEventListener("gta:set-tab", handler as EventListener);
     return () => window.removeEventListener("gta:set-tab", handler as EventListener);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("gta_active_tab", activeTab);
+  }, [activeTab]);
 
   const handleScoreUpdate = useCallback((newScore: number, newStreak: number, newBestStreak: number) => {
     setScore(newScore);
@@ -73,11 +80,21 @@ const Index = () => {
         <Background3D />
       </Suspense>
 
-      {!isGameActive && (
-        <Header onLogoClick={() => setActiveTab("game")} />
-      )}
+      <Header 
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          if (tab === "game") {
+            window.dispatchEvent(new CustomEvent("gta:reset-game"));
+          }
+          setActiveTab(tab);
+        }}
+        onLogoClick={() => {
+          window.dispatchEvent(new CustomEvent("gta:reset-game"));
+          setActiveTab("game");
+        }} 
+      />
 
-      <main className={`relative z-10 ${isGameActive ? "" : "pt-0 pb-28 lg:pb-0"}`}>
+      <main className="relative z-10 pt-20 pb-32 lg:pb-8 min-h-screen">
         <AuthGate>
           <AnimatePresence mode="wait">
             <motion.div
@@ -93,8 +110,13 @@ const Index = () => {
         </AuthGate>
       </main>
 
-      {token && !isGameActive && (
-        <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      {token && (
+        <BottomNav activeTab={activeTab} onTabChange={(tab) => {
+          if (tab === "game") {
+            window.dispatchEvent(new CustomEvent("gta:reset-game"));
+          }
+          setActiveTab(tab);
+        }} />
       )}
     </div>
   );

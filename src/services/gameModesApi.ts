@@ -1,11 +1,12 @@
 import { apiRequest } from "@/lib/apiClient";
-import { buildImageUrl } from "@/lib/imageUrl";
+import { buildImageUrl, buildFallbackImageUrl } from "@/lib/imageUrl";
 
 export type ModeQuestionImage = {
   id: string;
   hash: string;
   url: string;
   imageUrl: string;
+  fallbackImageUrl?: string;
   percentage?: number;
   percentageLabel?: string;
 };
@@ -70,6 +71,7 @@ const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?
         hash,
         url: item.url || buildImageUrl(hash),
         imageUrl: buildImageUrl(hash) || item.url || "",
+        fallbackImageUrl: buildFallbackImageUrl(hash),
         ...(item.percentage !== undefined ? { percentage: item.percentage } : {}),
         ...(item.percentageLabel ? { percentageLabel: item.percentageLabel } : {})
       };
