@@ -169,12 +169,12 @@ const Background3D = () => {
       >
         <Scene />
       </Canvas>
-      
+
       <div className="absolute inset-0 bg-gradient-to-b from-background/45 via-background/10 to-background/78 pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(5,2,25,0.12)_34%,rgba(5,2,25,0.58)_100%)] pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-r from-cyan/5 via-transparent to-magenta/5 pointer-events-none" />
-      
-      <div 
+
+      <div
         className="absolute inset-0 pointer-events-none opacity-[0.03]"
         style={{
           backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px)"

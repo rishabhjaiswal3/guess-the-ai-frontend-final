@@ -7,7 +7,7 @@ export default function NeuralGridBackground() {
 
   useEffect(() => {
     if (lowGraphics) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -17,17 +17,17 @@ export default function NeuralGridBackground() {
     let animationFrameId: number;
     let width = 0;
     let height = 0;
-    
+
     // Nodes for the neural network
     const nodes: { x: number; y: number; vx: number; vy: number; radius: number }[] = [];
     const numNodes = 60; // Adjust for density
-    
+
     const resize = () => {
       width = window.innerWidth;
       height = window.innerHeight;
       canvas.width = width;
       canvas.height = height;
-      
+
       // Re-initialize nodes on resize to spread them out
       nodes.length = 0;
       for (let i = 0; i < numNodes; i++) {
@@ -51,7 +51,7 @@ export default function NeuralGridBackground() {
       ctx.strokeStyle = "rgba(139, 93, 255, 0.03)";
       ctx.lineWidth = 1;
       const gridSize = 50;
-      
+
       // Moving grid effect
       const offsetX = (Date.now() / 50) % gridSize;
       const offsetY = (Date.now() / 50) % gridSize;
@@ -69,17 +69,17 @@ export default function NeuralGridBackground() {
 
       // Update and draw nodes
       ctx.fillStyle = "rgba(0, 255, 255, 0.5)";
-      
+
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        
+
         node.x += node.vx;
         node.y += node.vy;
-        
+
         // Bounce off walls
         if (node.x < 0 || node.x > width) node.vx *= -1;
         if (node.y < 0 || node.y > height) node.vy *= -1;
-        
+
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -90,7 +90,7 @@ export default function NeuralGridBackground() {
           const dx = node.x - other.x;
           const dy = node.y - other.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
-          
+
           if (distance < 150) {
             ctx.beginPath();
             ctx.strokeStyle = `rgba(0, 255, 255, ${0.15 * (1 - distance / 150)})`;
@@ -108,10 +108,10 @@ export default function NeuralGridBackground() {
       gradient.addColorStop(0, "rgba(0, 255, 255, 0)");
       gradient.addColorStop(0.8, "rgba(0, 255, 255, 0.05)");
       gradient.addColorStop(1, "rgba(0, 255, 255, 0.2)");
-      
+
       ctx.fillStyle = gradient;
       ctx.fillRect(0, scanY - 50, width, 50);
-      
+
       ctx.fillStyle = "rgba(0, 255, 255, 0.5)";
       ctx.fillRect(0, scanY, width, 1);
 

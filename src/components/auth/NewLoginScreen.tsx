@@ -80,10 +80,10 @@ function getNetworkLabel(network: NetworkInfo | null | undefined) {
 function getWalletErrorMessage(err: unknown, fallback: string): string {
   const raw = String(
     (err as { message?: unknown })?.message ||
-      (err as { reason?: unknown })?.reason ||
-      (err as { shortMessage?: unknown })?.shortMessage ||
-      err ||
-      ""
+    (err as { reason?: unknown })?.reason ||
+    (err as { shortMessage?: unknown })?.shortMessage ||
+    err ||
+    ""
   );
   const lower = raw.toLowerCase();
   const code = (err as { code?: number })?.code;
@@ -366,7 +366,7 @@ const NewLoginScreen = () => {
   const handleWalletSelect = async (type: 'injected' | 'gate' | 'privy') => {
     console.log("[Auth] Wallet selected", { type });
     setError("");
-    
+
     if (type === 'privy') {
       if (!ready) {
         setError("Authentication system is still loading...");
@@ -423,7 +423,7 @@ const NewLoginScreen = () => {
     <div className="px-4 pb-12 flex items-center justify-center">
       <div className="max-w-6xl mx-auto">
         <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] items-stretch">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             whileHover={{ scale: 1.005 }}
@@ -495,13 +495,13 @@ const NewLoginScreen = () => {
               </p>
             </div>
 
-              {error && (
-                <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                  {error}
-                </div>
-              )}
+            {error && (
+              <div className="mb-4 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-              <div className="space-y-4">
+            <div className="space-y-4">
               {step === "email" ? (
                 <>
                   <div>
@@ -581,7 +581,7 @@ const NewLoginScreen = () => {
                 </span>
               </Button>
               */}
-              
+
               <Button
                 type="button"
                 className="w-full h-14 text-lg font-bold btn-gradient text-primary-foreground shadow-[0_0_20px_rgba(139,93,255,0.2)]"
@@ -595,33 +595,33 @@ const NewLoginScreen = () => {
               </Button>
             </div>
 
-              <div className="mt-6">
-                <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                  <span className="flex-1 h-px bg-border" />
-                  Or continue with
-                  <span className="flex-1 h-px bg-border" />
-                </div>
-                <div className="grid gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
-                    onClick={() => initOAuth({ provider: "google" })}
-                    disabled={oauthLoading}
-                  >
-                    Google
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
-                    onClick={() => initOAuth({ provider: "discord" })}
-                    disabled={oauthLoading}
-                  >
-                    Discord
-                  </Button>
-                </div>
+            <div className="mt-6">
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                <span className="flex-1 h-px bg-border" />
+                Or continue with
+                <span className="flex-1 h-px bg-border" />
               </div>
+              <div className="grid gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
+                  onClick={() => initOAuth({ provider: "google" })}
+                  disabled={oauthLoading}
+                >
+                  Google
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-14 text-lg font-semibold border-border/40 hover:bg-background/10"
+                  onClick={() => initOAuth({ provider: "discord" })}
+                  disabled={oauthLoading}
+                >
+                  Discord
+                </Button>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
