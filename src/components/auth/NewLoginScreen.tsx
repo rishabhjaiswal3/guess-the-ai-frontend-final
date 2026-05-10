@@ -557,7 +557,9 @@ const NewLoginScreen = () => {
                       onClick={handleVerifyOtp}
                       disabled={isSubmittingCode}
                     >
-                      {isSubmittingCode ? "Verifying..." : "Verify OTP"}
+                      <span className="relative z-10 flex items-center justify-center">
+                        {isSubmittingCode ? "Verifying..." : "Verify OTP"}
+                      </span>
                     </Button>
                   </div>
                 </>
@@ -565,6 +567,7 @@ const NewLoginScreen = () => {
             </div>
 
             <div className="mt-6 space-y-3">
+              {/* 
               <Button
                 type="button"
                 variant="outline"
@@ -572,9 +575,12 @@ const NewLoginScreen = () => {
                 onClick={() => handleWalletSelect('gate')}
                 disabled={loading}
               >
-                <Bot className="w-5 h-5 mr-2" />
-                {loading ? "Connecting Gate..." : "Connect Gate Wallet"}
+                <span className="relative z-10 flex items-center justify-center">
+                  <Bot className="w-5 h-5 mr-2" />
+                  {loading ? "Connecting Gate..." : "Connect Gate Wallet"}
+                </span>
               </Button>
+              */}
               
               <Button
                 type="button"
@@ -582,8 +588,10 @@ const NewLoginScreen = () => {
                 onClick={() => handleWalletSelect('privy')}
                 disabled={loading || privyOpening}
               >
-                <Wallet className="w-5 h-5 mr-2" />
-                Connect Wallet
+                <span className="relative z-10 flex items-center justify-center">
+                  <Wallet className="w-5 h-5 mr-2" />
+                  Connect Wallet
+                </span>
               </Button>
             </div>
 
