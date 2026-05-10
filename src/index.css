@@ -138,8 +138,24 @@ All colors MUST be HSL.
   }
   
   .btn-gradient {
-    @apply relative overflow-hidden font-semibold;
+    @apply relative overflow-hidden font-semibold transition-all duration-300;
     background: var(--gradient-primary);
+    background-size: 200% 200%;
+  }
+  
+  .btn-gradient:hover {
+    @apply shadow-[0_0_30px_rgba(107,140,255,0.4)];
+    background-position: right center;
+  }
+
+  .btn-shine {
+    @apply relative overflow-hidden;
+  }
+
+  .btn-shine::after {
+    content: '';
+    @apply absolute top-0 -left-full w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-25deg] pointer-events-none;
+    animation: shine 4s infinite;
   }
   
   .btn-gradient::before {
@@ -413,13 +429,28 @@ All colors MUST be HSL.
   10% { opacity: 1; }
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+@keyframes shine {
+  0% { transform: translateX(-100%) skewX(-25deg); }
+  100% { transform: translateX(100%) skewX(-25deg); }
+}
+
+@keyframes lightning {
+  0% { transform: translateX(-150%) skewX(-25deg); opacity: 0; }
+  10% { transform: translateX(-50%) skewX(-25deg); opacity: 1; }
+  12% { opacity: 0.2; }
+  14% { opacity: 1; }
+  16% { opacity: 0.3; }
+  18% { opacity: 1; }
+  25% { transform: translateX(150%) skewX(-25deg); opacity: 0; }
+  100% { transform: translateX(150%) skewX(-25deg); opacity: 0; }
+}
+
+.animate-lightning {
+  animation: lightning 2s ease-out infinite;
+}
+
+.animate-shine {
+  animation: shine 3s ease-in-out infinite;
 }
 
 /* Scrollbar styling */

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Gamepad2, Trophy, User, Wallet, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TabType } from "@/components/BottomNav";
+import kultLogo from "@/assets/kult-0G-logo.png";
 
 interface HeaderProps {
   onLogoClick?: () => void;
@@ -132,6 +133,11 @@ const Header = ({ onLogoClick, activeTab, onTabChange }: HeaderProps) => {
               Logout
             </Button>
           ) : null}
+
+
+          {!token && (
+            <img src={kultLogo} alt="Kult 0G" className="h-6 w-auto mr-2 opacity-80" />
+          )}
 
           {/* Sound toggle */}
           <motion.button
