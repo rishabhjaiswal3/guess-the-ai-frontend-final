@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroAi from "@/assets/hero-ai2.png";
+import heroAi640 from "@/assets/hero-ai2-640.webp";
+import heroAi768 from "@/assets/hero-ai2-768.webp";
 import kultLogo from "@/assets/kult-0G-logo.png";
 import ogLogo from "@/assets/0G Logo.png";
 import trailerVid from "@/assets/trailer.mp4";
@@ -327,8 +328,14 @@ const LandingPage = () => {
             {/* Hero image - First on mobile, Right on desktop */}
             <div className="order-first md:order-last relative w-full mb-6 md:mb-0 group">
               <img
-                src={heroAi}
+                src={heroAi768}
+                srcSet={`${heroAi640} 640w, ${heroAi768} 768w`}
+                sizes="(min-width: 768px) 480px, 100vw"
                 alt="AI vs Human"
+                width={768}
+                height={1152}
+                fetchPriority="high"
+                decoding="async"
                 className="w-full h-auto object-cover rounded-3xl opacity-100 group-hover:scale-105 transition-all duration-700 shadow-glow-soft"
               />
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-32 w-64 rounded-full bg-violet/20 blur-[100px] animate-pulse-ring" />
