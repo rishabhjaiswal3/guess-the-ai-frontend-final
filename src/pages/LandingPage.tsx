@@ -15,9 +15,10 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import heroAi640 from "@/assets/hero-ai2-640.webp";
-import heroAi768 from "@/assets/hero-ai2-768.webp";
-import kultLogo from "@/assets/kult-0G-logo.png";
+
+const HERO_AVIF = "/images/hero-ai2-400.avif 400w, /images/hero-ai2-480.avif 480w, /images/hero-ai2-560.avif 560w";
+const HERO_WEBP = "/images/hero-ai2-400.webp 400w, /images/hero-ai2-480.webp 480w, /images/hero-ai2-560.webp 560w";
+const HERO_SIZES = "(min-width: 768px) 480px, 100vw";
 import ogLogo from "@/assets/0G Logo.png";
 import trailerVid from "@/assets/trailer.mp4";
 import NeuralNetwork3D from "@/components/NeuralNetwork3D";
@@ -326,18 +327,26 @@ const LandingPage = () => {
         <div className="bg-transparent border border-primary/40 rounded-[1rem] md:rounded-[2.5rem] p-4 md:px-8 md:pt-4 md:pb-4 relative overflow-hidden shadow-[0_0_50px_rgba(var(--primary),0.15)] sticky top-10 self-start transition-all duration-700 hover:border-primary/60 hover:shadow-[0_0_70px_rgba(var(--primary),0.2)] shadow-glow-soft">
           <div className="flex flex-col md:grid md:grid-cols-2 gap-4 relative">
             {/* Hero image - First on mobile, Right on desktop */}
-            <div className="order-first md:order-last relative w-full mb-6 md:mb-0 group">
-              <img
-                src={heroAi768}
-                srcSet={`${heroAi640} 640w, ${heroAi768} 768w`}
-                sizes="(min-width: 768px) 480px, 100vw"
-                alt="AI vs Human"
-                width={768}
-                height={1152}
-                fetchPriority="high"
-                decoding="async"
-                className="w-full h-auto object-cover rounded-3xl opacity-100 group-hover:scale-105 transition-all duration-700 shadow-glow-soft"
-              />
+            <div
+              className="order-first md:order-last relative w-full mb-6 md:mb-0 group bg-cover bg-center rounded-3xl"
+              style={{ backgroundImage: "url(/images/hero-ai2-blur.webp)" }}
+            >
+              <picture>
+                <source type="image/avif" srcSet={HERO_AVIF} sizes={HERO_SIZES} />
+                <source type="image/webp" srcSet={HERO_WEBP} sizes={HERO_SIZES} />
+                <img
+                  src="/images/hero-ai2-480.webp"
+                  srcSet={HERO_WEBP}
+                  sizes={HERO_SIZES}
+                  alt="AI vs Human"
+                  width={560}
+                  height={840}
+                  fetchPriority="high"
+                  decoding="async"
+                  className="w-full h-auto object-cover rounded-3xl opacity-0 transition-[opacity,transform] duration-500 ease-out group-hover:scale-105 shadow-glow-soft [&.loaded]:opacity-100"
+                  onLoad={(e) => e.currentTarget.classList.add("loaded")}
+                />
+              </picture>
               <div className="absolute bottom-0 left-1/2 -translate-x-1/2 h-32 w-64 rounded-full bg-violet/20 blur-[100px] animate-pulse-ring" />
             </div>
 

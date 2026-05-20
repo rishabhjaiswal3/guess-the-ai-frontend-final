@@ -10,6 +10,16 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
 
+    <!-- Hero LCP: start download before JS bundle (AVIF + WebP fallback in picture) -->
+    <link
+      rel="preload"
+      as="image"
+      type="image/avif"
+      imagesrcset="/images/hero-ai2-400.avif 400w, /images/hero-ai2-480.avif 480w, /images/hero-ai2-560.avif 560w"
+      imagesizes="(min-width: 768px) 480px, 100vw"
+      fetchpriority="high"
+    />
+
     <meta property="og:title" content="Guess The AI - Test Your AI Knowledge" />
     <meta property="og:description" content="Can you tell the difference between AI-generated and human-created images? Play now and test your skills!" />
     <meta property="og:type" content="website" />
