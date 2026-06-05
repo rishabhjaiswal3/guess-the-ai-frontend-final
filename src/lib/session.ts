@@ -111,6 +111,30 @@ export const getSourceFromUrl = () => {
   return queryParams.get("source") || hashParams.get("source") || "";
 };
 
+export const clearSourceFromUrl = () => {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("source")) {
+    url.searchParams.delete("source");
+    window.history.replaceState({}, "", url.toString());
+  }
+  if (url.hash.includes("source=")) {
+    const hashParams = new URLSearchParams(url.hash.replace(/^#\/?/, ""));
+    if (hashParams.has("source")) {
+      hashParams.delete("source");
+      const cleaned = hashParams.toString();
+      url.hash = cleaned ? `#/${cleaned}` : "";
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+};
+
+export const isAutoLoginRoute = (href?: string) => {
+  if (typeof window === "undefined" && !href) return false;
+  const url = new URL(href ?? window.location.href);
+  return url.pathname.includes("/auto-login") || url.hash.includes("/auto-login");
+};
+
 export const getWalletFromUrl = () => {
   if (typeof window === "undefined") return "";
   return new URLSearchParams(window.location.search).get("walletAddress") ?? "";

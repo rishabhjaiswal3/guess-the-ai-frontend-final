@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginV2 } from "@/services/authApi";
 import {
   clearJwtFromUrl,
+  clearSourceFromUrl,
   clearWalletFromUrl,
   getJwtFromUrl,
   getSourceFromUrl,
@@ -17,6 +18,7 @@ const DEPLOY_MARKER = "AUTO_LOGIN_DEPLOY_CHECK_V1";
 
 export default function AutoLogin() {
   const navigate = useNavigate();
+  const hasAttemptedLoginRef = useRef(false);
 
   const goBack = () => {
     if (window.history.length > 1) {
@@ -27,6 +29,9 @@ export default function AutoLogin() {
   };
 
   useEffect(() => {
+    if (hasAttemptedLoginRef.current) return;
+    hasAttemptedLoginRef.current = true;
+
     console.log("HELLO auto login page");
     const walletAddress = getWalletFromUrl();
     const jwt = getJwtFromUrl();
@@ -67,14 +72,22 @@ export default function AutoLogin() {
           const requestSource = source || "browser";
           const response = await loginV2({ jwt, source: requestSource });
           const token = response?.data?.token ?? "";
-          if (!token) navigate("/",{replace:true});
+          if (!token) {
+            navigate("/", { replace: true });
+            return;
+          }
           setStoredToken(token);
           setStoredSource(requestSource);
           if (response?.data?.username) setStoredUsername(response.data.username);
           clearJwtFromUrl();
+          clearSourceFromUrl();
           navigate("/", { replace: true });
           return;
-        } catch {
+        } catch (error) {
+          console.error("[AutoLogin] jwt login failed", error);
+          clearJwtFromUrl();
+          clearSourceFromUrl();
+          navigate("/", { replace: true });
           return;
         }
       }
@@ -90,9 +103,13 @@ export default function AutoLogin() {
             source: "browser"
           });
           const token = response?.data?.token ?? "";
-          if (!token) navigate("/",{replace:true});
+          if (!token) {
+            navigate("/", { replace: true });
+            return;
+          }
           setStoredToken(token);
           setIsIframe(inIframe);
+          setStoredSource("browser");
           if (response?.data?.username) setStoredUsername(response.data.username);
           clearWalletFromUrl();
           navigate("/", { replace: true });

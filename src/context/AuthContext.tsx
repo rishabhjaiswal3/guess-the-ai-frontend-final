@@ -5,6 +5,7 @@ import {
   clearJwtFromUrl,
   clearStoredSession,
   getJwtFromUrl,
+  isAutoLoginRoute,
   getStoredToken,
   getStoredUsername,
   onTokenChange,
@@ -280,6 +281,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (jwtAttemptedRef.current || token) return;
+    if (isAutoLoginRoute()) return;
     const jwt = getJwtFromUrl();
     if (jwt) {
       jwtAttemptedRef.current = true;
@@ -291,8 +293,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!ready || token || !authenticated) return;
     if (loginAttemptedRef.current) return;
     if (loggingOutRef.current) return; // Don't auto-login during logout
-    // Skip Privy auto-login on /auto-login route — AutoLogin.tsx handles it
-    if (window.location.pathname.includes("/auto-login")) return;
+    // Skip Privy auto-login on the iframe auto-login route — AutoLogin.tsx handles it
+    if (isAutoLoginRoute()) return;
     loginAttemptedRef.current = true;
     loginWithPrivy();
   }, [ready, authenticated, token, loginWithPrivy]);
