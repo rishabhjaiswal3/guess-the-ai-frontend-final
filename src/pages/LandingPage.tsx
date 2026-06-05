@@ -156,12 +156,12 @@ function ScrambleText({ text, hoverable = false }: { text: string; hoverable?: b
 
 function InfraItem({ icon: Icon, title, sub }: { icon: any; title: string; sub: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center text-center gap-2 group">
-      <div className="h-12 w-12 rounded-xl glass grid place-items-center text-cyan group-hover:bg-cyan/10 transition-colors">
-        <Icon size={22} />
+    <div className="glass-strong rounded-[2rem] p-6 border border-white/10 shadow-[0_0_20px_rgba(39,231,255,0.08)] hover:border-cyan/30 hover:shadow-[0_0_30px_rgba(39,231,255,0.18)] transition-all duration-300 flex flex-col items-center justify-center text-center gap-4 min-h-[210px]">
+      <div className="h-14 w-14 rounded-2xl bg-cyan/10 border border-cyan/20 grid place-items-center text-cyan shadow-inner">
+        <Icon size={24} />
       </div>
-      <div className="font-bold text-[11px] uppercase tracking-wider">{title}</div>
-      <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">{sub}</div>
+      <div className="font-black text-sm uppercase tracking-[0.22em] text-white">{title}</div>
+      <div className="text-[11px] text-muted-foreground uppercase tracking-[0.2em] flex items-center justify-center gap-1">{sub}</div>
     </div>
   );
 }
@@ -582,14 +582,17 @@ const LandingPage = () => {
             </div>
           </motion.div>
 
-          <div className="glass rounded-[2rem] p-6 md:p-8 border-primary/30 shadow-[0_0_30px_rgba(var(--primary),0.1)] hover:border-primary/50 transition-all duration-500 shadow-glow-soft">
-            <div className="flex items-center justify-center gap-3 mb-8">
-              <img src={ogLogo} alt="0G" className="h-4 w-auto brightness-110" />
-              <div className="font-bold tracking-[0.3em] text-[10px] text-cyan uppercase">INFRASTRUCTURE STATUS</div>
+          <div className="rounded-[2rem] p-6 md:p-8 border border-white/10 bg-white/5 backdrop-blur-xl shadow-[0_0_30px_rgba(var(--primary),0.08)] transition-all duration-500">
+            <div className="flex flex-col items-center justify-center gap-3 mb-8">
+              <img src={ogLogo} alt="0G" className="h-5 w-auto brightness-110" />
+              <div className="flex items-center gap-3">
+                <div className="font-bold tracking-[0.3em] text-[10px] text-cyan uppercase">0G Infrastructure Status</div>
+                <span className="rounded-full bg-cyan/10 text-cyan px-3 py-1 text-[9px] font-black uppercase tracking-[0.2em]">Live</span>
+              </div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
               <InfraItem icon={ShieldCheck} title="Verified" sub="DA Verified" />
-              <InfraItem icon={UserCircle2} title="Identity" sub={<><img src={ogLogo} alt="0G" className="h-2.5 w-auto" /> Native</>} />
+              <InfraItem icon={UserCircle2} title="Identity" sub="Native" />
               <InfraItem icon={Lock} title="Secured" sub="On-Chain" />
               <InfraItem icon={Box} title="Storage" sub="Decentralized" />
             </div>
