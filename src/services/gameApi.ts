@@ -1,5 +1,9 @@
 import { apiRequest } from "@/lib/apiClient";
 import { buildFallbackImageUrl, buildImageUrl } from "@/lib/imageUrl";
+import {
+  maybeDispatchContestRewardUnlocked,
+  type ContestRewardPayload,
+} from "@/lib/highwayHustleContest";
 
 export type GameImageResponse = {
   hash: string;
@@ -38,6 +42,7 @@ export type SubmitAnswerResponse = {
   };
   gateStats?: Record<string, unknown> | null;
   onchain?: { transactionHash?: string } | null;
+  contestReward?: ContestRewardPayload | null;
 };
 
 export type SessionResponse = {
@@ -94,10 +99,12 @@ export const submitAnswer = async (
   guess: "ai" | "human",
   isBackup = false
 ): Promise<SubmitAnswerResponse> => {
-  return apiRequest<SubmitAnswerResponse>("/game/ans", {
+  const response = await apiRequest<SubmitAnswerResponse>("/game/ans", {
     method: "POST",
     body: { hash, guess, isBackup },
   });
+  maybeDispatchContestRewardUnlocked(response?.contestReward);
+  return response;
 };
 
 export const startSession = async (): Promise<SessionResponse> => {

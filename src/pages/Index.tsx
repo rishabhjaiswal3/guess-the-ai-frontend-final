@@ -3,11 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import BottomNav, { TabType } from "@/components/BottomNav";
 import GameScreen from "@/components/game/GameScreen";
+import ContestScreen from "@/components/game/ContestScreen";
 import LeaderboardScreen from "@/components/game/LeaderboardScreen";
 import ProfileScreen from "@/components/game/ProfileScreen";
 import WalletScreen from "@/components/game/WalletScreen";
 import AuthGate from "@/components/auth/AuthGate";
+import ContestRewardUnlockDialog from "@/components/game/ContestRewardUnlockDialog";
 import { useAuth } from "@/context/AuthContext";
+import {
+  HIGHWAY_HUSTLE_CONTEST_EVENT,
+  type ContestRewardPayload,
+} from "@/lib/highwayHustleContest";
 
 const Background3D = lazy(() => import("@/components/Background3D"));
 
@@ -26,6 +32,7 @@ const Index = () => {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [isGameActive, setIsGameActive] = useState(false);
+  const [unlockedReward, setUnlockedReward] = useState<ContestRewardPayload | null>(null);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -35,6 +42,20 @@ const Index = () => {
     };
     window.addEventListener("gta:set-tab", handler as EventListener);
     return () => window.removeEventListener("gta:set-tab", handler as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const custom = event as CustomEvent<ContestRewardPayload>;
+      if (custom.detail) {
+        setUnlockedReward(custom.detail);
+      }
+    };
+
+    window.addEventListener(HIGHWAY_HUSTLE_CONTEST_EVENT, handler as EventListener);
+    return () => {
+      window.removeEventListener(HIGHWAY_HUSTLE_CONTEST_EVENT, handler as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -59,6 +80,8 @@ const Index = () => {
         );
       case "leaderboard":
         return <LeaderboardScreen key="leaderboard" />;
+      case "contest":
+        return <ContestScreen key="contest" />;
       case "profile":
         return <ProfileScreen key="profile" score={score} streak={streak} bestStreak={bestStreak} />;
       case "wallet":
@@ -118,6 +141,14 @@ const Index = () => {
           setActiveTab(tab);
         }} />
       )}
+
+      <ContestRewardUnlockDialog
+        open={Boolean(unlockedReward)}
+        reward={unlockedReward}
+        onOpenChange={(open) => {
+          if (!open) setUnlockedReward(null);
+        }}
+      />
     </div>
   );
 };

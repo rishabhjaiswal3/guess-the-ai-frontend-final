@@ -137,7 +137,8 @@ export const isAutoLoginRoute = (href?: string) => {
 
 export const getWalletFromUrl = () => {
   if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("walletAddress") ?? "";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("walletAddress") || params.get("wallet") || "";
 };
 
 export const clearWalletFromUrl = () => {
@@ -145,6 +146,10 @@ export const clearWalletFromUrl = () => {
   const url = new URL(window.location.href);
   if (url.searchParams.has("walletAddress")) {
     url.searchParams.delete("walletAddress");
+    window.history.replaceState({}, "", url.toString());
+  }
+  if (url.searchParams.has("wallet")) {
+    url.searchParams.delete("wallet");
     window.history.replaceState({}, "", url.toString());
   }
 };

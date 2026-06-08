@@ -6,7 +6,7 @@ import { getStoredSource } from "@/lib/session";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
-import { Gamepad2, Trophy, User, Wallet, Sparkles } from "lucide-react";
+import { Gamepad2, Trophy, User, Wallet, Sparkles, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TabType } from "@/components/BottomNav";
 import kultLogo from "@/assets/kult-0G-logo.png";
@@ -24,6 +24,7 @@ const Header = ({ onLogoClick, activeTab, onTabChange }: HeaderProps) => {
 
   const tabs = [
     { id: "game" as TabType, icon: Gamepad2, label: "Game", activeColor: "text-primary" },
+    { id: "contest" as TabType, icon: Gift, label: "Contest", activeColor: "text-amber-300" },
     { id: "leaderboard" as TabType, icon: Trophy, label: "Leaderboard", activeColor: "text-secondary" },
     { id: "profile" as TabType, icon: User, label: "Profile", activeColor: "text-accent" },
     { id: "wallet" as TabType, icon: Wallet, label: "Wallet", activeColor: "text-yellow" },

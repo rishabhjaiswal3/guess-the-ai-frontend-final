@@ -1,4 +1,5 @@
 import { apiRequest } from "@/lib/apiClient";
+import type { ContestRewardPayload } from "@/lib/highwayHustleContest";
 
 export type LoginPayload = {
   token: string;
@@ -52,6 +53,7 @@ export type ProfilePayload = {
   correctAnswers?: number;
   dungeonTitle?: string;
   campaign?: Record<string, unknown>;
+  contestReward?: ContestRewardPayload | null;
 };
 
 export type ProfileResponse = {

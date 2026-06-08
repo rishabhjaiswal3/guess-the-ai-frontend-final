@@ -4,7 +4,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@highway-hustle/*": ["../../highway-hustle/highway-hustle-frontend/src/*"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

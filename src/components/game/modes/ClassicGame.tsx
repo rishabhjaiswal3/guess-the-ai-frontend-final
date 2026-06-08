@@ -20,6 +20,7 @@ import { addGameTransaction } from "@/lib/gameTransactions";
 import { toast } from "@/components/ui/sonner";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 import GameImageBox from "@/components/game/GameImageBox";
+import { useAuth } from "@/context/AuthContext";
 type ProofStatus = "idle" | "verifying" | "verified" | "stored";
 
 interface ScorePopup {
@@ -109,6 +110,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
   const preloadedHashesRef = useRef<Set<string>>(new Set());
   const proofTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { playClick, playBack, playSuccess, playFail } = useFeedbackSound();
+  const { refreshProfile } = useAuth();
 
   const { hint, loading: hintLoading } = useHint(currentImage?.hash || null);
 
@@ -321,6 +323,8 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       } else {
         advanceProofStatus("idle");
       }
+
+      refreshProfile().catch(() => {});
     } catch {
       isCorrect = false;
       advanceProofStatus("idle");

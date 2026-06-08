@@ -1,5 +1,9 @@
 import { apiRequest } from "@/lib/apiClient";
 import { buildImageUrl, buildFallbackImageUrl } from "@/lib/imageUrl";
+import {
+  maybeDispatchContestRewardUnlocked,
+  type ContestRewardPayload,
+} from "@/lib/highwayHustleContest";
 
 export type ModeQuestionImage = {
   id: string;
@@ -59,6 +63,7 @@ export type ModeAnswerResponse = {
   oddHash?: string;
   variant?: string;
   comboUsed?: number;
+  contestReward?: ContestRewardPayload | null;
 };
 
 const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?: Array<{ id?: string; hash?: string; url?: string; percentage?: number; percentageLabel?: string }> }): ModeQuestionResponse => {
@@ -88,6 +93,15 @@ const unwrap = async <T>(path: string, options?: Parameters<typeof apiRequest<Ap
   return response?.data as T;
 };
 
+const submitModeAnswer = async <T extends ModeAnswerResponse>(path: string, body: unknown) => {
+  const response = await unwrap<T>(path, {
+    method: "POST",
+    body,
+  });
+  maybeDispatchContestRewardUnlocked(response?.contestReward);
+  return response;
+};
+
 export const getMultiSelectQuestion = async () => {
   const data = await unwrap<ModeQuestionResponse>("/game/multiselect/question");
   return withImageUrl(data);
@@ -98,10 +112,7 @@ export const submitMultiSelectAnswer = async (payload: {
   selectedHashes: string[];
   askingFor?: "ai" | "human";
 }) => {
-  return unwrap<ModeAnswerResponse>("/game/multiselect/answer", {
-    method: "POST",
-    body: payload,
-  });
+  return submitModeAnswer<ModeAnswerResponse>("/game/multiselect/answer", payload);
 };
 
 export const getDuelQuestion = async (variant: "normal" | "speed") => {
@@ -115,10 +126,7 @@ export const submitDuelAnswer = async (payload: {
   askingFor?: "ai" | "human";
   variant?: "normal" | "speed";
 }) => {
-  return unwrap<ModeAnswerResponse>("/game/duel/answer", {
-    method: "POST",
-    body: payload,
-  });
+  return submitModeAnswer<ModeAnswerResponse>("/game/duel/answer", payload);
 };
 
 export const getOddOneOutQuestion = async () => {
@@ -131,10 +139,7 @@ export const submitOddOneOutAnswer = async (payload: {
   selectedHash: string;
   askingFor?: "ai" | "human";
 }) => {
-  return unwrap<ModeAnswerResponse>("/game/oddoneout/answer", {
-    method: "POST",
-    body: payload,
-  });
+  return submitModeAnswer<ModeAnswerResponse>("/game/oddoneout/answer", payload);
 };
 
 export const getCardFlipDeck = async () => {
@@ -146,10 +151,7 @@ export const submitCardFlipAnswer = async (payload: {
   hash: string;
   guess: "ai" | "human";
 }) => {
-  return unwrap<ModeAnswerResponse>("/game/cardflip/answer", {
-    method: "POST",
-    body: payload,
-  });
+  return submitModeAnswer<ModeAnswerResponse>("/game/cardflip/answer", payload);
 };
 
 export const getRapidFireQuestion = async () => {
@@ -162,10 +164,7 @@ export const submitRapidFireAnswer = async (payload: {
   guess: "ai" | "human";
   combo: number;
 }) => {
-  return unwrap<ModeAnswerResponse>("/game/rapidfire/answer", {
-    method: "POST",
-    body: payload,
-  });
+  return submitModeAnswer<ModeAnswerResponse>("/game/rapidfire/answer", payload);
 };
 
 export type HintResponse = {

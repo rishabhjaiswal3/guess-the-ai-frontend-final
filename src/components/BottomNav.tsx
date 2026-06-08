@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { Gamepad2, Trophy, User, Wallet, Sparkles } from "lucide-react";
+import { Gamepad2, Trophy, User, Wallet, Sparkles, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export type TabType = "game" | "leaderboard" | "profile" | "wallet";
+export type TabType = "game" | "contest" | "leaderboard" | "profile" | "wallet";
 
 interface BottomNavProps {
   activeTab: TabType;
@@ -11,6 +11,7 @@ interface BottomNavProps {
 
 const tabs = [
   { id: "game" as TabType, icon: Gamepad2, label: "Game", activeColor: "text-primary" },
+  { id: "contest" as TabType, icon: Gift, label: "Contest", activeColor: "text-amber-300" },
   { id: "leaderboard" as TabType, icon: Trophy, label: "Leaderboard", activeColor: "text-secondary" },
   { id: "profile" as TabType, icon: User, label: "Profile", activeColor: "text-accent" },
   { id: "wallet" as TabType, icon: Wallet, label: "Wallet", activeColor: "text-yellow" },
@@ -24,7 +25,7 @@ const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-          className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-around relative overflow-hidden shadow-[0_-4px_30px_rgba(107,140,255,0.14)]"
+          className="glass-strong rounded-2xl px-2 py-2 flex items-center justify-between relative overflow-hidden shadow-[0_-4px_30px_rgba(107,140,255,0.14)]"
         >
           {/* Animated background gradient */}
           <motion.div
@@ -48,7 +49,7 @@ const BottomNav = ({ activeTab, onTabChange }: BottomNavProps) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-300 z-10",
+                  "relative flex flex-1 flex-col items-center gap-1 px-2 py-2 rounded-xl transition-all duration-300 z-10",
                   isActive
                     ? tab.activeColor
                     : "text-muted-foreground hover:text-foreground"

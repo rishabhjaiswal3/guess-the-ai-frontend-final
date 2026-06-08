@@ -1,27 +1,35 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Zap, Flame, Star, Trophy, Target, Award, Sparkles, Pencil, Check, X, Loader2, Settings, ZapOff } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Zap,
+  Flame,
+  Star,
+  Trophy,
+  Target,
+  Award,
+  Sparkles,
+  Pencil,
+  Check,
+  X,
+  Loader2,
+  Settings,
+  ZapOff,
+  CarFront,
+  CheckCircle2,
+  LockKeyhole,
+} from "lucide-react";
 import { useGraphicsSettings } from "@/hooks/useGraphicsSettings";
-import { Button } from "@/components/ui/button";
 import { RANK_COLORS } from "@/data/mockData";
 import { cn } from "@/lib/utils";
 import GlowingBorder from "@/components/effects/GlowingBorder";
 import AnimatedCounter from "@/components/effects/AnimatedCounter";
 import { useAuth } from "@/context/AuthContext";
+import { resolveContestRewardDetails } from "@/lib/highwayHustleContest";
 interface ProfileScreenProps {
   score: number;
   streak: number;
   bestStreak: number;
 }
-
-const ACHIEVEMENTS = [
-  { id: "first_win", icon: "🎯", name: "First Blood", desc: "Get your first correct guess", unlocked: true },
-  { id: "streak_5", icon: "🔥", name: "On Fire", desc: "Reach a 5 streak", unlocked: true },
-  { id: "streak_10", icon: "💎", name: "Diamond Eyes", desc: "Reach a 10 streak", unlocked: false },
-  { id: "score_100", icon: "💯", name: "Centurion", desc: "Score 100 points", unlocked: true },
-  { id: "score_500", icon: "🏆", name: "Champion", desc: "Score 500 points", unlocked: false },
-  { id: "perfect_10", icon: "⭐", name: "Perfect 10", desc: "10 correct in a row", unlocked: false },
-];
 
 const LEVEL_THRESHOLDS = [
   { level: "NEWBIE", minScore: 0, color: "from-slate-500 to-slate-600" },
@@ -31,6 +39,15 @@ const LEVEL_THRESHOLDS = [
   { level: "MASTER", minScore: 500, color: "from-orange-500 to-amber-600" },
   { level: "LEGEND", minScore: 1000, color: "from-yellow via-amber-400 to-yellow" },
 ];
+
+const buildAchievements = (correctAnswers: number, bestStreak: number, rewardGranted: boolean) => ([
+  { id: "first_win", icon: "🎯", name: "First Blood", desc: "Get your first correct guess", unlocked: correctAnswers >= 1 },
+  { id: "streak_5", icon: "🔥", name: "On Fire", desc: "Reach a 5 best streak", unlocked: bestStreak >= 5 },
+  { id: "streak_10", icon: "💎", name: "Diamond Eyes", desc: "Reach a 10 best streak", unlocked: bestStreak >= 10 },
+  { id: "score_100", icon: "💯", name: "Centurion", desc: "Score 100 total correct guesses", unlocked: correctAnswers >= 100 },
+  { id: "score_500", icon: "🏆", name: "Champion", desc: "Score 500 total correct guesses", unlocked: correctAnswers >= 500 },
+  { id: "highway_reward", icon: "🏎️", name: "Cross-Game Drop", desc: "Send the Muscle Monster reward to Highway Hustle", unlocked: rewardGranted },
+]);
 
 const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
   const [showAccountModal, setShowAccountModal] = useState(false);
@@ -61,8 +78,16 @@ const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
   const progressToNext = nextLevel.minScore > currentLevel.minScore 
     ? ((user.correctAnswers - currentLevel.minScore) / (nextLevel.minScore - currentLevel.minScore)) * 100
     : 100;
+  const remainingLevelXp = Math.max(0, nextLevel.minScore - user.correctAnswers);
 
-  const unlockedAchievements = ACHIEVEMENTS.filter(a => a.unlocked).length;
+  const contestReward = resolveContestRewardDetails(profile?.contestReward, user.bestStreak);
+  const achievements = buildAchievements(
+    user.correctAnswers,
+    user.bestStreak,
+    contestReward.granted
+  );
+
+  const unlockedAchievements = achievements.filter((achievement) => achievement.unlocked).length;
 
   const openAccountModal = () => {
     setEditName(user.username || "");
@@ -251,8 +276,10 @@ const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
                 <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
                   <Target className="w-6 h-6 text-primary" />
                 </div>
-                <span className="text-2xl font-black text-foreground">73%</span>
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Accuracy</span>
+                <span className="text-2xl font-black text-foreground">
+                  {contestReward.currentBestStreak}/{contestReward.targetStreak}
+                </span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Contest Goal</span>
               </motion.div>
 
               <motion.div
@@ -263,10 +290,18 @@ const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
                 className="glass-3d glass-3d-hover rounded-3xl p-6 flex flex-col items-center text-center group transition-colors cursor-default"
               >
                 <div className="w-12 h-12 rounded-2xl glass flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                  <Trophy className="w-6 h-6 text-secondary" />
+                  {contestReward.granted ? (
+                    <CheckCircle2 className="w-6 h-6 text-emerald-300" />
+                  ) : contestReward.unlocked ? (
+                    <CarFront className="w-6 h-6 text-amber-300" />
+                  ) : (
+                    <LockKeyhole className="w-6 h-6 text-secondary" />
+                  )}
                 </div>
-                <span className="text-2xl font-black text-foreground">#42</span>
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Global Rank</span>
+                <span className="text-2xl font-black text-foreground">
+                  {contestReward.granted ? "LIVE" : contestReward.unlocked ? "READY" : "LOCKED"}
+                </span>
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1">Reward Status</span>
               </motion.div>
             </div>
 
@@ -359,11 +394,10 @@ const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
                 
                 <div className="flex justify-between text-[11px] font-bold text-muted-foreground uppercase tracking-widest px-1">
                   <span>Current: {user.correctAnswers} XP</span>
-                  <span>Gap: {nextLevel.minScore - user.correctAnswers} XP</span>
+                  <span>Gap: {remainingLevelXp} XP</span>
                 </div>
               </div>
             </motion.div>
-
             {/* Achievements Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -389,7 +423,7 @@ const ProfileScreen = ({ score, streak, bestStreak }: ProfileScreenProps) => {
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
-                {ACHIEVEMENTS.map((achievement, index) => (
+                {achievements.map((achievement, index) => (
                   <motion.div
                     key={achievement.id}
                     initial={{ opacity: 0, scale: 0.8 }}
