@@ -1,4 +1,4 @@
-import muscleRewardImage from "@highway-hustle/assets/cars/muscle.png";
+import muscleRewardImage from "@/assets/rewards/muscle.png";
 
 export type ContestRewardStatus = "locked" | "eligible" | "granted";
 
