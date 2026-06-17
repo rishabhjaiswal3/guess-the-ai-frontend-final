@@ -16,7 +16,7 @@ import ClassicStatsBar from "@/components/game/classic/ClassicStatsBar";
 import ClassicGuessButtons from "@/components/game/classic/ClassicGuessButtons";
 import GameRulesDialog from "@/components/game/GameRulesDialog";
 import networkConfig from "@/lib/networkConfig";
-import { addGameTransaction } from "@/lib/gameTransactions";
+import { recordAnswerOnchainTx } from "@/lib/recordAnswerOnchainTx";
 import { toast } from "@/components/ui/sonner";
 import VerifyHashEyeButton from "@/components/game/VerifyHashEyeButton";
 import GameImageBox from "@/components/game/GameImageBox";
@@ -310,7 +310,7 @@ const ClassicGame = ({ onBack, onScoreUpdate }: ClassicGameProps) => {
       const txHash = response?.onchain?.transactionHash;
       if (txHash) {
         setLastTxHash(txHash);
-        addGameTransaction(txHash, "Classic");
+        recordAnswerOnchainTx(response, "Classic");
         advanceProofStatus("verified", 2000);
         const explorerBase = networkConfig.blockExplorers?.default?.url;
         toast.success("Permanently recorded on 0G", {

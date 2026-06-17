@@ -9,6 +9,15 @@ import networkConfig from "@/lib/networkConfig";
 import { getGameTransactions, type GameTransactionRecord } from "@/lib/gameTransactions";
 import { getStoredSource } from "@/lib/session";
 import VerifyManifest0gSection from "@/components/game/VerifyManifest0gSection";
+import {
+  DEFAULT_ONCHAIN_CONFIG,
+  ONCHAIN_CONTRACT_LABELS,
+  contractExplorerUrl,
+  txExplorerUrl,
+  type OnchainContractKey,
+  type OnchainPublicConfig,
+} from "@/lib/onchainConfig";
+import { fetchOnchainConfig } from "@/services/onchainApi";
 
 const WalletScreen = () => {
   const { openLogin, token, profile, logout } = useAuth();
@@ -16,6 +25,7 @@ const WalletScreen = () => {
   const [gameTransactions, setGameTransactions] = useState<GameTransactionRecord[]>([]);
   const [walletCopied, setWalletCopied] = useState(false);
   const [copiedContract, setCopiedContract] = useState<string | null>(null);
+  const [onchainConfig, setOnchainConfig] = useState<OnchainPublicConfig>(DEFAULT_ONCHAIN_CONFIG);
 
   const handleCopyWallet = () => {
     if (!profile?.walletAddress) return;
@@ -33,11 +43,22 @@ const WalletScreen = () => {
   const shouldHideLogout = getStoredSource() === "browser";
 
   useEffect(() => {
+    fetchOnchainConfig().then(setOnchainConfig).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!showTransactions) return;
     setGameTransactions(getGameTransactions());
   }, [showTransactions, token]);
 
-  const explorer = networkConfig.blockExplorers?.default?.url || "https://chainscan.0g.ai";
+  const explorer = onchainConfig.explorerUrl || networkConfig.blockExplorers?.default?.url || "https://chainscan.0g.ai";
+  const contractEntries = (Object.keys(ONCHAIN_CONTRACT_LABELS) as OnchainContractKey[])
+    .map((key) => ({
+      key,
+      label: ONCHAIN_CONTRACT_LABELS[key],
+      address: onchainConfig.contracts[key],
+    }))
+    .filter((entry): entry is { key: OnchainContractKey; label: string; address: string } => Boolean(entry.address));
   const allowedModeLabels: Record<string, string> = {
     classic: "Classic Mode",
     multiselect: "Multi Select",
@@ -243,7 +264,7 @@ const WalletScreen = () => {
                               size="sm"
                               variant="ghost"
                               className="h-8 text-[10px] font-bold text-primary hover:bg-primary/10"
-                              onClick={() => window.open(`${explorer}/tx/${tx.hash}`, "_blank")}
+                              onClick={() => window.open(txExplorerUrl(explorer, tx.hash), "_blank")}
                             >
                               EXPLORER
                             </Button>
@@ -256,13 +277,45 @@ const WalletScreen = () => {
 
                 <div className="h-px bg-white/10" />
 
+                <p className="text-xs text-muted-foreground mb-6 leading-relaxed">
+                  Game actions are recorded on 0G by the operator wallet below. Your connected wallet appears in transaction data on these contracts.
+                </p>
+
+                {onchainConfig.operatorAddress && (
+                  <div className="mb-6 p-5 rounded-2xl glass border border-primary/20">
+                    <p className="text-sm font-black text-foreground mb-1">Operator Wallet (submits txs)</p>
+                    <p className="text-xs text-muted-foreground mb-3">
+                      All register / session / answer / leaderboard writes are gas-sponsored from this server wallet.
+                    </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <p className="text-xs font-mono text-muted-foreground break-all">
+                        {onchainConfig.operatorAddress}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-xs font-bold"
+                          onClick={() => handleCopyContract(onchainConfig.operatorAddress!)}
+                        >
+                          {copiedContract === onchainConfig.operatorAddress ? "Copied!" : "Copy"}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-9 text-xs font-bold"
+                          onClick={() => window.open(contractExplorerUrl(explorer, onchainConfig.operatorAddress!), "_blank")}
+                        >
+                          View <ArrowUpRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Core Contracts */}
                 <div className="space-y-4">
-                  {[
-                    { label: "Core Game Contract", address: "0x4aCfb1a2Dc270846A7913757189543e4C18F7826" },
-                    { label: "Answer Submissions", address: "0x73d377634F906fD24fE342fd95182c3c80bCFe49" },
-                    { label: "Leaderboard", address: "0x9663dA1163842cfbac83D382Bdf331227d012114" },
-                  ].map((entry) => (
+                  {contractEntries.map((entry) => (
                     <div 
                       key={entry.address} 
                       className="flex flex-col sm:flex-row sm:items-center justify-between p-5 rounded-2xl glass border border-white/10 hover:bg-white/10 transition-all group gap-4 sm:gap-0"
@@ -289,7 +342,7 @@ const WalletScreen = () => {
                         <Button
                           variant="outline"
                           className="flex-1 sm:flex-none border-magenta/30 text-magenta hover:bg-magenta/10 h-9 sm:h-10 px-3 sm:px-6 text-[10px] sm:text-xs font-bold rounded-xl"
-                          onClick={() => window.open(`${explorer}/address/${entry.address}`, "_blank")}
+                          onClick={() => window.open(contractExplorerUrl(explorer, entry.address), "_blank")}
                         >
                           View <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                         </Button>

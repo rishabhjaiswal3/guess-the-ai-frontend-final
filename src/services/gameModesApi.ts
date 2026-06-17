@@ -64,6 +64,7 @@ export type ModeAnswerResponse = {
   variant?: string;
   comboUsed?: number;
   contestReward?: ContestRewardPayload | null;
+  onchain?: { transactionHash?: string } | null;
 };
 
 const withImageUrl = (question: Omit<ModeQuestionResponse, "images"> & { images?: Array<{ id?: string; hash?: string; url?: string; percentage?: number; percentageLabel?: string }> }): ModeQuestionResponse => {

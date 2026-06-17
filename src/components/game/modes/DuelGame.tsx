@@ -16,6 +16,7 @@ import {
   type ModeQuestionImage,
 } from "@/services/gameModesApi";
 import GameImageBox from "@/components/game/GameImageBox";
+import { recordAnswerOnchainTx } from "@/lib/recordAnswerOnchainTx";
 
 interface DuelGameProps {
   onBack: () => void;
@@ -126,6 +127,7 @@ const DuelGame = ({ onBack, onScoreUpdate }: DuelGameProps) => {
         askingFor: targetLabel,
         variant: gameMode,
       });
+      recordAnswerOnchainTx(response, "Duel");
 
       // Artificial delay for "juiciness"
       await new Promise(resolve => setTimeout(resolve, 1500));

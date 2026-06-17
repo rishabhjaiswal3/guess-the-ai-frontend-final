@@ -15,6 +15,7 @@ import {
   type ModeAnswerResult,
 } from "@/services/gameModesApi";
 import GameImageBox from "@/components/game/GameImageBox";
+import { recordAnswerOnchainTx } from "@/lib/recordAnswerOnchainTx";
 
 interface MultiSelectGameProps {
   onBack: () => void;
@@ -109,6 +110,7 @@ const MultiSelectGame = ({ onBack, onScoreUpdate }: MultiSelectGameProps) => {
         selectedHashes: Array.from(selectedIds),
         askingFor,
       });
+      recordAnswerOnchainTx(response, "Multi Select");
 
       // Artificial delay for "juiciness"
       await new Promise(resolve => setTimeout(resolve, 1500));
