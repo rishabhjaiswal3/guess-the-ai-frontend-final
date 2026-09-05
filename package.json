@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:gateway": "VITE_BASE_PATH=/guesstheai/ vite build",
     "build:dev": "vite build --mode development",
     "deploy": "npm run build && wrangler deploy",
     "lint": "eslint .",
