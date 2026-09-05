@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Gamepad2, Trophy, User, Wallet, Sparkles, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-
 export type TabType = "game" | "contest" | "leaderboard" | "profile" | "wallet";
 
 interface BottomNavProps {
